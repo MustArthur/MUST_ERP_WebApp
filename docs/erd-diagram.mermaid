@@ -1,0 +1,176 @@
+---
+title: MUST ERP - Manufacturing Module ERD
+---
+erDiagram
+    %% Master Data
+    CATEGORIES ||--o{ ITEMS : "has"
+    UNITS_OF_MEASURE ||--o{ ITEMS : "base_uom"
+    UNITS_OF_MEASURE ||--o{ UOM_CONVERSIONS : "from"
+    UNITS_OF_MEASURE ||--o{ UOM_CONVERSIONS : "to"
+
+    %% Items & Recipes
+    ITEMS ||--o{ RECIPE_LINES : "ingredient"
+    ITEMS ||--o{ RECIPES : "output"
+    RECIPES ||--o{ RECIPE_LINES : "contains"
+
+    %% Warehouse
+    WAREHOUSES ||--o{ LOCATIONS : "has"
+    WAREHOUSES ||--o{ STOCK_ON_HAND : "stores"
+    LOCATIONS ||--o{ STOCK_ON_HAND : "at"
+
+    %% Inventory
+    ITEMS ||--o{ LOTS : "tracked_by"
+    SUPPLIERS ||--o{ LOTS : "supplies"
+    LOTS ||--o{ STOCK_ON_HAND : "qty"
+    ITEMS ||--o{ INVENTORY_TRANSACTIONS : "moves"
+    LOTS ||--o{ INVENTORY_TRANSACTIONS : "tracks"
+
+    %% Production
+    RECIPES ||--o{ PRODUCTION_ORDERS : "uses"
+    PRODUCTION_ORDERS ||--o{ PRODUCTION_CONSUMPTIONS : "consumes"
+    PRODUCTION_ORDERS ||--o{ PRODUCTION_OUTPUTS : "produces"
+    PRODUCTION_ORDERS ||--o{ LOTS : "creates"
+    ITEMS ||--o{ PRODUCTION_CONSUMPTIONS : "material"
+    LOTS ||--o{ PRODUCTION_CONSUMPTIONS : "source_lot"
+
+    CATEGORIES {
+        uuid id PK
+        varchar code UK
+        varchar name
+        enum type
+    }
+
+    UNITS_OF_MEASURE {
+        uuid id PK
+        varchar code UK
+        varchar name
+        enum type
+    }
+
+    SUPPLIERS {
+        uuid id PK
+        varchar code UK
+        varchar name
+        varchar contact_name
+        varchar phone
+    }
+
+    ITEMS {
+        uuid id PK
+        varchar code UK
+        varchar name
+        uuid category_id FK
+        uuid base_uom_id FK
+        boolean track_lot
+        boolean track_expiry
+        int shelf_life_days
+        decimal min_stock_qty
+    }
+
+    WAREHOUSES {
+        uuid id PK
+        varchar code UK
+        varchar name
+        enum type
+        decimal temp_min
+        decimal temp_max
+    }
+
+    LOCATIONS {
+        uuid id PK
+        uuid warehouse_id FK
+        varchar code
+        varchar zone
+        varchar rack
+    }
+
+    RECIPES {
+        uuid id PK
+        varchar code UK
+        varchar name
+        uuid output_item_id FK
+        decimal output_qty
+        decimal expected_yield
+        int version
+        enum status
+    }
+
+    RECIPE_LINES {
+        uuid id PK
+        uuid recipe_id FK
+        int line_no
+        uuid item_id FK
+        decimal qty_per_batch
+        decimal scrap_percent
+        boolean is_critical
+    }
+
+    LOTS {
+        uuid id PK
+        varchar lot_number UK
+        uuid item_id FK
+        uuid supplier_id FK
+        uuid production_order_id FK
+        date manufactured_date
+        date expiry_date
+        decimal initial_qty
+        enum status
+        enum quality_status
+    }
+
+    STOCK_ON_HAND {
+        uuid id PK
+        uuid item_id FK
+        uuid warehouse_id FK
+        uuid location_id FK
+        uuid lot_id FK
+        decimal qty_on_hand
+        decimal qty_reserved
+        decimal qty_available
+    }
+
+    INVENTORY_TRANSACTIONS {
+        uuid id PK
+        varchar transaction_no UK
+        enum transaction_type
+        uuid item_id FK
+        uuid lot_id FK
+        uuid from_warehouse_id FK
+        uuid to_warehouse_id FK
+        decimal qty
+        varchar reference_type
+        uuid reference_id
+    }
+
+    PRODUCTION_ORDERS {
+        uuid id PK
+        varchar order_no UK
+        uuid recipe_id FK
+        uuid output_item_id FK
+        decimal planned_qty
+        decimal actual_qty
+        timestamp planned_start
+        timestamp actual_start
+        enum status
+        enum priority
+    }
+
+    PRODUCTION_CONSUMPTIONS {
+        uuid id PK
+        uuid production_order_id FK
+        uuid recipe_line_id FK
+        uuid item_id FK
+        uuid lot_id FK
+        decimal planned_qty
+        decimal actual_qty
+        boolean is_issued
+    }
+
+    PRODUCTION_OUTPUTS {
+        uuid id PK
+        uuid production_order_id FK
+        uuid item_id FK
+        uuid lot_id FK
+        decimal qty
+        enum quality_status
+    }

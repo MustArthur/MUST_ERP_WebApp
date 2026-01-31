@@ -1,0 +1,17 @@
+{
+  "version": "1.8.1",
+  "installedAt": "2026-01-30T10:28:48.514Z",
+  "targetDir": "/Users/art_tamrongsak/Documents/MUST_ERP_WebApp",
+  "ides": [
+    "claude",
+    "cursor",
+    "gemini"
+  ],
+  "components": {
+    "skills": true,
+    "agents": true,
+    "commands": true,
+    "templates": true,
+    "memory": true
+  }
+}

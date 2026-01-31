@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUST ERP - Manufacturing Module</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans Thai', sans-serif; }
+    .sidebar-item { transition: all 0.2s; }
+    .sidebar-item:hover { background-color: rgba(59, 130, 246, 0.1); }
+    .sidebar-item.active { background-color: rgba(59, 130, 246, 0.2); border-right: 3px solid #3b82f6; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ==================== SAMPLE DATA ====================
+    const sampleData = {
+      kpis: {
+        todayProduction: { value: 450, unit: 'ขวด', trend: '+12%' },
+        inventoryValue: { value: 1250000, unit: 'บาท', trend: '+5%' },
+        pendingOrders: { value: 3, unit: 'รายการ' },
+        lowStockItems: { value: 5, unit: 'รายการ', alert: true }
+      },
+      expiringLots: [
+        { id: 1, lotNumber: 'SUP-20260125-001', item: 'อกไก่สด', expiry: '2026-01-31', daysLeft: 2, qty: '15 KG' },
+        { id: 2, lotNumber: 'SUP-20260120-003', item: 'Whey Protein', expiry: '2026-02-05', daysLeft: 7, qty: '8 KG' },
+      ],
+      productionOrders: [
+        { id: 1, orderNo: 'PO-202601-001', product: 'โปรตีนไก่ Original', qty: 200, status: 'IN_PROGRESS', progress: 65 },
+        { id: 2, orderNo: 'PO-202601-002', product: 'โปรตีนไก่ Vanilla', qty: 150, status: 'PLANNED', progress: 0 },
+        { id: 3, orderNo: 'PO-202601-003', product: 'โปรตีนไก่ Double', qty: 100, status: 'DRAFT', progress: 0 },
+      ],
+      recentTransactions: [
+        { id: 1, type: 'RECEIVE', item: 'อกไก่สด', qty: '+50 KG', time: '09:30', user: 'สมหญิง' },
+        { id: 2, type: 'PRODUCTION_OUT', item: 'อกไก่สด', qty: '-20 KG', time: '09:15', user: 'ระบบ' },
+        { id: 3, type: 'PRODUCTION_IN', item: 'โปรตีนไก่ Original', qty: '+100 BTL', time: '08:45', user: 'สมชาย' },
+      ],
+      coldStorageTemp: { current: 3.5, min: 0, max: 5, status: 'NORMAL' },
+      inventory: [
+        { id: 1, code: 'RM-CHICKEN-001', name: 'อกไก่สดไม่มีหนัง', category: 'วัตถุดิบ', warehouse: 'ห้องเย็น', qtyOnHand: 85.5, uom: 'KG', status: 'LOW' },
+        { id: 2, code: 'RM-WHEY-001', name: 'Whey Protein Isolate', category: 'วัตถุดิบ', warehouse: 'คลังวัตถุดิบ', qtyOnHand: 45, uom: 'KG', status: 'LOW' },
+        { id: 3, code: 'PKG-BTL-350', name: 'ขวด PET 350ml ใส', category: 'บรรจุภัณฑ์', warehouse: 'คลังวัตถุดิบ', qtyOnHand: 12500, uom: 'PC', status: 'OK' },
+        { id: 4, code: 'FG-PRO-001', name: 'เครื่องดื่มโปรตีนไก่ Original 350ml', category: 'สำเร็จรูป', warehouse: 'คลัง FG', qtyOnHand: 850, uom: 'BTL', status: 'OK' },
+      ],
+      recipes: [
+        { id: 1, code: 'RCP-PRO-001', name: 'สูตรเครื่องดื่มโปรตีนไก่ Original', output: 100, uom: 'BTL', yield: 95, version: 3, status: 'ACTIVE', ingredients: 8 },
+        { id: 2, code: 'RCP-PRO-002', name: 'สูตรเครื่องดื่มโปรตีนไก่ Vanilla', output: 100, uom: 'BTL', yield: 95, version: 2, status: 'ACTIVE', ingredients: 6 },
+        { id: 3, code: 'RCP-PRO-003', name: 'สูตรเครื่องดื่มโปรตีนไก่ Double Protein', output: 100, uom: 'BTL', yield: 93, version: 1, status: 'ACTIVE', ingredients: 5 },
+      ]
+    };
+
+    // ==================== COMPONENTS ====================
+
+    // Status Badge
+    const StatusBadge = ({ status }) => {
+      const styles = {
+        'IN_PROGRESS': 'bg-blue-100 text-blue-800',
+        'PLANNED': 'bg-yellow-100 text-yellow-800',
+        'COMPLETED': 'bg-green-100 text-green-800',
+        'DRAFT': 'bg-gray-100 text-gray-800',
+        'ACTIVE': 'bg-green-100 text-green-800',
+        'LOW': 'bg-red-100 text-red-800',
+        'OK': 'bg-green-100 text-green-800'
+      };
+      const labels = {
+        'IN_PROGRESS': 'กำลังผลิต',
+        'PLANNED': 'วางแผนแล้ว',
+        'COMPLETED': 'เสร็จสิ้น',
+        'DRAFT': 'ร่าง',
+        'ACTIVE': 'ใช้งาน',
+        'LOW': 'ต่ำกว่าขั้นต่ำ',
+        'OK': 'ปกติ'
+      };
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100'}`}>
+          {labels[status] || status}
+        </span>
+      );
+    };
+
+    // Transaction Badge
+    const TransactionBadge = ({ type }) => {
+      const config = {
+        'RECEIVE': { color: 'bg-green-100 text-green-800', label: 'รับเข้า' },
+        'ISSUE': { color: 'bg-orange-100 text-orange-800', label: 'เบิกออก' },
+        'PRODUCTION_IN': { color: 'bg-blue-100 text-blue-800', label: 'รับจากผลิต' },
+        'PRODUCTION_OUT': { color: 'bg-purple-100 text-purple-800', label: 'เบิกผลิต' },
+      };
+      const { color, label } = config[type] || { color: 'bg-gray-100', label: type };
+      return <span className={`px-2 py-1 rounded text-xs font-medium ${color}`}>{label}</span>;
+    };
+
+    // KPI Card
+    const KPICard = ({ title, value, unit, trend, alert, icon }) => (
+      <div className={`bg-white rounded-xl p-4 shadow-sm border ${alert ? 'border-red-300 bg-red-50' : ''}`}>
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="text-gray-500 text-sm">{title}</p>
+            <p className={`text-2xl font-bold mt-1 ${alert ? 'text-red-600' : 'text-gray-900'}`}>
+              {typeof value === 'number' ? value.toLocaleString() : value}
+              <span className="text-sm font-normal text-gray-500 ml-1">{unit}</span>
+            </p>
+            {trend && <p className={`text-sm mt-1 ${trend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{trend}</p>}
+          </div>
+          <span className="text-2xl">{icon}</span>
+        </div>
+      </div>
+    );
+
+    // ==================== PAGES ====================
+
+    // Dashboard Page
+    const DashboardPage = () => {
+      const [time, setTime] = useState(new Date().toLocaleString('th-TH'));
+      useEffect(() => {
+        const timer = setInterval(() => setTime(new Date().toLocaleString('th-TH')), 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      return (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-500">{time}</p>
+            </div>
+          </div>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard title="ผลิตวันนี้" value={sampleData.kpis.todayProduction.value} unit="ขวด" trend={sampleData.kpis.todayProduction.trend} icon="🏭" />
+            <KPICard title="มูลค่าสต็อก" value={sampleData.kpis.inventoryValue.value} unit="บาท" trend={sampleData.kpis.inventoryValue.trend} icon="📦" />
+            <KPICard title="ใบสั่งผลิตรอดำเนินการ" value={sampleData.kpis.pendingOrders.value} unit="รายการ" icon="📋" />
+            <KPICard title="สินค้าใกล้หมด" value={sampleData.kpis.lowStockItems.value} unit="รายการ" alert={true} icon="⚠️" />
+          </div>
+
+          {/* Temperature */}
+          <div className={`rounded-xl p-4 flex items-center justify-between ${sampleData.coldStorageTemp.status === 'NORMAL' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🌡️</span>
+              <div>
+                <p className="font-medium">อุณหภูมิห้องเย็น</p>
+                <p className="text-sm text-gray-600">ช่วงปกติ: {sampleData.coldStorageTemp.min}°C - {sampleData.coldStorageTemp.max}°C</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className={`text-3xl font-bold ${sampleData.coldStorageTemp.status === 'NORMAL' ? 'text-green-600' : 'text-red-600'}`}>
+                {sampleData.coldStorageTemp.current}°C
+              </p>
+              <p className="text-green-600">✓ ปกติ</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Production Orders */}
+            <div className="bg-white rounded-xl shadow-sm border">
+              <div className="p-4 border-b"><h2 className="font-semibold">📋 ใบสั่งผลิตวันนี้</h2></div>
+              <div className="divide-y">
+                {sampleData.productionOrders.map(order => (
+                  <div key={order.id} className="p-4 hover:bg-gray-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-medium">{order.orderNo}</p>
+                        <p className="text-sm text-gray-500">{order.product}</p>
+                      </div>
+                      <StatusBadge status={order.status} />
+                    </div>
+                    {order.status === 'IN_PROGRESS' && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${order.progress}%` }} />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{order.progress}%</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Expiring Lots */}
+            <div className="bg-white rounded-xl shadow-sm border">
+              <div className="p-4 border-b"><h2 className="font-semibold">⚠️ Lot ใกล้หมดอายุ</h2></div>
+              <div className="divide-y">
+                {sampleData.expiringLots.map(lot => (
+                  <div key={lot.id} className="p-4 hover:bg-gray-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-blue-600">{lot.lotNumber}</p>
+                        <p className="text-sm text-gray-500">{lot.item}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${lot.daysLeft <= 3 ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}`}>
+                        {lot.daysLeft} วัน
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">คงเหลือ: {lot.qty}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="bg-white rounded-xl shadow-sm border">
+            <div className="p-4 border-b"><h2 className="font-semibold">📦 รายการเคลื่อนไหวล่าสุด</h2></div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">เวลา</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">ประเภท</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">สินค้า</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">จำนวน</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">ผู้ดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {sampleData.recentTransactions.map(tx => (
+                    <tr key={tx.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">{tx.time}</td>
+                      <td className="px-4 py-3"><TransactionBadge type={tx.type} /></td>
+                      <td className="px-4 py-3 text-sm">{tx.item}</td>
+                      <td className={`px-4 py-3 text-sm font-medium ${tx.qty.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{tx.qty}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">{tx.user}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="bg-blue-600 text-white rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-blue-700 transition shadow-lg">
+              <span className="text-2xl">🏭</span>
+              <span className="font-medium">สร้างใบสั่งผลิต</span>
+            </button>
+            <button className="bg-green-600 text-white rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-green-700 transition shadow-lg">
+              <span className="text-2xl">🚚</span>
+              <span className="font-medium">รับวัตถุดิบเข้า</span>
+            </button>
+            <button className="bg-purple-600 text-white rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-purple-700 transition shadow-lg">
+              <span className="text-2xl">📦</span>
+              <span className="font-medium">ตรวจสอบสต็อก</span>
+            </button>
+            <button className="bg-orange-600 text-white rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-orange-700 transition shadow-lg">
+              <span className="text-2xl">✅</span>
+              <span className="font-medium">บันทึกผลผลิต</span>
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Inventory Page
+    const InventoryPage = () => (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">คลังสินค้า</h1>
+            <p className="text-gray-500">จัดการวัตถุดิบ บรรจุภัณฑ์ และสินค้าสำเร็จรูป</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">📥 รับเข้า</button>
+            <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">📤 เบิกออก</button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">รหัส</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">ชื่อสินค้า</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">หมวดหมู่</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">คลัง</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">คงเหลือ</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {sampleData.inventory.map(item => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-mono text-blue-600">{item.code}</td>
+                  <td className="px-4 py-3">{item.name}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{item.category}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{item.warehouse}</td>
+                  <td className="px-4 py-3 text-right font-medium">{item.qtyOnHand.toLocaleString()} {item.uom}</td>
+                  <td className="px-4 py-3 text-center"><StatusBadge status={item.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl p-4 border">
+            <p className="text-sm text-gray-500">รายการทั้งหมด</p>
+            <p className="text-2xl font-bold">{sampleData.inventory.length}</p>
+          </div>
+          <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+            <p className="text-sm text-red-600">ต่ำกว่าขั้นต่ำ</p>
+            <p className="text-2xl font-bold text-red-600">{sampleData.inventory.filter(i => i.status === 'LOW').length}</p>
+          </div>
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+            <p className="text-sm text-orange-600">Lot ใกล้หมดอายุ</p>
+            <p className="text-2xl font-bold text-orange-600">{sampleData.expiringLots.length}</p>
+          </div>
+          <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+            <p className="text-sm text-green-600">มูลค่ารวม</p>
+            <p className="text-2xl font-bold text-green-600">฿1.54M</p>
+          </div>
+        </div>
+      </div>
+    );
+
+    // Production Page
+    const ProductionPage = () => (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">การผลิต</h1>
+            <p className="text-gray-500">จัดการใบสั่งผลิตและบันทึกผลผลิต</p>
+          </div>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">➕ สร้างใบสั่งผลิต</button>
+        </div>
+
+        <div className="grid grid-cols-5 gap-4">
+          {['ทั้งหมด', 'ร่าง', 'วางแผน', 'กำลังผลิต', 'เสร็จสิ้น'].map((label, idx) => (
+            <button key={idx} className={`rounded-xl p-4 text-left ${idx === 0 ? 'bg-blue-600 text-white' : 'bg-white border hover:border-blue-300'}`}>
+              <p className={`text-sm ${idx === 0 ? 'text-blue-100' : 'text-gray-500'}`}>{label}</p>
+              <p className="text-2xl font-bold">{[3, 1, 1, 1, 0][idx]}</p>
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          {sampleData.productionOrders.map(order => (
+            <div key={order.id} className="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-bold text-lg">{order.orderNo}</span>
+                    <StatusBadge status={order.status} />
+                  </div>
+                  <p className="text-gray-600">{order.product}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-500">เป้าหมาย</p>
+                  <p className="font-bold">{order.qty} ขวด</p>
+                </div>
+                {order.status === 'IN_PROGRESS' && (
+                  <div className="w-32">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${order.progress}%` }} />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 text-right">{order.progress}%</p>
+                  </div>
+                )}
+                <div>
+                  {order.status === 'PLANNED' && (
+                    <button className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">▶️ เริ่ม</button>
+                  )}
+                  {order.status === 'IN_PROGRESS' && (
+                    <button className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">✅ บันทึก</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    // Recipe Page
+    const RecipePage = () => (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">สูตรการผลิต (BOM)</h1>
+            <p className="text-gray-500">จัดการสูตรและส่วนประกอบการผลิต</p>
+          </div>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">➕ สร้างสูตรใหม่</button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sampleData.recipes.map(recipe => (
+            <div key={recipe.id} className="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition cursor-pointer">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="font-mono text-sm text-blue-600">{recipe.code}</p>
+                  <h3 className="font-semibold">{recipe.name}</h3>
+                </div>
+                <StatusBadge status={recipe.status} />
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                <p className="text-sm text-gray-500">ผลผลิต</p>
+                <p className="font-medium">{recipe.output} {recipe.uom} / Batch</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                <div className="bg-blue-50 rounded-lg p-2">
+                  <p className="text-blue-600 font-medium">{recipe.ingredients}</p>
+                  <p className="text-gray-500 text-xs">ส่วนประกอบ</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-2">
+                  <p className="text-green-600 font-medium">{recipe.yield}%</p>
+                  <p className="text-gray-500 text-xs">Yield</p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-2">
+                  <p className="text-purple-600 font-medium">v{recipe.version}</p>
+                  <p className="text-gray-500 text-xs">Version</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    // Reports Page
+    const ReportsPage = () => (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">รายงาน</h1>
+          <p className="text-gray-500">ดูรายงานและวิเคราะห์ข้อมูลการผลิต</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { title: 'สรุปการผลิต', desc: 'ดูภาพรวมการผลิต จำนวน Yield และสินค้าที่ผลิตมากที่สุด', icon: '🏭', color: 'blue' },
+            { title: 'มูลค่าสินค้าคงคลัง', desc: 'ดูมูลค่าสต็อก แยกตามหมวดหมู่ และรายการแจ้งเตือน', icon: '📦', color: 'green' },
+            { title: 'วิเคราะห์ Yield', desc: 'เปรียบเทียบ Yield จริงกับเป้าหมาย แยกตามใบสั่งผลิต', icon: '📈', color: 'purple' },
+            { title: 'สอบกลับ Lot', desc: 'ค้นหาประวัติการใช้วัตถุดิบของแต่ละ Lot', icon: '🔍', color: 'orange' },
+          ].map((report, idx) => (
+            <button key={idx} className="bg-white rounded-xl p-5 shadow-sm border hover:shadow-md transition text-left w-full group">
+              <div className={`w-12 h-12 rounded-lg bg-${report.color}-100 flex items-center justify-center mb-3 text-2xl group-hover:scale-110 transition`}>
+                {report.icon}
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">{report.title}</h3>
+              <p className="text-sm text-gray-500">{report.desc}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Sample Report Preview */}
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <h3 className="font-semibold mb-4">📊 สรุปการผลิตเดือนนี้</h3>
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-600">ใบสั่งผลิต</p>
+              <p className="text-2xl font-bold text-blue-900">45</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <p className="text-sm text-green-600">ผลิตได้</p>
+              <p className="text-2xl font-bold text-green-900">4,250</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <p className="text-sm text-purple-600">Yield เฉลี่ย</p>
+              <p className="text-2xl font-bold text-purple-900">94.2%</p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4">
+              <p className="text-sm text-orange-600">เสร็จตามแผน</p>
+              <p className="text-2xl font-bold text-orange-900">84.4%</p>
+            </div>
+          </div>
+          <div className="flex items-end justify-between h-32 gap-2 bg-gray-50 rounded-lg p-4">
+            {[180, 200, 150, 220, 190, 210, 180].map((val, idx) => (
+              <div key={idx} className="flex-1 flex flex-col items-center">
+                <span className="text-xs mb-1">{val}</span>
+                <div className="w-full bg-blue-500 rounded-t" style={{ height: `${val / 2.5}%` }} />
+                <span className="text-xs text-gray-500 mt-1">{23 + idx}/01</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    // ==================== MAIN APP ====================
+    const App = () => {
+      const [activePage, setActivePage] = useState('dashboard');
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+      const menuItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
+        { id: 'inventory', label: 'คลังสินค้า', icon: '📦' },
+        { id: 'production', label: 'การผลิต', icon: '🏭' },
+        { id: 'recipe', label: 'สูตรการผลิต', icon: '📋' },
+        { id: 'reports', label: 'รายงาน', icon: '📊' },
+      ];
+
+      const renderPage = () => {
+        switch (activePage) {
+          case 'dashboard': return <DashboardPage />;
+          case 'inventory': return <InventoryPage />;
+          case 'production': return <ProductionPage />;
+          case 'recipe': return <RecipePage />;
+          case 'reports': return <ReportsPage />;
+          default: return <DashboardPage />;
+        }
+      };
+
+      return (
+        <div className="flex min-h-screen">
+          {/* Sidebar */}
+          <aside className={`bg-white border-r shadow-sm transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
+            <div className="p-4 border-b flex items-center justify-between">
+              {!sidebarCollapsed && (
+                <div>
+                  <h1 className="text-xl font-bold text-blue-600">MUST ERP</h1>
+                  <p className="text-xs text-gray-500">Manufacturing Module</p>
+                </div>
+              )}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                {sidebarCollapsed ? '→' : '←'}
+              </button>
+            </div>
+
+            <nav className="p-2">
+              {menuItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setActivePage(item.id)}
+                  className={`sidebar-item w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 ${
+                    activePage === item.id ? 'active bg-blue-50 text-blue-600' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
+                </button>
+              ))}
+            </nav>
+
+            {!sidebarCollapsed && (
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-blue-600 font-medium">A</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Arthur</p>
+                    <p className="text-xs text-gray-500">Admin</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto">
+            <div className="max-w-7xl mx-auto p-6">
+              {renderPage()}
+            </div>
+          </main>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
