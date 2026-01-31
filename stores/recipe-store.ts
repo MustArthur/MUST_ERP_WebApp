@@ -2,6 +2,11 @@ import { create } from 'zustand'
 import { Recipe, RecipeStatus, CreateRecipeInput, UpdateRecipeInput, RecipeFilterState } from '@/types/recipe'
 import { mockRecipes } from '@/lib/mock-data/recipes'
 import { generateId, delay } from '@/lib/utils'
+import * as recipeApi from '@/lib/api/recipes'
+
+// Flag to enable/disable Supabase (set to false to use mock data only)
+const USE_SUPABASE = true
+
 
 interface RecipeState {
   // Data
@@ -46,16 +51,33 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
   error: null,
   filters: defaultFilters,
 
-  // Fetch all recipes
+  // Fetch all recipes - NOW USES SUPABASE WITH MOCK FALLBACK
   fetchRecipes: async () => {
     set({ isLoading: true, error: null })
     try {
-      await delay(300) // Simulate API delay
+      if (USE_SUPABASE) {
+        try {
+          const recipes = await recipeApi.getRecipes()
+          // If no recipes in DB, use mock data
+          if (recipes.length === 0) {
+            console.log('No recipes in Supabase, using mock data')
+            set({ recipes: recipesData, isLoading: false })
+          } else {
+            set({ recipes, isLoading: false })
+          }
+          return
+        } catch (supabaseError) {
+          console.warn('Supabase error, falling back to mock data:', supabaseError)
+        }
+      }
+      // Fallback: use mock data
+      await delay(300)
       set({ recipes: recipesData, isLoading: false })
     } catch {
       set({ error: 'ไม่สามารถโหลดข้อมูลสูตรได้', isLoading: false })
     }
   },
+
 
   // Get single recipe
   getRecipe: async (id: string) => {
@@ -105,12 +127,24 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
     }
   },
 
-  // Update recipe
+  // Update recipe - NOW USES SUPABASE
   updateRecipe: async (id: string, input: UpdateRecipeInput) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
+      if (USE_SUPABASE) {
+        try {
+          const updated = await recipeApi.updateRecipe(id, input)
+          // Refresh recipes list
+          const recipes = await recipeApi.getRecipes()
+          set({ recipes, isLoading: false, selectedRecipe: updated })
+          return updated
+        } catch (supabaseError) {
+          console.warn('Supabase update error, falling back to mock:', supabaseError)
+        }
+      }
 
+      // Fallback to mock data
+      await delay(400)
       const idx = recipesData.findIndex(r => r.id === id)
       if (idx === -1) {
         throw new Error('Recipe not found')
@@ -122,10 +156,10 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
         ...input,
         ingredients: input.ingredients
           ? input.ingredients.map((ing, i) => ({
-              ...ing,
-              id: generateId(),
-              lineNo: i + 1,
-            }))
+            ...ing,
+            id: generateId(),
+            lineNo: i + 1,
+          }))
           : recipesData[idx].ingredients,
         updatedAt: now,
       }
@@ -139,6 +173,7 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
       throw new Error('Failed to update recipe')
     }
   },
+
 
   // Duplicate recipe
   duplicateRecipe: async (id: string) => {

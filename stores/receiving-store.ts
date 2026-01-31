@@ -205,13 +205,42 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
         ? suppliersData.find(s => s.id === input.supplierId)
         : existing.supplier
 
+      // Map update items to full items (preserve existing properties)
+      const items = input.items
+        ? input.items.map((item, index) => {
+            const existingItem = existing.items.find(i => i.id === item.id)
+            return {
+              id: item.id || `pri-${id}-${index + 1}`,
+              lineNo: index + 1,
+              itemId: item.itemId,
+              qtyOrdered: existingItem?.qtyOrdered,
+              qtyReceived: item.qtyReceived,
+              qtyAccepted: existingItem?.qtyAccepted || 0,
+              qtyRejected: existingItem?.qtyRejected || 0,
+              uom: item.uom,
+              batchNo: item.batchNo,
+              mfgDate: item.mfgDate,
+              expDate: item.expDate,
+              unitPrice: item.unitPrice,
+              totalPrice: item.qtyReceived * item.unitPrice,
+              warehouseId: item.warehouseId,
+              qcInspectionId: existingItem?.qcInspectionId,
+              qcStatus: existingItem?.qcStatus || 'NOT_REQUIRED' as const,
+              remarks: item.remarks,
+            }
+          })
+        : existing.items
+
       const updated: PurchaseReceipt = {
         ...existing,
-        ...input,
+        supplierId: input.supplierId || existing.supplierId,
+        receiptDate: input.receiptDate || existing.receiptDate,
+        poNumber: input.poNumber !== undefined ? input.poNumber : existing.poNumber,
+        invoiceNumber: input.invoiceNumber !== undefined ? input.invoiceNumber : existing.invoiceNumber,
+        remarks: input.remarks !== undefined ? input.remarks : existing.remarks,
         supplier,
-        totalAmount: input.items
-          ? calculateReceiptTotal(input.items as PurchaseReceiptItem[])
-          : existing.totalAmount,
+        items,
+        totalAmount: calculateReceiptTotal(items),
         updatedAt: new Date().toISOString(),
       }
 

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { StatusBadge } from './status-badge'
 import { Edit, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 interface RecipeCardProps {
   recipe: Recipe
@@ -72,7 +72,7 @@ export function RecipeCard({ recipe, onView, onEdit, onDuplicate }: RecipeCardPr
 
         {/* Footer */}
         <div className="mt-3 pt-3 border-t flex justify-between items-center">
-          <span className="text-xs text-gray-400">อัพเดท: {recipe.updatedAt}</span>
+          <span className="text-xs text-gray-400">อัพเดท: {formatDateTime(recipe.updatedAt)}</span>
           <div className="flex gap-1">
             {onEdit && (
               <Button

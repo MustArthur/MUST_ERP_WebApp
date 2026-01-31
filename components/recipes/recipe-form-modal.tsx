@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Trash2, Check } from 'lucide-react'
-import { mockRawMaterials, mockFinishedGoods } from '@/lib/mock-data/recipes'
+import { getRawMaterials, getFinishedGoods, Item } from '@/lib/api/items'
 
 interface RecipeFormModalProps {
   recipe?: Recipe | null
@@ -42,6 +42,10 @@ export function RecipeFormModal({
   onSave,
 }: RecipeFormModalProps) {
   const [isLoading, setIsLoading] = useState(false)
+
+  // Items from Supabase
+  const [rawMaterials, setRawMaterials] = useState<Item[]>([])
+  const [finishedGoods, setFinishedGoods] = useState<Item[]>([])
 
   // Form state
   const [code, setCode] = useState('')
@@ -65,12 +69,25 @@ export function RecipeFormModal({
       item: '',
       code: '',
       qty: 0,
-      uom: 'KG',
+      uom: 'G',
       scrap: 0,
       isCritical: true,
       cost: 0,
     }
   }
+
+  // Load items from Supabase on mount
+  useEffect(() => {
+    async function loadItems() {
+      const [rm, fg] = await Promise.all([
+        getRawMaterials(),
+        getFinishedGoods()
+      ])
+      setRawMaterials(rm)
+      setFinishedGoods(fg)
+    }
+    loadItems()
+  }, [])
 
   // Reset form when recipe changes
   useEffect(() => {
@@ -107,6 +124,7 @@ export function RecipeFormModal({
     }
   }, [recipe, isOpen])
 
+
   const addIngredient = () => {
     setIngredients([...ingredients, createEmptyIngredient()])
   }
@@ -126,18 +144,18 @@ export function RecipeFormModal({
   }
 
   const handleMaterialSelect = (tempId: string, materialCode: string) => {
-    const material = mockRawMaterials.find(m => m.code === materialCode)
+    const material = rawMaterials.find(m => m.code === materialCode)
     if (material) {
       setIngredients(
         ingredients.map(ing =>
           ing.tempId === tempId
             ? {
-                ...ing,
-                code: material.code,
-                item: material.name,
-                uom: material.uom,
-                cost: material.cost,
-              }
+              ...ing,
+              code: material.code,
+              item: material.name,
+              uom: material.base_uom_code as UnitOfMeasure || 'G',
+              cost: material.last_purchase_cost,
+            }
             : ing
         )
       )
@@ -145,7 +163,7 @@ export function RecipeFormModal({
   }
 
   const handleFinishedGoodSelect = (productCode: string) => {
-    const product = mockFinishedGoods.find(p => p.code === productCode)
+    const product = finishedGoods.find(p => p.code === productCode)
     if (product) {
       setOutputItemCode(product.code)
       setOutputItem(product.name)
@@ -216,7 +234,7 @@ export function RecipeFormModal({
                   <SelectValue placeholder="-- เลือกสินค้า --" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockFinishedGoods.map(fg => (
+                  {finishedGoods.map(fg => (
                     <SelectItem key={fg.code} value={fg.code}>
                       {fg.code} - {fg.name}
                     </SelectItem>
@@ -311,7 +329,7 @@ export function RecipeFormModal({
                             <SelectValue placeholder="-- เลือก --" />
                           </SelectTrigger>
                           <SelectContent>
-                            {mockRawMaterials.map(mat => (
+                            {rawMaterials.map(mat => (
                               <SelectItem key={mat.code} value={mat.code}>
                                 {mat.code} - {mat.name}
                               </SelectItem>

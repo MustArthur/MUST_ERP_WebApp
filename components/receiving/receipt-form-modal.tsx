@@ -84,8 +84,8 @@ const UOM_OPTIONS: { value: UnitOfMeasure; label: string }[] = [
   { value: 'ML', label: 'มิลลิลิตร (ML)' },
   { value: 'PC', label: 'ชิ้น (PC)' },
   { value: 'BOX', label: 'กล่อง (BOX)' },
-  { value: 'PACK', label: 'แพ็ค (PACK)' },
-  { value: 'BOTTLE', label: 'ขวด (BOTTLE)' },
+  { value: 'PKG', label: 'แพ็ค (PKG)' },
+  { value: 'BTL', label: 'ขวด (BTL)' },
 ]
 
 export function ReceiptFormModal({
@@ -98,9 +98,9 @@ export function ReceiptFormModal({
   const { suppliers, fetchSuppliers } = useReceivingStore()
   const { stockItems, warehouses, fetchStockItems, fetchWarehouses } = useInventoryStore()
 
-  // Filter raw material warehouses
+  // Filter raw material warehouses (including quarantine)
   const rawMaterialWarehouses = warehouses.filter(
-    w => w.type === 'RAW_MATERIAL' || w.type === 'QUARANTINE'
+    w => w.type === 'RAW_MATERIAL'
   )
 
   // Filter raw material items
@@ -555,7 +555,7 @@ export function ReceiptFormModal({
                                     {rawMaterialWarehouses.map((wh) => (
                                       <SelectItem key={wh.id} value={wh.id}>
                                         {wh.name}
-                                        {wh.type === 'QUARANTINE' && ' (กักกัน)'}
+                                        {wh.isQuarantine && ' (กักกัน)'}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>

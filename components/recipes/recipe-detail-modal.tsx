@@ -13,7 +13,7 @@ import { StatusBadge } from './status-badge'
 import { IngredientTable } from './ingredient-table'
 import { BatchCalculator } from './batch-calculator'
 import { Beaker, FileText, Calculator, Copy, Edit } from 'lucide-react'
-import { formatDuration } from '@/lib/utils'
+import { formatDuration, formatDateTime } from '@/lib/utils'
 
 interface RecipeDetailModalProps {
   recipe: Recipe | null
@@ -67,7 +67,7 @@ export function RecipeDetailModal({
           </div>
           <div>
             <p className="text-muted-foreground text-xs">อัพเดทล่าสุด</p>
-            <p className="font-medium">{recipe.updatedAt}</p>
+            <p className="font-medium">{formatDateTime(recipe.updatedAt)}</p>
           </div>
         </div>
 
@@ -133,7 +133,7 @@ export function RecipeDetailModal({
         {/* Footer */}
         <div className="pt-4 border-t flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            สร้าง: {recipe.createdAt}
+            สร้าง: {formatDateTime(recipe.createdAt)}
           </div>
           <div className="flex gap-2">
             {onDuplicate && (
