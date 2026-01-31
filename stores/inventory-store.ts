@@ -286,6 +286,12 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       const entryCount = stockEntriesData.length + 1
       const code = `SE-2026-${entryCount.toString().padStart(4, '0')}`
 
+      // Check if any item requires QC
+      const hasQCRequired = input.items.some(item => {
+        const stockItem = stockItemsData.find(si => si.id === item.itemId)
+        return stockItem?.requiresQC || false
+      })
+
       const newEntry: StockEntry = {
         id: generateId(),
         code,
@@ -310,7 +316,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
           totalCost: item.unitCost ? item.unitCost * item.qty : undefined,
         })),
         remarks: input.remarks,
-        isQCRequired: false,
+        isQCRequired: hasQCRequired,
         createdBy: 'ระบบ',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

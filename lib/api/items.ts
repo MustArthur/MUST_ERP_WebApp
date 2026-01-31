@@ -10,7 +10,7 @@ export interface Item {
 }
 
 /**
- * Get all raw materials for dropdown
+ * Get all raw materials for dropdown (items with code starting with RM-)
  */
 export async function getRawMaterials(): Promise<Item[]> {
     const { data: items, error } = await supabase
@@ -23,6 +23,7 @@ export async function getRawMaterials(): Promise<Item[]> {
       base_uom_id,
       category_id
     `)
+        .like('code', 'RM-%')
         .order('name')
 
     if (error) {
@@ -39,16 +40,13 @@ export async function getRawMaterials(): Promise<Item[]> {
 
     const uomMap = new Map((uoms || []).map(u => [u.id, u.code]))
 
-    // Filter only raw materials (exclude finished goods by checking code prefix)
-    return (items || [])
-        .filter(i => !i.code.startsWith('FG-'))
-        .map(i => ({
-            id: i.id,
-            code: i.code,
-            name: i.name,
-            last_purchase_cost: i.last_purchase_cost || 0,
-            base_uom_code: uomMap.get(i.base_uom_id) || 'G',
-        }))
+    return (items || []).map(i => ({
+        id: i.id,
+        code: i.code,
+        name: i.name,
+        last_purchase_cost: i.last_purchase_cost || 0,
+        base_uom_code: uomMap.get(i.base_uom_id) || 'G',
+    }))
 }
 
 /**

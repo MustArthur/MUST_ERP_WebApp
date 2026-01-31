@@ -12,6 +12,7 @@ import {
 import { UnitOfMeasure } from '@/types/inventory'
 import { useReceivingStore } from '@/stores/receiving-store'
 import { useInventoryStore } from '@/stores/inventory-store'
+import { getRawMaterials, Item } from '@/lib/api/items'
 import {
   Dialog,
   DialogContent,
@@ -95,17 +96,13 @@ export function ReceiptFormModal({
   onSave,
 }: ReceiptFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [rawMaterials, setRawMaterials] = useState<Item[]>([])
   const { suppliers, fetchSuppliers } = useReceivingStore()
   const { stockItems, warehouses, fetchStockItems, fetchWarehouses } = useInventoryStore()
 
   // Filter raw material warehouses (including quarantine)
   const rawMaterialWarehouses = warehouses.filter(
     w => w.type === 'RAW_MATERIAL'
-  )
-
-  // Filter raw material items
-  const rawMaterialItems = stockItems.filter(
-    i => i.type === 'RAW_MATERIAL' || i.type === 'PACKAGING'
   )
 
   const form = useForm<ReceiptFormValues>({
@@ -142,6 +139,13 @@ export function ReceiptFormModal({
     fetchSuppliers()
     fetchStockItems()
     fetchWarehouses()
+
+    // Load raw materials from Supabase
+    async function loadRawMaterials() {
+      const items = await getRawMaterials()
+      setRawMaterials(items)
+    }
+    loadRawMaterials()
   }, [fetchSuppliers, fetchStockItems, fetchWarehouses])
 
   // Populate form when editing
@@ -170,10 +174,10 @@ export function ReceiptFormModal({
 
   // Auto-fill item details when item selected
   const handleItemChange = (index: number, itemId: string) => {
-    const item = stockItems.find(i => i.id === itemId)
+    const item = rawMaterials.find(i => i.id === itemId)
     if (item) {
-      form.setValue(`items.${index}.uom`, item.uom)
-      form.setValue(`items.${index}.unitPrice`, item.costPerUnit)
+      form.setValue(`items.${index}.uom`, item.base_uom_code || 'KG')
+      form.setValue(`items.${index}.unitPrice`, item.last_purchase_cost || 0)
       // Set default warehouse based on item type
       const defaultWarehouse = warehouses.find(
         w => w.type === 'RAW_MATERIAL' && w.status === 'ACTIVE'
@@ -221,14 +225,13 @@ export function ReceiptFormModal({
 
   // Get item name by ID
   const getItemName = (itemId: string): string => {
-    const item = stockItems.find(i => i.id === itemId)
+    const item = rawMaterials.find(i => i.id === itemId)
     return item?.name || itemId
   }
 
-  // Check if item requires QC
+  // Check if item requires QC (all raw materials require QC by default)
   const itemRequiresQC = (itemId: string): boolean => {
-    const item = stockItems.find(i => i.id === itemId)
-    return item?.requiresQC || false
+    return rawMaterials.some(i => i.id === itemId)
   }
 
   return (
@@ -414,16 +417,11 @@ export function ReceiptFormModal({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {rawMaterialItems.map((item) => (
+                                    {rawMaterials.map((item) => (
                                       <SelectItem key={item.id} value={item.id}>
                                         <div className="flex items-center gap-2">
                                           <span>{item.name}</span>
                                           <span className="text-gray-500">({item.code})</span>
-                                          {item.requiresQC && (
-                                            <Badge variant="outline" className="text-xs">
-                                              QC
-                                            </Badge>
-                                          )}
                                         </div>
                                       </SelectItem>
                                     ))}
@@ -587,7 +585,7 @@ export function ReceiptFormModal({
                             <p className="font-semibold text-lg">
                               {formatCurrency(
                                 (form.watch(`items.${index}.qtyReceived`) || 0) *
-                                  (form.watch(`items.${index}.unitPrice`) || 0)
+                                (form.watch(`items.${index}.unitPrice`) || 0)
                               )}
                             </p>
                           </div>
