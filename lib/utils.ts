@@ -1,9 +1,6 @@
-import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-/**
- * Merge Tailwind CSS classes safely
- */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -21,78 +18,25 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Format date in Thai locale
+ * Format date to Thai locale
  */
-export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString)
   return new Intl.DateTimeFormat('th-TH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  }).format(d)
+  }).format(date)
 }
 
 /**
- * Format date as short format (YYYY-MM-DD)
+ * Format date to short format
  */
-export function formatDateShort(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toISOString().split('T')[0]
+export function formatDateShort(dateString: string): string {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('th-TH', {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+  }).format(date)
 }
-
-/**
- * Format number with Thai locale
- */
-export function formatNumber(num: number, decimals: number = 0): string {
-  return new Intl.NumberFormat('th-TH', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(num)
-}
-
-/**
- * Delay helper for async operations
- */
-export function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-/**
- * Generate a random ID
- */
-export function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-/**
- * Format minutes to hours and minutes
- */
-export function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  if (hours === 0) return `${mins} นาที`
-  if (mins === 0) return `${hours} ชม.`
-  return `${hours} ชม. ${mins} นาที`
-}
-
-/**
- * Format datetime to short format (DD/MM/YYYY HH:mm)
- */
-export function formatDateTime(date: Date | string | null | undefined): string {
-  if (!date) return '-'
-  try {
-    const d = typeof date === 'string' ? new Date(date) : date
-    if (isNaN(d.getTime())) return '-'
-
-    const day = d.getDate().toString().padStart(2, '0')
-    const month = (d.getMonth() + 1).toString().padStart(2, '0')
-    const year = d.getFullYear()
-    const hours = d.getHours().toString().padStart(2, '0')
-    const mins = d.getMinutes().toString().padStart(2, '0')
-
-    return `${day}/${month}/${year} ${hours}:${mins}`
-  } catch {
-    return '-'
-  }
-}
-
