@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Item } from '@/types/item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,12 +11,14 @@ import {
     Package,
     Box,
     Tag,
+    Eye,
 } from 'lucide-react'
 
 interface ItemTableProps {
     items: Item[]
     onEdit: (item: Item) => void
     onDelete: (item: Item) => void
+    onView?: (item: Item) => void
 }
 
 const getItemTypeBadge = (code: string) => {
@@ -31,7 +34,17 @@ const getItemTypeBadge = (code: string) => {
     return <Badge variant="outline">อื่นๆ</Badge>
 }
 
-export function ItemTable({ items, onEdit, onDelete }: ItemTableProps) {
+export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
+    const router = useRouter()
+
+    const handleRowClick = (item: Item) => {
+        if (onView) {
+            onView(item)
+        } else {
+            router.push(`/items/${item.id}`)
+        }
+    }
+
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <div className="overflow-x-auto">
@@ -52,7 +65,8 @@ export function ItemTable({ items, onEdit, onDelete }: ItemTableProps) {
                         {items.map((item) => (
                             <tr
                                 key={item.id}
-                                className="hover:bg-gray-50 transition-colors"
+                                className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                onClick={() => handleRowClick(item)}
                             >
                                 <td className="px-4 py-3">
                                     <span className="font-mono text-sm font-medium text-gray-900">{item.code}</span>
@@ -83,12 +97,21 @@ export function ItemTable({ items, onEdit, onDelete }: ItemTableProps) {
                                         <Badge variant="outline" className="text-gray-500">ไม่ใช้งาน</Badge>
                                     )}
                                 </td>
-                                <td className="px-4 py-3 text-center">
+                                <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                                     <div className="flex items-center justify-center gap-1">
                                         <Button
                                             variant="ghost"
                                             size="sm"
+                                            onClick={() => handleRowClick(item)}
+                                            title="ดูรายละเอียด"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => onEdit(item)}
+                                            title="แก้ไข"
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
@@ -97,6 +120,7 @@ export function ItemTable({ items, onEdit, onDelete }: ItemTableProps) {
                                             size="sm"
                                             onClick={() => onDelete(item)}
                                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            title="ลบ"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>

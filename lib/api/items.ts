@@ -4,7 +4,10 @@ import {
     Category,
     UnitOfMeasure as UOM,
     CreateItemInput,
-    UpdateItemInput
+    UpdateItemInput,
+    ItemSupplier,
+    CreateItemSupplierInput,
+    UpdateItemSupplierInput
 } from '@/types/item'
 
 export interface Item {
@@ -226,3 +229,143 @@ export async function getFinishedGoods(): Promise<Item[]> {
     return items || []
 }
 
+// ============================================
+// ITEM SUPPLIERS
+// ============================================
+
+/**
+ * Get all suppliers for an item
+ */
+export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> {
+    const { data, error } = await supabase
+        .from('item_suppliers')
+        .select(`
+            id,
+            item_id,
+            supplier_id,
+            supplier_part_number,
+            purchase_price,
+            purchase_uom_id,
+            lead_time_days,
+            min_order_qty,
+            is_preferred,
+            is_active,
+            suppliers:supplier_id (id, code, name),
+            units_of_measure:purchase_uom_id (id, code, name)
+        `)
+        .eq('item_id', itemId)
+        .order('is_preferred', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching item suppliers:', error)
+        return []
+    }
+
+    return (data || []).map(d => ({
+        id: d.id,
+        itemId: d.item_id,
+        supplierId: d.supplier_id,
+        supplierCode: (d.suppliers as any)?.code || '',
+        supplierName: (d.suppliers as any)?.name || '',
+        supplierPartNumber: d.supplier_part_number,
+        purchasePrice: d.purchase_price || 0,
+        purchaseUomId: d.purchase_uom_id,
+        purchaseUomCode: (d.units_of_measure as any)?.code || null,
+        purchaseUomName: (d.units_of_measure as any)?.name || null,
+        leadTimeDays: d.lead_time_days || 7,
+        minOrderQty: d.min_order_qty || 1,
+        isPreferred: d.is_preferred || false,
+        isActive: d.is_active ?? true,
+    }))
+}
+
+/**
+ * Add a supplier to an item
+ */
+export async function addItemSupplier(input: CreateItemSupplierInput): Promise<ItemSupplier | null> {
+    const { data, error } = await supabase
+        .from('item_suppliers')
+        .insert({
+            item_id: input.itemId,
+            supplier_id: input.supplierId,
+            supplier_part_number: input.supplierPartNumber,
+            purchase_price: input.purchasePrice || 0,
+            purchase_uom_id: input.purchaseUomId,
+            lead_time_days: input.leadTimeDays || 7,
+            min_order_qty: input.minOrderQty || 1,
+            is_preferred: input.isPreferred || false,
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error adding item supplier:', error)
+        throw new Error(error.message)
+    }
+
+    // Fetch the full data
+    const suppliers = await getItemSuppliers(input.itemId)
+    return suppliers.find(s => s.id === data.id) || null
+}
+
+/**
+ * Update an item supplier
+ */
+export async function updateItemSupplier(id: string, itemId: string, input: UpdateItemSupplierInput): Promise<ItemSupplier | null> {
+    const updateData: Record<string, any> = {}
+    if (input.supplierPartNumber !== undefined) updateData.supplier_part_number = input.supplierPartNumber
+    if (input.purchasePrice !== undefined) updateData.purchase_price = input.purchasePrice
+    if (input.purchaseUomId !== undefined) updateData.purchase_uom_id = input.purchaseUomId
+    if (input.leadTimeDays !== undefined) updateData.lead_time_days = input.leadTimeDays
+    if (input.minOrderQty !== undefined) updateData.min_order_qty = input.minOrderQty
+    if (input.isPreferred !== undefined) updateData.is_preferred = input.isPreferred
+    if (input.isActive !== undefined) updateData.is_active = input.isActive
+
+    const { error } = await supabase
+        .from('item_suppliers')
+        .update(updateData)
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error updating item supplier:', error)
+        throw new Error(error.message)
+    }
+
+    const suppliers = await getItemSuppliers(itemId)
+    return suppliers.find(s => s.id === id) || null
+}
+
+/**
+ * Delete an item supplier
+ */
+export async function deleteItemSupplier(id: string): Promise<boolean> {
+    const { error } = await supabase
+        .from('item_suppliers')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error deleting item supplier:', error)
+        throw new Error(error.message)
+    }
+
+    return true
+}
+
+/**
+ * Get all suppliers (for dropdown)
+ */
+export async function getSuppliers(): Promise<{ id: string; code: string; name: string }[]> {
+    const { data, error } = await supabase
+        .from('suppliers')
+        .select('id, code, name')
+        .eq('is_active', true)
+        .order('name')
+
+    if (error) {
+        console.error('Error fetching suppliers:', error)
+        return []
+    }
+
+    return data || []
+}
