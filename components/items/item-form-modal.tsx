@@ -30,13 +30,17 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Package, Save } from 'lucide-react'
+import { UnitManagerModal } from './unit-manager-modal'
+import { useItemsStore } from '@/stores/items-store'
 
 const itemFormSchema = z.object({
     code: z.string().min(1, 'กรุณาระบุรหัส'),
     name: z.string().min(1, 'กรุณาระบุชื่อ'),
     categoryId: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
     baseUomId: z.string().min(1, 'กรุณาเลือกหน่วย'),
+    stockUomId: z.string().min(1, 'กรุณาเลือกหน่วยสต๊อก'),
     lastPurchaseCost: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
+    safetyStock: z.number().min(0, 'Safety Stock ต้องไม่ติดลบ'),
     isActive: z.boolean(),
 })
 
@@ -60,6 +64,7 @@ export function ItemFormModal({
     onSave,
 }: ItemFormModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [showUnitManager, setShowUnitManager] = useState(false)
     const isEditing = !!item
 
     const form = useForm<ItemFormValues>({
@@ -69,7 +74,9 @@ export function ItemFormModal({
             name: '',
             categoryId: '',
             baseUomId: '',
+            stockUomId: '',
             lastPurchaseCost: 0,
+            safetyStock: 0,
             isActive: true,
         },
     })
@@ -82,7 +89,9 @@ export function ItemFormModal({
                 name: item.name,
                 categoryId: item.categoryId,
                 baseUomId: item.baseUomId,
+                stockUomId: item.stockUomId || item.baseUomId,
                 lastPurchaseCost: item.lastPurchaseCost,
+                safetyStock: item.safetyStock || 0,
                 isActive: item.isActive,
             })
         } else {
@@ -91,7 +100,9 @@ export function ItemFormModal({
                 name: '',
                 categoryId: '',
                 baseUomId: '',
+                stockUomId: '',
                 lastPurchaseCost: 0,
+                safetyStock: 0,
                 isActive: true,
             })
         }
@@ -105,7 +116,9 @@ export function ItemFormModal({
                     name: data.name,
                     categoryId: data.categoryId,
                     baseUomId: data.baseUomId,
+                    stockUomId: data.stockUomId,
                     lastPurchaseCost: data.lastPurchaseCost,
+                    safetyStock: data.safetyStock,
                     isActive: data.isActive,
                 }, false)
             } else {
@@ -114,7 +127,9 @@ export function ItemFormModal({
                     name: data.name,
                     categoryId: data.categoryId,
                     baseUomId: data.baseUomId,
+                    stockUomId: data.stockUomId,
                     lastPurchaseCost: data.lastPurchaseCost,
+                    safetyStock: data.safetyStock,
                 }, true)
             }
             onClose()
@@ -124,6 +139,8 @@ export function ItemFormModal({
             setIsSubmitting(false)
         }
     }
+
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -210,7 +227,17 @@ export function ItemFormModal({
                                 name="baseUomId"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>หน่วย *</FormLabel>
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel>หน่วยผลิต *</FormLabel>
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="h-auto p-0 text-xs"
+                                                onClick={() => setShowUnitManager(true)}
+                                            >
+                                                จัดการหน่วย
+                                            </Button>
+                                        </div>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
@@ -231,25 +258,81 @@ export function ItemFormModal({
                             />
                         </div>
 
-                        <FormField
-                            control={form.control}
-                            name="lastPurchaseCost"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>ราคา/หน่วย (บาท)</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            {...field}
-                                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
+                        <UnitManagerModal
+                            isOpen={showUnitManager}
+                            onClose={() => setShowUnitManager(false)}
+                            uoms={uoms}
+                            onRefresh={() => {
+                                useItemsStore.getState().fetchUOMs()
+                            }}
                         />
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="lastPurchaseCost"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>ราคา/หน่วย (บาท)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="safetyStock"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Safety Stock</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                step="1"
+                                                placeholder="0"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="stockUomId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>หน่วยสต๊อก</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="เลือกหน่วย" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {uoms.map((uom) => (
+                                                    <SelectItem key={uom.id} value={uom.id}>
+                                                        {uom.name} ({uom.code})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
                         {isEditing && (
                             <FormField

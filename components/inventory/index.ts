@@ -1,4 +1,6 @@
-export { WarehouseCard } from './warehouse-card'
-export { StockItemCard } from './stock-item-card'
-export { InventoryDetailModal } from './inventory-detail-modal'
-export { StockFormModal } from './stock-form-modal'
+export * from './warehouse-card'
+export * from './stock-item-card'
+export * from './inventory-detail-modal'
+export * from './stock-form-modal'
+export * from './inventory-table'
+

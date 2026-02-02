@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState, useEffect, useMemo } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Item, ItemSupplier, UnitOfMeasure } from '@/types/item'
@@ -12,6 +12,7 @@ import {
     deleteItemSupplier,
     getSuppliers,
     getUnitsOfMeasure,
+    updateItem,
 } from '@/lib/api/items'
 import { formatCurrency } from '@/lib/utils'
 import {
@@ -57,12 +58,14 @@ import {
     Star,
     Save,
     Loader2,
+    Calculator,
 } from 'lucide-react'
 
 const supplierFormSchema = z.object({
     supplierId: z.string().min(1, 'กรุณาเลือก Supplier'),
     supplierPartNumber: z.string().optional(),
     purchasePrice: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
+    packagingSize: z.number().min(1, 'ขนาดบรรจุต้องมากกว่า 0'),
     purchaseUomId: z.string().optional(),
     leadTimeDays: z.number().min(0),
     minOrderQty: z.number().min(0),
@@ -73,6 +76,7 @@ type SupplierFormValues = z.infer<typeof supplierFormSchema>
 
 interface ItemSupplierSectionProps {
     item: Item
+    onItemUpdate?: (item: Item) => void
 }
 
 interface Supplier {
@@ -81,7 +85,7 @@ interface Supplier {
     name: string
 }
 
-export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
+export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionProps) {
     const [itemSuppliers, setItemSuppliers] = useState<ItemSupplier[]>([])
     const [suppliers, setSuppliers] = useState<Supplier[]>([])
     const [uoms, setUoms] = useState<UnitOfMeasure[]>([])
@@ -97,12 +101,25 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
             supplierId: '',
             supplierPartNumber: '',
             purchasePrice: 0,
+            packagingSize: 1,
             purchaseUomId: '',
             leadTimeDays: 7,
             minOrderQty: 1,
             isPreferred: false,
         },
     })
+
+    // Watch for auto-calculation
+    const watchedPrice = useWatch({ control: form.control, name: 'purchasePrice' })
+    const watchedPackaging = useWatch({ control: form.control, name: 'packagingSize' })
+
+    // Calculate unit price
+    const calculatedUnitPrice = useMemo(() => {
+        if (watchedPackaging > 0) {
+            return watchedPrice / watchedPackaging
+        }
+        return 0
+    }, [watchedPrice, watchedPackaging])
 
     // Load data
     useEffect(() => {
@@ -128,6 +145,7 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                 supplierId: selectedSupplier.supplierId,
                 supplierPartNumber: selectedSupplier.supplierPartNumber || '',
                 purchasePrice: selectedSupplier.purchasePrice,
+                packagingSize: selectedSupplier.packagingSize || 1,
                 purchaseUomId: selectedSupplier.purchaseUomId || '',
                 leadTimeDays: selectedSupplier.leadTimeDays,
                 minOrderQty: selectedSupplier.minOrderQty,
@@ -138,6 +156,7 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                 supplierId: '',
                 supplierPartNumber: '',
                 purchasePrice: 0,
+                packagingSize: 1,
                 purchaseUomId: item.baseUomId || '',
                 leadTimeDays: 7,
                 minOrderQty: 1,
@@ -177,11 +196,14 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
     const onSubmit = async (data: SupplierFormValues) => {
         try {
             setIsSubmitting(true)
+            const unitPrice = data.packagingSize > 0 ? data.purchasePrice / data.packagingSize : 0
+
             if (selectedSupplier) {
                 // Update
                 const updated = await updateItemSupplier(selectedSupplier.id, item.id, {
                     supplierPartNumber: data.supplierPartNumber,
                     purchasePrice: data.purchasePrice,
+                    packagingSize: data.packagingSize,
                     purchaseUomId: data.purchaseUomId || undefined,
                     leadTimeDays: data.leadTimeDays,
                     minOrderQty: data.minOrderQty,
@@ -189,6 +211,13 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                 })
                 if (updated) {
                     setItemSuppliers(prev => prev.map(s => s.id === updated.id ? updated : s))
+                    // Auto-update item's lastPurchaseCost if preferred or if it's the only supplier
+                    if (data.isPreferred || itemSuppliers.length === 1) {
+                        const updatedItem = await updateItem(item.id, { lastPurchaseCost: unitPrice })
+                        if (updatedItem && onItemUpdate) {
+                            onItemUpdate(updatedItem)
+                        }
+                    }
                 }
             } else {
                 // Create
@@ -197,6 +226,7 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                     supplierId: data.supplierId,
                     supplierPartNumber: data.supplierPartNumber,
                     purchasePrice: data.purchasePrice,
+                    packagingSize: data.packagingSize,
                     purchaseUomId: data.purchaseUomId || undefined,
                     leadTimeDays: data.leadTimeDays,
                     minOrderQty: data.minOrderQty,
@@ -204,6 +234,13 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                 })
                 if (created) {
                     setItemSuppliers(prev => [...prev, created])
+                    // Auto-update lastPurchaseCost if first supplier or preferred
+                    if (data.isPreferred || itemSuppliers.length === 0) {
+                        const updatedItem = await updateItem(item.id, { lastPurchaseCost: unitPrice })
+                        if (updatedItem && onItemUpdate) {
+                            onItemUpdate(updatedItem)
+                        }
+                    }
                 }
             }
             setShowFormModal(false)
@@ -251,58 +288,73 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                                 <th className="px-3 py-2 text-left text-sm font-medium text-gray-600">Supplier</th>
                                 <th className="px-3 py-2 text-left text-sm font-medium text-gray-600">Part Number</th>
                                 <th className="px-3 py-2 text-right text-sm font-medium text-gray-600">ราคาซื้อ</th>
+                                <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">ขนาดบรรจุ</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">หน่วยซื้อ</th>
+                                <th className="px-3 py-2 text-right text-sm font-medium text-gray-600">ราคา/หน่วย</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">Lead Time</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">MOQ</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {itemSuppliers.map((supplier) => (
-                                <tr key={supplier.id} className="hover:bg-gray-50">
-                                    <td className="px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            {supplier.isPreferred && (
-                                                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                            )}
-                                            <div>
-                                                <p className="font-medium text-gray-900">{supplier.supplierName}</p>
-                                                <p className="text-xs text-gray-500">{supplier.supplierCode}</p>
+                            {itemSuppliers.map((supplier) => {
+                                const unitPrice = supplier.packagingSize > 0
+                                    ? supplier.purchasePrice / supplier.packagingSize
+                                    : supplier.purchasePrice
+                                return (
+                                    <tr key={supplier.id} className="hover:bg-gray-50">
+                                        <td className="px-3 py-2">
+                                            <div className="flex items-center gap-2">
+                                                {supplier.isPreferred && (
+                                                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                                )}
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{supplier.supplierName}</p>
+                                                    <p className="text-xs text-gray-500">{supplier.supplierCode}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2">
-                                        <span className="font-mono text-sm">{supplier.supplierPartNumber || '-'}</span>
-                                    </td>
-                                    <td className="px-3 py-2 text-right font-medium">
-                                        {formatCurrency(supplier.purchasePrice)}
-                                    </td>
-                                    <td className="px-3 py-2 text-center">
-                                        <Badge variant="outline">{supplier.purchaseUomCode || item.baseUomCode}</Badge>
-                                    </td>
-                                    <td className="px-3 py-2 text-center text-sm">
-                                        {supplier.leadTimeDays} วัน
-                                    </td>
-                                    <td className="px-3 py-2 text-center text-sm">
-                                        {supplier.minOrderQty}
-                                    </td>
-                                    <td className="px-3 py-2 text-center">
-                                        <div className="flex items-center justify-center gap-1">
-                                            <Button variant="ghost" size="sm" onClick={() => handleEdit(supplier)}>
-                                                <Edit2 className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleDeletePrompt(supplier)}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <span className="font-mono text-sm">{supplier.supplierPartNumber || '-'}</span>
+                                        </td>
+                                        <td className="px-3 py-2 text-right font-medium">
+                                            {formatCurrency(supplier.purchasePrice)}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            <Badge variant="secondary">{supplier.packagingSize || 1}</Badge>
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            <Badge variant="outline">{supplier.purchaseUomCode || item.baseUomCode}</Badge>
+                                        </td>
+                                        <td className="px-3 py-2 text-right">
+                                            <span className="font-medium text-green-600">
+                                                {formatCurrency(unitPrice)}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-sm">
+                                            {supplier.leadTimeDays} วัน
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-sm">
+                                            {supplier.minOrderQty}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Button variant="ghost" size="sm" onClick={() => handleEdit(supplier)}>
+                                                    <Edit2 className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDeletePrompt(supplier)}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -310,7 +362,7 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
 
             {/* Form Modal */}
             <Dialog open={showFormModal} onOpenChange={setShowFormModal}>
-                <DialogContent>
+                <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle>
                             {selectedSupplier ? 'แก้ไขข้อมูล Supplier' : 'เพิ่ม Supplier'}
@@ -362,51 +414,87 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                                 )}
                             />
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="purchasePrice"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>ราคาซื้อ (บาท)</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    {...field}
-                                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="purchaseUomId"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>หน่วยซื้อ</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                            {/* Price & Packaging Section with Auto-Calculate */}
+                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Calculator className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm font-medium text-blue-800">คำนวณราคาต่อหน่วยอัตโนมัติ</span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <FormField
+                                        control={form.control}
+                                        name="purchasePrice"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>ราคาซื้อ (บาท)</FormLabel>
                                                 <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="เลือกหน่วย" />
-                                                    </SelectTrigger>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        {...field}
+                                                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                    />
                                                 </FormControl>
-                                                <SelectContent>
-                                                    {uoms.map((uom) => (
-                                                        <SelectItem key={uom.id} value={uom.id}>
-                                                            {uom.name} ({uom.code})
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="packagingSize"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>ขนาดบรรจุ</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="number"
+                                                        step="1"
+                                                        min="1"
+                                                        {...field}
+                                                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 1)}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-2 block">ราคา/หน่วย</label>
+                                        <div className="h-10 px-3 flex items-center bg-green-100 rounded-md border border-green-200">
+                                            <span className="font-bold text-green-700">
+                                                ฿{calculatedUnitPrice.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <FormField
+                                control={form.control}
+                                name="purchaseUomId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>หน่วยซื้อ</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="เลือกหน่วย" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {uoms.map((uom) => (
+                                                    <SelectItem key={uom.id} value={uom.id}>
+                                                        {uom.name} ({uom.code})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
@@ -457,7 +545,7 @@ export function ItemSupplierSection({ item }: ItemSupplierSectionProps) {
                                                 Preferred Supplier
                                             </FormLabel>
                                             <p className="text-sm text-muted-foreground">
-                                                กำหนดเป็น Supplier หลัก
+                                                กำหนดเป็น Supplier หลัก (อัปเดตราคาต่อหน่วยในข้อมูลสินค้า)
                                             </p>
                                         </div>
                                         <FormControl>

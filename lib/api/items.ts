@@ -20,9 +20,10 @@ export interface Item {
 }
 
 /**
- * Get all items with full details
+ * Get all items with full details including stock quantities
  */
 export async function getAllItems(): Promise<ItemType[]> {
+    // First, get all items with basic info
     const { data: items, error } = await supabase
         .from('items')
         .select(`
@@ -34,9 +35,12 @@ export async function getAllItems(): Promise<ItemType[]> {
           created_at,
           updated_at,
           base_uom_id,
+          stock_uom_id,
           category_id,
+          min_stock_qty,
           categories:category_id (id, code, name),
-          units_of_measure:base_uom_id (id, code, name)
+          units_of_measure:base_uom_id (id, code, name),
+          stock_uom:stock_uom_id (id, code, name)
         `)
         .order('code')
 
@@ -45,22 +49,45 @@ export async function getAllItems(): Promise<ItemType[]> {
         return []
     }
 
-    return (items || []).map(i => ({
-        id: i.id,
-        code: i.code,
-        name: i.name,
-        categoryId: i.category_id || '',
-        categoryCode: (i.categories as any)?.code || '',
-        categoryName: (i.categories as any)?.name || '',
-        baseUomId: i.base_uom_id || '',
-        baseUomCode: (i.units_of_measure as any)?.code || '',
-        baseUomName: (i.units_of_measure as any)?.name || '',
-        lastPurchaseCost: i.last_purchase_cost || 0,
-        isActive: i.is_active ?? true,
-        createdAt: i.created_at,
-        updatedAt: i.updated_at,
-    }))
+    // Get stock on hand summary per item
+    const { data: stockData } = await supabase
+        .from('stock_on_hand')
+        .select('item_id, qty_on_hand')
+
+    // Calculate total stock per item
+    const stockByItem = new Map<string, number>()
+    for (const s of stockData || []) {
+        const current = stockByItem.get(s.item_id) || 0
+        stockByItem.set(s.item_id, current + (s.qty_on_hand || 0))
+    }
+
+    return (items || []).map(i => {
+        const stockQty = stockByItem.get(i.id) || 0
+        const safetyStock = (i as any).min_stock_qty || 0
+        return {
+            id: i.id,
+            code: i.code,
+            name: i.name,
+            categoryId: i.category_id || '',
+            categoryCode: (i.categories as any)?.code || '',
+            categoryName: (i.categories as any)?.name || '',
+            baseUomId: i.base_uom_id || '',
+            baseUomCode: (i.units_of_measure as any)?.code || '',
+            baseUomName: (i.units_of_measure as any)?.name || '',
+            stockUomId: i.stock_uom_id || i.base_uom_id || '',
+            stockUomCode: (i.stock_uom as any)?.code || (i.units_of_measure as any)?.code || '',
+            stockUomName: (i.stock_uom as any)?.name || (i.units_of_measure as any)?.name || '',
+            lastPurchaseCost: i.last_purchase_cost || 0,
+            isActive: i.is_active ?? true,
+            createdAt: i.created_at,
+            updatedAt: i.updated_at,
+            stockQty,
+            safetyStock,
+            isLowStock: safetyStock > 0 && stockQty < safetyStock,
+        }
+    })
 }
+
 
 /**
  * Create a new item
@@ -73,7 +100,9 @@ export async function createItem(input: CreateItemInput): Promise<ItemType | nul
             name: input.name,
             category_id: input.categoryId,
             base_uom_id: input.baseUomId,
+            stock_uom_id: input.stockUomId || input.baseUomId,
             last_purchase_cost: input.lastPurchaseCost || 0,
+            min_stock_qty: input.safetyStock || 0,
             is_active: true,
         })
         .select()
@@ -97,7 +126,9 @@ export async function updateItem(id: string, input: UpdateItemInput): Promise<It
     if (input.name !== undefined) updateData.name = input.name
     if (input.categoryId !== undefined) updateData.category_id = input.categoryId
     if (input.baseUomId !== undefined) updateData.base_uom_id = input.baseUomId
+    if (input.stockUomId !== undefined) updateData.stock_uom_id = input.stockUomId
     if (input.lastPurchaseCost !== undefined) updateData.last_purchase_cost = input.lastPurchaseCost
+    if (input.safetyStock !== undefined) updateData.min_stock_qty = input.safetyStock
     if (input.isActive !== undefined) updateData.is_active = input.isActive
 
     const { error } = await supabase
@@ -131,6 +162,51 @@ export async function deleteItem(id: string): Promise<boolean> {
 
     return true
 }
+
+/**
+ * Create a new unit of measure
+ */
+export async function createUOM(code: string, name: string): Promise<UOM | null> {
+    const { data, error } = await supabase
+        .from('units_of_measure')
+        .insert({
+            code,
+            name,
+            type: 'PIECE', // Default type must be valid enum valaue
+            is_active: true
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error creating UOM:', error)
+        throw new Error(error.message)
+    }
+
+    return {
+        id: data.id,
+        code: data.code,
+        name: data.name
+    }
+}
+
+/**
+ * Delete a unit of measure
+ */
+export async function deleteUOM(id: string): Promise<boolean> {
+    const { error } = await supabase
+        .from('units_of_measure')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error deleting UOM:', error)
+        throw new Error(error.message)
+    }
+
+    return true
+}
+
 
 /**
  * Get all categories
@@ -245,6 +321,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
             supplier_id,
             supplier_part_number,
             purchase_price,
+            packaging_size,
             purchase_uom_id,
             lead_time_days,
             min_order_qty,
@@ -269,6 +346,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
         supplierName: (d.suppliers as any)?.name || '',
         supplierPartNumber: d.supplier_part_number,
         purchasePrice: d.purchase_price || 0,
+        packagingSize: d.packaging_size || 1,
         purchaseUomId: d.purchase_uom_id,
         purchaseUomCode: (d.units_of_measure as any)?.code || null,
         purchaseUomName: (d.units_of_measure as any)?.name || null,
@@ -290,6 +368,7 @@ export async function addItemSupplier(input: CreateItemSupplierInput): Promise<I
             supplier_id: input.supplierId,
             supplier_part_number: input.supplierPartNumber,
             purchase_price: input.purchasePrice || 0,
+            packaging_size: input.packagingSize || 1,
             purchase_uom_id: input.purchaseUomId,
             lead_time_days: input.leadTimeDays || 7,
             min_order_qty: input.minOrderQty || 1,
@@ -315,6 +394,7 @@ export async function updateItemSupplier(id: string, itemId: string, input: Upda
     const updateData: Record<string, any> = {}
     if (input.supplierPartNumber !== undefined) updateData.supplier_part_number = input.supplierPartNumber
     if (input.purchasePrice !== undefined) updateData.purchase_price = input.purchasePrice
+    if (input.packagingSize !== undefined) updateData.packaging_size = input.packagingSize
     if (input.purchaseUomId !== undefined) updateData.purchase_uom_id = input.purchaseUomId
     if (input.leadTimeDays !== undefined) updateData.lead_time_days = input.leadTimeDays
     if (input.minOrderQty !== undefined) updateData.min_order_qty = input.minOrderQty

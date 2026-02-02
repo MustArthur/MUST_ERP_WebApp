@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useItemsStore } from '@/stores/items-store'
 import { Item, CreateItemInput, UpdateItemInput } from '@/types/item'
-import { ItemTable, ItemFormModal } from '@/components/items'
+import { ItemTable, ItemFormModal, QuickReceiveModal } from '@/components/items'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +31,7 @@ import {
     Box,
     Tag,
     RefreshCw,
+    ArrowDownLeft,
 } from 'lucide-react'
 
 export default function ItemsPage() {
@@ -52,6 +53,7 @@ export default function ItemsPage() {
     // Modals
     const [showFormModal, setShowFormModal] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [showReceiveModal, setShowReceiveModal] = useState(false)
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
 
     // Load data on mount
@@ -91,7 +93,7 @@ export default function ItemsPage() {
         total: items.length,
         rawMaterials: items.filter(i => i.code.startsWith('RM-')).length,
         finishedGoods: items.filter(i => i.code.startsWith('FG-')).length,
-        packaging: items.filter(i => i.code.startsWith('PKG-')).length,
+        lowStock: items.filter(i => i.isLowStock).length,
     }), [items])
 
     // Handlers
@@ -145,6 +147,10 @@ export default function ItemsPage() {
                                 <RefreshCw className="w-4 h-4 mr-2" />
                                 รีเฟรช
                             </Button>
+                            <Button variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => { setSelectedItem(null); setShowReceiveModal(true) }}>
+                                <ArrowDownLeft className="w-4 h-4 mr-2" />
+                                บันทึกรับเข้า
+                            </Button>
                             <Button onClick={handleCreateItem}>
                                 <Plus className="w-5 h-5 mr-2" />
                                 เพิ่มรายการใหม่
@@ -192,12 +198,12 @@ export default function ItemsPage() {
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-purple-100">
-                                <Tag className="w-5 h-5 text-purple-600" />
+                            <div className={`p-2 rounded-lg ${stats.lowStock > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
+                                <Tag className={`w-5 h-5 ${stats.lowStock > 0 ? 'text-red-600' : 'text-gray-600'}`} />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">บรรจุภัณฑ์</p>
-                                <p className="text-2xl font-bold text-purple-600">{stats.packaging}</p>
+                                <p className="text-sm text-gray-500">สต็อกต่ำ</p>
+                                <p className={`text-2xl font-bold ${stats.lowStock > 0 ? 'text-red-600' : 'text-gray-600'}`}>{stats.lowStock}</p>
                             </div>
                         </div>
                     </div>
@@ -316,6 +322,15 @@ export default function ItemsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Quick Receive Modal */}
+            <QuickReceiveModal
+                item={selectedItem}
+                items={items}
+                isOpen={showReceiveModal}
+                onClose={() => setShowReceiveModal(false)}
+                onSuccess={() => fetchItems()}
+            />
         </div>
     )
 }

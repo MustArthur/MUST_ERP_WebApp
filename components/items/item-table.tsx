@@ -54,9 +54,9 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">รหัส</th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ชื่อ</th>
                             <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">ประเภท</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">หมวดหมู่</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">หน่วย</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">ราคา/หน่วย</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">สต็อก</th>
+                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Safety Stock</th>
+                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">หน่วยสต๊อก</th>
                             <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">สถานะ</th>
                             <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">จัดการ</th>
                         </tr>
@@ -77,18 +77,23 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                 <td className="px-4 py-3 text-center">
                                     {getItemTypeBadge(item.code)}
                                 </td>
-                                <td className="px-4 py-3 text-sm text-gray-600">
-                                    {item.categoryName || '-'}
+                                <td className="px-4 py-3 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                        {item.isLowStock && (
+                                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="สต็อกต่ำ" />
+                                        )}
+                                        <span className={`font-medium ${item.isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
+                                            {item.stockQty.toLocaleString()}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3 text-right text-sm text-gray-600">
+                                    {item.safetyStock > 0 ? item.safetyStock.toLocaleString() : '-'}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                     <Badge variant="outline" className="font-mono">
-                                        {item.baseUomCode || '-'}
+                                        {item.stockUomCode || item.baseUomCode || '-'}
                                     </Badge>
-                                </td>
-                                <td className="px-4 py-3 text-right">
-                                    <span className="font-medium text-gray-900">
-                                        {formatCurrency(item.lastPurchaseCost)}
-                                    </span>
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                     {item.isActive ? (

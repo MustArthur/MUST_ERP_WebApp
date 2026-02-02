@@ -8,7 +8,7 @@
 ## Design Decisions
 | Date | Decision | Reason |
 |------|----------|--------|
-
+| 2026-02-02 | Switch Inventory to Table View | Improve data density and scannability |
 ## Business Logic
 | Date | Decision | Reason |
 |------|----------|--------|

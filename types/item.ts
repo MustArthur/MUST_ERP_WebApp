@@ -9,10 +9,17 @@ export interface Item {
     baseUomId: string
     baseUomCode: string
     baseUomName: string
+    stockUomId: string
+    stockUomCode: string
+    stockUomName: string
     lastPurchaseCost: number
     isActive: boolean
     createdAt: string
     updatedAt: string
+    // Stock fields
+    stockQty: number
+    safetyStock: number
+    isLowStock: boolean
 }
 
 export interface Category {
@@ -32,14 +39,18 @@ export interface CreateItemInput {
     name: string
     categoryId: string
     baseUomId: string
+    stockUomId?: string
     lastPurchaseCost?: number
+    safetyStock?: number
 }
 
 export interface UpdateItemInput {
     name?: string
     categoryId?: string
     baseUomId?: string
+    stockUomId?: string
     lastPurchaseCost?: number
+    safetyStock?: number
     isActive?: boolean
 }
 
@@ -60,6 +71,7 @@ export interface ItemSupplier {
     supplierName: string
     supplierPartNumber: string | null
     purchasePrice: number
+    packagingSize: number  // ขนาดบรรจุ
     purchaseUomId: string | null
     purchaseUomCode: string | null
     purchaseUomName: string | null
@@ -74,6 +86,7 @@ export interface CreateItemSupplierInput {
     supplierId: string
     supplierPartNumber?: string
     purchasePrice?: number
+    packagingSize?: number
     purchaseUomId?: string
     leadTimeDays?: number
     minOrderQty?: number
@@ -83,9 +96,11 @@ export interface CreateItemSupplierInput {
 export interface UpdateItemSupplierInput {
     supplierPartNumber?: string
     purchasePrice?: number
+    packagingSize?: number
     purchaseUomId?: string
     leadTimeDays?: number
     minOrderQty?: number
     isPreferred?: boolean
     isActive?: boolean
 }
+

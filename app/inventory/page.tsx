@@ -12,6 +12,7 @@ import {
   StockItemCard,
   InventoryDetailModal,
   StockFormModal,
+  InventoryTable,
 } from '@/components/inventory'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -339,17 +340,12 @@ export default function InventoryPage() {
               </div>
             )}
 
-            {/* Items Grid */}
+            {/* Items Table */}
             {!isLoading && filteredItems.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredItems.map(item => (
-                  <StockItemCard
-                    key={item.id}
-                    item={item}
-                    onView={handleViewItem}
-                  />
-                ))}
-              </div>
+              <InventoryTable
+                items={filteredItems}
+                onView={handleViewItem}
+              />
             )}
 
             {/* Empty State */}
