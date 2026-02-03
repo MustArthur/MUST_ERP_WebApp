@@ -47,18 +47,18 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
 
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[70vh] relative">
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b">
                         <tr>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">รหัส</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ชื่อ</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">ประเภท</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">สต็อก</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Safety Stock</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">หน่วยสต๊อก</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">สถานะ</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">จัดการ</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-600 shadow-sm">รหัส</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-600 shadow-sm">ชื่อ</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-600 shadow-sm">ประเภท</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-right text-sm font-medium text-gray-600 shadow-sm">สต็อก</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-right text-sm font-medium text-gray-600 shadow-sm">Safety Stock</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-600 shadow-sm">หน่วยสต๊อก</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-600 shadow-sm">สถานะ</th>
+                            <th className="sticky top-0 z-10 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-600 shadow-sm">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
