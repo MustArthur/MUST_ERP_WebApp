@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from './status-badge'
 import { IngredientTable } from './ingredient-table'
 import { BatchCalculator } from './batch-calculator'
-import { Beaker, FileText, Calculator, Copy, Edit } from 'lucide-react'
+import { Beaker, FileText, Calculator, Copy, Edit, Trash2 } from 'lucide-react'
 import { formatDuration, formatDateTime } from '@/lib/utils'
 
 interface RecipeDetailModalProps {
@@ -21,6 +21,7 @@ interface RecipeDetailModalProps {
   onClose: () => void
   onEdit?: (recipe: Recipe) => void
   onDuplicate?: (recipe: Recipe) => void
+  onDelete?: (recipe: Recipe) => void
 }
 
 export function RecipeDetailModal({
@@ -29,6 +30,7 @@ export function RecipeDetailModal({
   onClose,
   onEdit,
   onDuplicate,
+  onDelete,
 }: RecipeDetailModalProps) {
   if (!recipe) return null
 
@@ -136,6 +138,16 @@ export function RecipeDetailModal({
             สร้าง: {formatDateTime(recipe.createdAt)}
           </div>
           <div className="flex gap-2">
+            {onDelete && recipe.status !== 'OBSOLETE' && (
+              <Button
+                variant="outline"
+                className="text-red-600 border-red-300 hover:bg-red-50"
+                onClick={() => onDelete(recipe)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                ยกเลิกสูตร
+              </Button>
+            )}
             {onDuplicate && (
               <Button variant="outline" onClick={() => onDuplicate(recipe)}>
                 <Copy className="w-4 h-4 mr-2" />

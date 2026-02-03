@@ -6,6 +6,16 @@ import { Recipe, RecipeStatus, CreateRecipeInput } from '@/types/recipe'
 import { RecipeCard, RecipeTable, RecipeDetailModal, RecipeFormModal } from '@/components/recipes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Plus, Search, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -15,6 +25,7 @@ export default function RecipesPage() {
     createRecipe,
     updateRecipe,
     duplicateRecipe,
+    deleteRecipe,
     isLoading,
     filters,
     setFilters,
@@ -27,6 +38,11 @@ export default function RecipesPage() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFormModal, setShowFormModal] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
+
+  // Confirmation dialogs
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
+  const [recipeToAction, setRecipeToAction] = useState<Recipe | null>(null)
 
   // Load recipes on mount
   useEffect(() => {
@@ -55,9 +71,30 @@ export default function RecipesPage() {
     setShowDetailModal(false)
   }
 
-  const handleDuplicate = async (recipe: Recipe) => {
-    await duplicateRecipe(recipe.id)
+  const handleDuplicate = (recipe: Recipe) => {
+    setRecipeToAction(recipe)
+    setShowDuplicateConfirm(true)
+  }
+
+  const confirmDuplicate = async () => {
+    if (!recipeToAction) return
+    await duplicateRecipe(recipeToAction.id)
+    setShowDuplicateConfirm(false)
     setShowDetailModal(false)
+    setRecipeToAction(null)
+  }
+
+  const handleDelete = (recipe: Recipe) => {
+    setRecipeToAction(recipe)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!recipeToAction) return
+    await deleteRecipe(recipeToAction.id)
+    setShowDeleteConfirm(false)
+    setShowDetailModal(false)
+    setRecipeToAction(null)
   }
 
   const handleCloseForm = () => {
@@ -193,6 +230,7 @@ export default function RecipesPage() {
         onClose={handleCloseDetail}
         onEdit={handleEdit}
         onDuplicate={handleDuplicate}
+        onDelete={handleDelete}
       />
 
       {/* Form Modal */}
@@ -202,6 +240,51 @@ export default function RecipesPage() {
         onClose={handleCloseForm}
         onSave={handleSave}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการยกเลิกสูตร</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการยกเลิกสูตร <strong>{recipeToAction?.name}</strong> ({recipeToAction?.code}) หรือไม่?
+              <br /><br />
+              <span className="text-yellow-600">
+                สูตรจะถูกเปลี่ยนสถานะเป็น "ยกเลิก" และไม่สามารถใช้สร้าง Work Order ได้
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ไม่ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              ยืนยันยกเลิกสูตร
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Duplicate Confirmation Dialog */}
+      <AlertDialog open={showDuplicateConfirm} onOpenChange={setShowDuplicateConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการคัดลอกสูตร</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการคัดลอกสูตร <strong>{recipeToAction?.name}</strong> ({recipeToAction?.code}) หรือไม่?
+              <br /><br />
+              ระบบจะสร้างสูตรใหม่พร้อมส่วนประกอบเดิมทั้งหมด โดยสถานะจะเป็น "ร่าง"
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDuplicate}>
+              คัดลอกสูตร
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

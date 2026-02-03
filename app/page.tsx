@@ -52,8 +52,8 @@ const modules: Module[] = [
     href: '/recipes',
     icon: BookOpen,
     color: 'from-violet-500 to-violet-600',
-    status: 'partial',
-    features: ['ดูรายการสูตร (UI พร้อม)']
+    status: 'ready',
+    features: ['ดูรายการสูตร', 'สร้าง/แก้ไขสูตร', 'คัดลอกสูตร', 'คำนวณ Batch']
   },
   {
     name: 'การผลิต',
@@ -70,8 +70,8 @@ const modules: Module[] = [
     href: '/quality',
     icon: ClipboardCheck,
     color: 'from-red-500 to-red-600',
-    status: 'partial',
-    features: ['ดูรายการ QC (UI พร้อม)']
+    status: 'ready',
+    features: ['ตรวจสอบ QC', 'จัดการ Templates', 'Quarantine', 'CCP Monitoring']
   },
   {
     name: 'รับวัตถุดิบ',
@@ -79,8 +79,8 @@ const modules: Module[] = [
     href: '/receiving',
     icon: Truck,
     color: 'from-cyan-500 to-cyan-600',
-    status: 'partial',
-    features: ['ดูรายการรับเข้า (UI พร้อม)']
+    status: 'ready',
+    features: ['บันทึกใบรับ', 'QC Integration', 'Supplier Tracking', 'รายงานการรับ']
   },
   {
     name: 'คลังสินค้า',
@@ -167,7 +167,7 @@ export default function Home() {
           <div className="flex flex-wrap gap-6 text-sm">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <span className="text-gray-700"><strong>Items, Suppliers, Inventory, Transactions</strong> - พร้อมลงข้อมูล</span>
+              <span className="text-gray-700"><strong>ทุกโมดูลพร้อมใช้งาน</strong> - Items, Suppliers, Recipes, Production, QC, Receiving, Inventory</span>
             </div>
           </div>
         </div>

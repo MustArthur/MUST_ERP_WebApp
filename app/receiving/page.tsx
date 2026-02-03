@@ -20,6 +20,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,6 +73,11 @@ export default function ReceivingPage() {
   const [showQCModal, setShowQCModal] = useState(false)
   const [selectedInspectionId, setSelectedInspectionId] = useState<string | null>(null)
 
+  // Confirmation dialogs
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [receiptToAction, setReceiptToAction] = useState<PurchaseReceipt | null>(null)
+
   // Load data on mount
   useEffect(() => {
     fetchReceipts()
@@ -86,11 +101,34 @@ export default function ReceivingPage() {
     fetchReceipts()
   }
 
-  const handleSubmitReceipt = async (receipt: PurchaseReceipt) => {
-    await submitReceipt(receipt.id)
+  const handleSubmitReceipt = (receipt: PurchaseReceipt) => {
+    setReceiptToAction(receipt)
+    setShowSubmitConfirm(true)
+  }
+
+  const confirmSubmitReceipt = async () => {
+    if (!receiptToAction) return
+    await submitReceipt(receiptToAction.id)
     fetchReceipts()
     fetchInspections()
+    setShowSubmitConfirm(false)
     setShowDetailModal(false)
+    setReceiptToAction(null)
+  }
+
+  const handleCancelReceipt = (receipt: PurchaseReceipt) => {
+    setReceiptToAction(receipt)
+    setShowCancelConfirm(true)
+  }
+
+  const confirmCancelReceipt = async () => {
+    if (!receiptToAction) return
+    const { cancelReceipt } = useReceivingStore.getState()
+    await cancelReceipt(receiptToAction.id)
+    fetchReceipts()
+    setShowCancelConfirm(false)
+    setShowDetailModal(false)
+    setReceiptToAction(null)
   }
 
   const handleCompleteReceipt = async (receipt: PurchaseReceipt) => {
@@ -383,6 +421,7 @@ export default function ReceivingPage() {
         onClose={() => setShowDetailModal(false)}
         onSubmit={handleSubmitReceipt}
         onComplete={handleCompleteReceipt}
+        onCancel={handleCancelReceipt}
         onViewQC={handleViewQC}
       />
 
@@ -405,6 +444,54 @@ export default function ReceivingPage() {
           }}
         />
       )}
+
+      {/* Submit Confirmation Dialog */}
+      <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการส่งใบรับ</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการยืนยันใบรับ <strong>{receiptToAction?.code}</strong> หรือไม่?
+              <br /><br />
+              <span className="text-yellow-600">
+                หลังยืนยันแล้ว ระบบจะสร้างใบตรวจ QC อัตโนมัติสำหรับสินค้าที่ต้องตรวจสอบ
+                และไม่สามารถแก้ไขข้อมูลได้อีก
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSubmitReceipt}>
+              ยืนยันส่งใบรับ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการยกเลิกใบรับ</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการยกเลิกใบรับ <strong>{receiptToAction?.code}</strong> หรือไม่?
+              <br /><br />
+              <span className="text-red-600">
+                การยกเลิกใบรับไม่สามารถย้อนกลับได้
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ไม่ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancelReceipt}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              ยืนยันยกเลิก
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

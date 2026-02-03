@@ -35,6 +35,7 @@ interface ReceiptDetailModalProps {
   onClose: () => void
   onSubmit?: (receipt: PurchaseReceipt) => void
   onComplete?: (receipt: PurchaseReceipt) => void
+  onCancel?: (receipt: PurchaseReceipt) => void
   onPrint?: (receipt: PurchaseReceipt) => void
   onViewQC?: (inspectionId: string) => void
 }
@@ -45,6 +46,7 @@ export function ReceiptDetailModal({
   onClose,
   onSubmit,
   onComplete,
+  onCancel,
   onPrint,
   onViewQC,
 }: ReceiptDetailModalProps) {
@@ -528,6 +530,16 @@ export function ReceiptDetailModal({
               <Button variant="outline" onClick={() => onPrint(receipt)}>
                 <Printer className="w-4 h-4 mr-2" />
                 พิมพ์
+              </Button>
+            )}
+            {onCancel && (receipt.status === 'DRAFT' || receipt.status === 'PENDING_QC') && (
+              <Button
+                variant="outline"
+                className="text-red-600 border-red-300 hover:bg-red-50"
+                onClick={() => onCancel(receipt)}
+              >
+                <XCircle className="w-4 h-4 mr-2" />
+                ยกเลิก
               </Button>
             )}
             {onSubmit && receipt.status === 'DRAFT' && (
