@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import {
   Package,
+  Package2,
   Factory,
   ClipboardCheck,
   Truck,
+  Send,
   BookOpen,
   Users,
   Warehouse,
@@ -55,12 +57,12 @@ const modules: Module[] = [
   },
   {
     name: 'การผลิต',
-    description: 'ใบสั่งผลิตและ Job Cards',
+    description: 'Work Orders, Job Cards, CCP Gate',
     href: '/production',
     icon: Factory,
     color: 'from-orange-500 to-orange-600',
-    status: 'partial',
-    features: ['ดูรายการใบสั่งผลิต (UI พร้อม)']
+    status: 'ready',
+    features: ['Work Orders', 'Job Cards', 'CCP Gate Logic', 'Progress Tracking']
   },
   {
     name: 'คุณภาพ (CCP)',
@@ -97,6 +99,24 @@ const modules: Module[] = [
     color: 'from-indigo-500 to-indigo-600',
     status: 'ready',
     features: ['บันทึก รับ/เบิก/โอน', 'ดูประวัติ Transactions']
+  },
+  {
+    name: 'สินค้าสำเร็จรูป',
+    description: 'FG Stock และ Batch Tracking',
+    href: '/finished-goods',
+    icon: Package2,
+    color: 'from-teal-500 to-teal-600',
+    status: 'ready',
+    features: ['Batch Tracking', 'FEFO Alerts', 'QC Approval', 'Expiry Monitoring']
+  },
+  {
+    name: 'จัดส่งสินค้า',
+    description: 'Pick List & Cold Chain Tracking',
+    href: '/delivery',
+    icon: Send,
+    color: 'from-rose-500 to-rose-600',
+    status: 'ready',
+    features: ['Customer Orders', 'Pick List', 'Delivery Notes', 'Cold Chain']
   },
 ]
 
@@ -224,6 +244,34 @@ export default function Home() {
               <div>
                 <div className="font-medium text-gray-900">3. บันทึกรับเข้า</div>
                 <div className="text-sm text-gray-500">เพิ่มสต็อกคลัง</div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Production Flow Section */}
+        <div className="mt-6 p-6 bg-gradient-to-r from-orange-50 to-rose-50 rounded-2xl border border-orange-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🏭 Production Flow - กระบวนการผลิต</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/production" className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <Factory className="w-8 h-8 text-orange-600" />
+              <div>
+                <div className="font-medium text-gray-900">1. สร้างใบสั่งผลิต</div>
+                <div className="text-sm text-gray-500">Work Orders + CCP</div>
+              </div>
+            </Link>
+            <Link href="/finished-goods" className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <Package2 className="w-8 h-8 text-teal-600" />
+              <div>
+                <div className="font-medium text-gray-900">2. รับ FG เข้าคลัง</div>
+                <div className="text-sm text-gray-500">Batch + FEFO Tracking</div>
+              </div>
+            </Link>
+            <Link href="/delivery" className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <Send className="w-8 h-8 text-rose-600" />
+              <div>
+                <div className="font-medium text-gray-900">3. จัดส่งสินค้า</div>
+                <div className="text-sm text-gray-500">Cold Chain Tracking</div>
               </div>
             </Link>
           </div>

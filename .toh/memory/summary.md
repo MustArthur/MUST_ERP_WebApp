@@ -43,8 +43,14 @@
     - Pick List with FEFO allocation
     - Delivery Note with Cold Chain Tracking (2-8°C)
 
+11. ✅ **Home Page** (`/`)
+    - 10 module cards with status badges
+    - Quick Start section (Data Entry flow)
+    - Production Flow section (Production → FG → Delivery)
+
 ## Current State
 Phase 1-3 Complete. Core manufacturing flow operational from receiving to delivery.
+Home Page updated with all module cards including Production Flow.
 
 ## Key Files
 - Types: `types/*.ts`

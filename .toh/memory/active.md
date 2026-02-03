@@ -1,31 +1,22 @@
 # 🔥 Active Task
 
 ## Current Focus
-Phase 3: FG Management + Delivery Module completed ✅
+Home Page updated with Production Flow cards ✅
 
 ## In Progress
 - (none)
 
 ## Just Completed
+- ✅ Home Page Update (`app/page.tsx`)
+  - Updated Production status to 'ready'
+  - Added FG Management card (teal color)
+  - Added Delivery card (rose color)
+  - Added Production Flow Quick Access section
+
 - ✅ Phase 3: FG Management + Delivery Module
   - **FG Management** (`/finished-goods`)
-    - Types: `types/finished-goods.ts`
-    - Mock Data: `lib/mock-data/finished-goods.ts`
-    - Store: `stores/finished-goods-store.ts`
-    - Components: `components/finished-goods/` (stats, batch-table, entry-modal, expiry-alerts)
-    - Page: `app/finished-goods/page.tsx`
-    - Features: Batch tracking, FEFO alerts, QC approval
-
   - **Delivery Module** (`/delivery`)
-    - Types: `types/delivery.ts`
-    - Mock Data: `lib/mock-data/delivery.ts`
-    - Store: `stores/delivery-store.ts`
-    - Components: `components/delivery/` (stats, order-table, delivery-note-table, cold-chain-log)
-    - Page: `app/delivery/page.tsx`
-    - Features: Customer Orders, Pick Lists, Delivery Notes, Cold Chain Tracking
-
-  - Installed `sonner` for toast notifications
-  - Added `Toaster` to layout.tsx
+  - Cold Chain Tracking (2-8°C)
 
 ## Next Steps
 - Reports & Dashboard
