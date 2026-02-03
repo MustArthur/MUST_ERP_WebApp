@@ -9,6 +9,7 @@
 | Date | Decision | Reason |
 |------|----------|--------|
 | 2026-02-02 | Switch Inventory to Table View | Improve data density and scannability |
+| 2026-02-03 | Switch Recipes to Table View | Consistency with Inventory and better data density |
 ## Business Logic
 | Date | Decision | Reason |
 |------|----------|--------|

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRecipeStore, useFilteredRecipes } from '@/stores/recipe-store'
 import { Recipe, RecipeStatus, CreateRecipeInput } from '@/types/recipe'
-import { RecipeCard, RecipeDetailModal, RecipeFormModal } from '@/components/recipes'
+import { RecipeCard, RecipeTable, RecipeDetailModal, RecipeFormModal } from '@/components/recipes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Plus, Search, BookOpen } from 'lucide-react'
@@ -165,17 +165,12 @@ export default function RecipesPage() {
 
         {/* Recipe Cards Grid */}
         {!isLoading && filteredRecipes.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRecipes.map(recipe => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                onView={handleViewDetail}
-                onEdit={handleEdit}
-                onDuplicate={handleDuplicate}
-              />
-            ))}
-          </div>
+          <RecipeTable
+            recipes={filteredRecipes}
+            onView={handleViewDetail}
+            onEdit={handleEdit}
+            onDuplicate={handleDuplicate}
+          />
         )}
 
         {/* Empty State */}
