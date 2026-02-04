@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Header } from '@/components/layout'
 import {
   Package,
   Package2,
@@ -132,8 +133,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white border-b shadow-sm">
+      {/* Header with User Menu */}
+      <Header />
+
+      {/* Title Section */}
+      <div className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -159,7 +163,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Quick Stats */}
       <div className="border-b bg-white/50">
