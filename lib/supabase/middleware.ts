@@ -37,6 +37,7 @@ export async function updateSession(request: NextRequest) {
 
     // Protected routes - redirect to login if not authenticated
     const protectedPaths = [
+        '/dashboard',
         '/items',
         '/suppliers',
         '/recipes',

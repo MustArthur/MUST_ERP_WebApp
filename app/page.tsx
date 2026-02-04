@@ -13,7 +13,8 @@ import {
   ArrowLeftRight,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  LayoutDashboard,
 } from 'lucide-react'
 
 type ModuleStatus = 'ready' | 'partial' | 'planned'
@@ -29,6 +30,15 @@ interface Module {
 }
 
 const modules: Module[] = [
+  {
+    name: 'Dashboard',
+    description: 'ภาพรวม KPIs และ Charts',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    color: 'from-indigo-500 to-purple-600',
+    status: 'ready',
+    features: ['Production KPIs', 'QC Pass Rate', 'Delivery Trends', 'Alerts']
+  },
   {
     name: 'สินค้า/วัตถุดิบ',
     description: 'จัดการข้อมูล Items, Categories, UOM',
@@ -169,9 +179,13 @@ export default function Home() {
       <div className="border-b bg-white/50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-wrap gap-6 text-sm">
+            <Link href="/dashboard" className="flex items-center gap-2 hover:text-indigo-600 transition-colors">
+              <LayoutDashboard className="w-4 h-4 text-indigo-600" />
+              <span className="text-gray-700 hover:text-indigo-600"><strong>ดู Dashboard</strong> - ภาพรวม KPIs, Charts, Alerts</span>
+            </Link>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <span className="text-gray-700"><strong>ทุกโมดูลพร้อมใช้งาน</strong> - Items, Suppliers, Recipes, Production, QC, Receiving, Inventory</span>
+              <span className="text-gray-700"><strong>11 โมดูลพร้อมใช้งาน</strong></span>
             </div>
           </div>
         </div>
