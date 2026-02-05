@@ -14,6 +14,7 @@ import {
     getItemsForTransaction,
     getLotsByItem
 } from '@/lib/api/inventory-transactions'
+import { useInventoryStore } from './inventory-store'
 
 interface TransactionStats {
     todayIn: number
@@ -172,6 +173,9 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
                     getTransactionStats()
                 ])
                 set({ transactions, stats, isLoading: false })
+
+                // Sync with Inventory Store - update stock balances
+                useInventoryStore.getState().fetchStockBalances()
             }
             return newTransaction
         } catch (error) {
