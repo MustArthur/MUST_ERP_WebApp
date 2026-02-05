@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Item } from '@/types/item'
+import { Item, UnitOfMeasure } from '@/types/item'
 import { useTransactionsStore } from '@/stores/transactions-store'
 import {
     Dialog,
@@ -37,6 +37,7 @@ const quickReceiveSchema = z.object({
     warehouseId: z.string().min(1, 'กรุณาเลือกคลังปลายทาง'),
     locationId: z.string().optional(),
     qty: z.number().min(0.01, 'จำนวนต้องมากกว่า 0'),
+    uomId: z.string().min(1, 'กรุณาเลือกหน่วย'),
     unitCost: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
     lotNumber: z.string().optional(),
     expiryDate: z.string().optional(),
@@ -48,12 +49,13 @@ type QuickReceiveValues = z.infer<typeof quickReceiveSchema>
 interface QuickReceiveModalProps {
     item?: Item | null  // Optional pre-selected item
     items: Item[]       // List of all items for dropdown
+    uoms: UnitOfMeasure[] // List of all UOMs
     isOpen: boolean
     onClose: () => void
     onSuccess: () => void
 }
 
-export function QuickReceiveModal({ item, items, isOpen, onClose, onSuccess }: QuickReceiveModalProps) {
+export function QuickReceiveModal({ item, items, uoms, isOpen, onClose, onSuccess }: QuickReceiveModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [itemSearch, setItemSearch] = useState('')
     const {
@@ -71,6 +73,7 @@ export function QuickReceiveModal({ item, items, isOpen, onClose, onSuccess }: Q
             warehouseId: '',
             locationId: '',
             qty: undefined as unknown as number,
+            uomId: '',
             unitCost: 0,
             lotNumber: '',
             expiryDate: '',
@@ -97,6 +100,7 @@ export function QuickReceiveModal({ item, items, isOpen, onClose, onSuccess }: Q
             if (item) {
                 form.setValue('itemId', item.id)
                 form.setValue('unitCost', item.lastPurchaseCost || 0)
+                form.setValue('uomId', item.baseUomId)
             } else {
                 form.reset()
             }
@@ -110,6 +114,7 @@ export function QuickReceiveModal({ item, items, isOpen, onClose, onSuccess }: Q
         const selectedItem = items.find(i => i.id === selectedItemId)
         if (selectedItem) {
             form.setValue('unitCost', selectedItem.lastPurchaseCost || 0)
+            form.setValue('uomId', selectedItem.baseUomId)
         }
     }, [selectedItemId, items, form])
 
@@ -142,7 +147,7 @@ export function QuickReceiveModal({ item, items, isOpen, onClose, onSuccess }: Q
                 toWarehouseId: data.warehouseId,
                 toLocationId: data.locationId || undefined,
                 qty: data.qty,
-                uomId: targetItem.baseUomId,
+                uomId: data.uomId,
                 unitCost: data.unitCost,
                 lotNumber: data.lotNumber || undefined,
                 expiryDate: data.expiryDate || undefined,
@@ -252,8 +257,29 @@ export function QuickReceiveModal({ item, items, isOpen, onClose, onSuccess }: Q
                                                     }}
                                                 />
                                             </FormControl>
-                                            <div className="shrink-0 bg-gray-100 px-3 py-2 rounded-md border text-sm text-gray-600 font-medium">
-                                                {items.find(i => i.id === form.watch('itemId'))?.baseUomCode || item?.baseUomCode || 'หน่วย'}
+                                            <div className="shrink-0 min-w-[100px]">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="uomId"
+                                                    render={({ field }) => (
+                                                        <FormItem className="space-y-0">
+                                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger tabIndex={-1}>
+                                                                        <SelectValue placeholder="หน่วย" />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    {uoms.map((uom) => (
+                                                                        <SelectItem key={uom.id} value={uom.id}>
+                                                                            {uom.code}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </FormItem>
+                                                    )}
+                                                />
                                             </div>
                                         </div>
                                         <FormMessage />

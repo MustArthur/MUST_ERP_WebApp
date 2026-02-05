@@ -12,9 +12,11 @@ import {
     getWarehouses,
     getLocationsByWarehouse,
     getItemsForTransaction,
-    getLotsByItem
+    getLotsByItem,
+    getStockBalance
 } from '@/lib/api/inventory-transactions'
 import { useInventoryStore } from './inventory-store'
+import { useItemsStore } from './items-store'
 
 interface TransactionStats {
     todayIn: number
@@ -74,6 +76,8 @@ interface TransactionsState {
     createTransaction: (input: CreateTransactionInput) => Promise<InventoryTransaction | null>
     setFilters: (filters: Partial<TransactionFilters>) => void
     resetFilters: () => void
+    currentStock: number
+    fetchStockBalance: (itemId: string, warehouseId: string, locationId?: string | null) => Promise<void>
 }
 
 const defaultFilters: TransactionFilters = {
@@ -176,6 +180,9 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
 
                 // Sync with Inventory Store - update stock balances
                 useInventoryStore.getState().fetchStockBalances()
+
+                // Sync with Items Store - update stock quantities in items list
+                useItemsStore.getState().fetchItems()
             }
             return newTransaction
         } catch (error) {
@@ -195,4 +202,20 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
     resetFilters: () => {
         set({ filters: defaultFilters })
     },
+
+    // Current Stock State
+    currentStock: 0,
+    fetchStockBalance: async (itemId: string, warehouseId: string, locationId?: string | null) => {
+        if (!itemId || !warehouseId) {
+            set({ currentStock: 0 })
+            return
+        }
+        try {
+            const stock = await getStockBalance(itemId, warehouseId, locationId)
+            set({ currentStock: stock })
+        } catch (error) {
+            console.error('Error fetching stock balance:', error)
+            set({ currentStock: 0 })
+        }
+    }
 }))

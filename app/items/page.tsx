@@ -327,6 +327,7 @@ export default function ItemsPage() {
             <QuickReceiveModal
                 item={selectedItem}
                 items={items}
+                uoms={uoms}
                 isOpen={showReceiveModal}
                 onClose={() => setShowReceiveModal(false)}
                 onSuccess={() => fetchItems()}

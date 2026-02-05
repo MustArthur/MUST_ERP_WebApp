@@ -148,14 +148,20 @@ async function updateStockOnHand(input: CreateTransactionInput): Promise<void> {
 
     // Handle stock reduction (from)
     if (['ISSUE', 'TRANSFER', 'ADJUST_OUT', 'PRODUCTION_OUT', 'SCRAP'].includes(transactionType)) {
-        if (fromWarehouseId && fromLocationId) {
-            const { data: existing } = await supabase
+        if (fromWarehouseId) {
+            let query = supabase
                 .from('stock_on_hand')
                 .select('id, qty_on_hand')
                 .eq('item_id', itemId)
                 .eq('warehouse_id', fromWarehouseId)
-                .eq('location_id', fromLocationId)
-                .maybeSingle()
+
+            if (fromLocationId) {
+                query = query.eq('location_id', fromLocationId)
+            } else {
+                query = query.is('location_id', null)
+            }
+
+            const { data: existing } = await query.maybeSingle()
 
             if (existing) {
                 await supabase
@@ -351,4 +357,26 @@ export async function getTransactionStats(): Promise<{
     }
 
     return { todayIn, todayOut, weekIn, weekOut }
+}
+
+/**
+ * Get stock balance for an item in a specific warehouse/location
+ */
+export async function getStockBalance(itemId: string, warehouseId: string, locationId?: string | null): Promise<number> {
+    if (!warehouseId) return 0
+
+    let query = supabase
+        .from('stock_on_hand')
+        .select('qty_on_hand')
+        .eq('item_id', itemId)
+        .eq('warehouse_id', warehouseId)
+
+    if (locationId) {
+        query = query.eq('location_id', locationId)
+    } else {
+        query = query.is('location_id', null)
+    }
+
+    const { data } = await query.maybeSingle()
+    return data?.qty_on_hand || 0
 }

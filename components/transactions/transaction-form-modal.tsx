@@ -36,7 +36,29 @@ const transactionSchema = z.object({
     qty: z.number().min(0.01, 'จำนวนต้องมากกว่า 0'),
     unitCost: z.number().optional(),
     notes: z.string().optional(),
-})
+}).superRefine((data, ctx) => {
+    // Validate From Warehouse
+    if (['ISSUE', 'TRANSFER', 'ADJUST_OUT', 'PRODUCTION_OUT', 'SCRAP'].includes(data.transactionType)) {
+        if (!data.fromWarehouseId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "กรุณาเลือกคลังต้นทาง",
+                path: ["fromWarehouseId"],
+            });
+        }
+    }
+
+    // Validate To Warehouse
+    if (['RECEIVE', 'TRANSFER', 'ADJUST_IN', 'PRODUCTION_IN', 'RETURN'].includes(data.transactionType)) {
+        if (!data.toWarehouseId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "กรุณาเลือกคลังปลายทาง",
+                path: ["toWarehouseId"],
+            });
+        }
+    }
+});
 
 type TransactionFormData = z.infer<typeof transactionSchema>
 
@@ -69,7 +91,9 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
         fetchLocations,
         fetchItems,
         fetchLots,
-        createTransaction
+        createTransaction,
+        currentStock,
+        fetchStockBalance
     } = useTransactionsStore()
 
     const {
@@ -140,6 +164,14 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
     // Determine which fields to show based on transaction type
     const needsFromLocation = ['ISSUE', 'TRANSFER', 'ADJUST_OUT', 'PRODUCTION_OUT', 'SCRAP'].includes(watchedType)
     const needsToLocation = ['RECEIVE', 'TRANSFER', 'ADJUST_IN', 'PRODUCTION_IN', 'RETURN'].includes(watchedType)
+    const watchedFromLocation = watch('fromLocationId')
+
+    // Fetch stock balance when dependencies change
+    useEffect(() => {
+        if (needsFromLocation && watchedItem && watchedFromWarehouse) {
+            fetchStockBalance(watchedItem, watchedFromWarehouse, watchedFromLocation)
+        }
+    }, [needsFromLocation, watchedItem, watchedFromWarehouse, watchedFromLocation, fetchStockBalance])
 
     const onSubmit = async (data: TransactionFormData) => {
         setIsSubmitting(true)
@@ -242,49 +274,28 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
                         </div>
                     )}
 
-                    {/* From Warehouse/Location */}
+                    {/* From Warehouse (Location removed as per user request) */}
                     {needsFromLocation && (
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>คลังต้นทาง</Label>
-                                <Select
-                                    value={watchedFromWarehouse || ''}
-                                    onValueChange={(v) => {
-                                        setValue('fromWarehouseId', v)
-                                        setValue('fromLocationId', '')
-                                    }}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="เลือกคลัง" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {warehouses.map((wh) => (
-                                            <SelectItem key={wh.id} value={wh.id}>
-                                                {wh.code} - {wh.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>ตำแหน่งต้นทาง</Label>
-                                <Select
-                                    value={watch('fromLocationId') || ''}
-                                    onValueChange={(v) => setValue('fromLocationId', v)}
-                                    disabled={!watchedFromWarehouse}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="เลือกตำแหน่ง" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {(locations[watchedFromWarehouse || ''] || []).map((loc) => (
-                                            <SelectItem key={loc.id} value={loc.id}>
-                                                {loc.code} - {loc.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div className="space-y-2">
+                            <Label>คลังต้นทาง</Label>
+                            <Select
+                                value={watchedFromWarehouse || ''}
+                                onValueChange={(v) => {
+                                    setValue('fromWarehouseId', v)
+                                    setValue('fromLocationId', '')
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="เลือกคลัง" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {warehouses.map((wh) => (
+                                        <SelectItem key={wh.id} value={wh.id}>
+                                            {wh.code} - {wh.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     )}
 
@@ -334,29 +345,28 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
                         </div>
                     )}
 
-                    {/* Quantity and Cost */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>จำนวน *</Label>
-                            <Input
-                                type="number"
-                                step="0.01"
-                                {...register('qty', { valueAsNumber: true })}
-                                placeholder="0.00"
-                            />
-                            {errors.qty && (
-                                <p className="text-sm text-red-500">{errors.qty.message}</p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label>ราคาต่อหน่วย</Label>
-                            <Input
-                                type="number"
-                                step="0.01"
-                                {...register('unitCost', { valueAsNumber: true })}
-                                placeholder="0.00"
-                            />
-                        </div>
+                    {/* Quantity (Cost removed as per user request) */}
+                    <div className="space-y-2">
+                        <Label>จำนวน *</Label>
+                        <Input
+                            type="number"
+                            step="1"
+                            {...register('qty', { valueAsNumber: true })}
+                            placeholder="0"
+                            className={
+                                (needsFromLocation && currentStock < (watch('qty') || 0))
+                                    ? "border-red-500 focus-visible:ring-red-500"
+                                    : ""
+                            }
+                        />
+                        {needsFromLocation && watchedFromWarehouse && (
+                            <p className={`text-xs ${currentStock === 0 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>
+                                คงเหลือ: {currentStock.toLocaleString()} {items.find(i => i.id === watchedItem)?.baseUomCode}
+                            </p>
+                        )}
+                        {errors.qty && (
+                            <p className="text-sm text-red-500">{errors.qty.message}</p>
+                        )}
                     </div>
 
                     {/* Notes */}
