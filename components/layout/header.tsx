@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Package, User, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { Package, User, LogOut, Settings, ChevronDown, ArrowLeft } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface HeaderProps {
@@ -59,8 +59,16 @@ export function Header({ title, showBack, backHref = '/' }: HeaderProps) {
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    {/* Left: Logo & Title */}
+                    {/* Left: Back Button & Logo & Title */}
                     <div className="flex items-center gap-4">
+                        {showBack && (
+                            <Link href={backHref}>
+                                <Button variant="ghost" size="sm" className="gap-2">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    <span className="hidden sm:inline">หน้าแรก</span>
+                                </Button>
+                            </Link>
+                        )}
                         <Link href="/" className="flex items-center gap-2">
                             <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
                                 <Package className="h-5 w-5 text-white" />

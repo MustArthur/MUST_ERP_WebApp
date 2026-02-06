@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useDeliveryStore } from '@/stores/delivery-store'
 import {
@@ -40,6 +41,7 @@ import {
   RefreshCw,
   CheckCircle,
   ClipboardList,
+  ArrowLeft,
 } from 'lucide-react'
 
 export default function DeliveryPage() {
@@ -190,9 +192,17 @@ export default function DeliveryPage() {
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">จัดส่งสินค้า</h1>
-              <p className="text-sm text-gray-500">จัดการคำสั่งซื้อและ Cold Chain Tracking</p>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  หน้าแรก
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">จัดส่งสินค้า</h1>
+                <p className="text-sm text-gray-500">จัดการคำสั่งซื้อและ Cold Chain Tracking</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleRefresh}>

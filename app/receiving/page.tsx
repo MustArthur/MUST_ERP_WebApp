@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useReceivingStore } from '@/stores/receiving-store'
 import { useQualityStore } from '@/stores/quality-store'
@@ -48,6 +49,7 @@ import {
   AlertTriangle,
   Filter,
   CalendarDays,
+  ArrowLeft,
 } from 'lucide-react'
 
 export default function ReceivingPage() {
@@ -202,9 +204,17 @@ export default function ReceivingPage() {
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">รับวัตถุดิบ</h1>
-              <p className="text-sm text-gray-500">จัดการใบรับสินค้าจาก Supplier</p>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  หน้าแรก
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">รับวัตถุดิบ</h1>
+                <p className="text-sm text-gray-500">จัดการใบรับสินค้าจาก Supplier</p>
+              </div>
             </div>
             <Button onClick={handleCreateReceipt}>
               <Plus className="w-5 h-5 mr-2" />

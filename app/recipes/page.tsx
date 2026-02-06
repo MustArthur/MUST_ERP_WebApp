@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRecipeStore, useFilteredRecipes } from '@/stores/recipe-store'
 import { Recipe, RecipeStatus, CreateRecipeInput } from '@/types/recipe'
@@ -16,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Plus, Search, BookOpen } from 'lucide-react'
+import { Plus, Search, BookOpen, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function RecipesPage() {
@@ -125,9 +126,17 @@ export default function RecipesPage() {
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">สูตรการผลิต (BOM)</h1>
-              <p className="text-sm text-gray-500">จัดการสูตรและส่วนประกอบการผลิต</p>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  หน้าแรก
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">สูตรการผลิต (BOM)</h1>
+                <p className="text-sm text-gray-500">จัดการสูตรและส่วนประกอบการผลิต</p>
+              </div>
             </div>
             <Button onClick={handleCreate}>
               <Plus className="w-5 h-5 mr-2" />

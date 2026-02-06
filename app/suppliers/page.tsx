@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useMemo } from 'react'
 import { useSuppliersStore } from '@/stores/suppliers-store'
 import { Supplier, CreateSupplierInput, UpdateSupplierInput } from '@/types/supplier'
@@ -31,6 +32,7 @@ import {
     Users,
     CheckCircle,
     XCircle,
+    ArrowLeft,
 } from 'lucide-react'
 
 export default function SuppliersPage() {
@@ -124,13 +126,21 @@ export default function SuppliersPage() {
             <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
-                                <Building2 className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
-                                <p className="text-gray-500">จัดการข้อมูล Suppliers</p>
+                        <div className="flex items-center gap-4">
+                            <Link href="/">
+                                <Button variant="ghost" size="sm">
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    หน้าแรก
+                                </Button>
+                            </Link>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+                                    <Building2 className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
+                                    <p className="text-gray-500">จัดการข้อมูล Suppliers</p>
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">

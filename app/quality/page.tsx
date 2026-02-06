@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useQualityStore, useFilteredInspections, useFilteredTemplates } from '@/stores/quality-store'
 import { useInventoryStore } from '@/stores/inventory-store'
@@ -47,6 +48,7 @@ import {
   Plus,
   FileText,
   Package,
+  ArrowLeft,
 } from 'lucide-react'
 
 export default function QualityPage() {
@@ -222,9 +224,17 @@ export default function QualityPage() {
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">ควบคุมคุณภาพ (QC)</h1>
-              <p className="text-sm text-gray-500">ตรวจสอบคุณภาพวัตถุดิบและสินค้า</p>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  หน้าแรก
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">ควบคุมคุณภาพ (QC)</h1>
+                <p className="text-sm text-gray-500">ตรวจสอบคุณภาพวัตถุดิบและสินค้า</p>
+              </div>
             </div>
             <div className="flex gap-2">
               {activeTab === 'inspections' && (

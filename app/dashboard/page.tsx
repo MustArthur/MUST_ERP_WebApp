@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Header } from '@/components/layout'
+import { Header } from '@/components/layout/header'
 import { StatsCard, StatsGrid, SimpleAreaChart, SimpleBarChart, SimplePieChart } from '@/components/dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header title="Dashboard" />
+            <Header title="Dashboard" showBack backHref="/" />
 
             <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
                 {/* Page Title */}

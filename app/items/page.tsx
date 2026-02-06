@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useMemo } from 'react'
 import { useItemsStore } from '@/stores/items-store'
 import { Item, CreateItemInput, UpdateItemInput } from '@/types/item'
@@ -32,6 +33,7 @@ import {
     Tag,
     RefreshCw,
     ArrowDownLeft,
+    ArrowLeft,
 } from 'lucide-react'
 
 export default function ItemsPage() {
@@ -138,9 +140,17 @@ export default function ItemsPage() {
             <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">จัดการรายการสินค้า</h1>
-                            <p className="text-gray-500">Master Data - วัตถุดิบ, สินค้าสำเร็จ, บรรจุภัณฑ์</p>
+                        <div className="flex items-center gap-4">
+                            <Link href="/">
+                                <Button variant="ghost" size="sm">
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    หน้าแรก
+                                </Button>
+                            </Link>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">จัดการรายการสินค้า</h1>
+                                <p className="text-gray-500">Master Data - วัตถุดิบ, สินค้าสำเร็จ, บรรจุภัณฑ์</p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" onClick={() => fetchItems()}>
