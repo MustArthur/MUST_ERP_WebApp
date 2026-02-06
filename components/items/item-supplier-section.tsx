@@ -252,7 +252,6 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     minOrderQty: data.minOrderQty,
                     isPreferred: data.isPreferred,
                     priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
-                    priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
                     supplierProductName: data.supplierProductName,
                     unitPrice: unitPrice,
                 })
@@ -280,6 +279,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     isPreferred: data.isPreferred,
                     priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
                     supplierProductName: data.supplierProductName,
+                    unitPrice: unitPrice,
                 })
                 if (created) {
                     await loadItemSuppliers()
