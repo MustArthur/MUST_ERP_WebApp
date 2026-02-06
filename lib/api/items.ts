@@ -329,10 +329,12 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
             is_preferred,
             is_active,
             price_updated_at,
+            supplier_product_name,
             suppliers:supplier_id (id, code, name),
             units_of_measure:purchase_uom_id (id, code, name)
         `)
         .eq('item_id', itemId)
+        .order('price_updated_at', { ascending: false, nullsFirst: false })
         .order('is_preferred', { ascending: false })
 
     if (error) {
@@ -357,6 +359,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
         isPreferred: d.is_preferred || false,
         isActive: d.is_active ?? true,
         priceUpdatedAt: d.price_updated_at || null,
+        supplierProductName: d.supplier_product_name || '',
     }))
 }
 
@@ -377,6 +380,7 @@ export async function addItemSupplier(input: CreateItemSupplierInput): Promise<I
             min_order_qty: input.minOrderQty || 1,
             is_preferred: input.isPreferred || false,
             price_updated_at: input.priceUpdatedAt,
+            supplier_product_name: input.supplierProductName,
         })
         .select()
         .single()
@@ -405,6 +409,7 @@ export async function updateItemSupplier(id: string, itemId: string, input: Upda
     if (input.isPreferred !== undefined) updateData.is_preferred = input.isPreferred
     if (input.isActive !== undefined) updateData.is_active = input.isActive
     if (input.priceUpdatedAt !== undefined) updateData.price_updated_at = input.priceUpdatedAt
+    if (input.supplierProductName !== undefined) updateData.supplier_product_name = input.supplierProductName
 
     const { error } = await supabase
         .from('item_suppliers')

@@ -80,6 +80,7 @@ const supplierFormSchema = z.object({
     minOrderQty: z.number().min(0),
     isPreferred: z.boolean(),
     priceUpdatedAt: z.date().optional(),
+    supplierProductName: z.string().optional(),
 })
 
 type SupplierFormValues = z.infer<typeof supplierFormSchema>
@@ -117,6 +118,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
             minOrderQty: 1,
             isPreferred: false,
             priceUpdatedAt: new Date(),
+            supplierProductName: '',
         },
     })
 
@@ -133,17 +135,21 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
     }, [watchedPrice, watchedPackaging])
 
     // Load data
+    const loadItemSuppliers = async () => {
+        const data = await getItemSuppliers(item.id)
+        setItemSuppliers(data)
+    }
+
     useEffect(() => {
         async function loadData() {
             setIsLoading(true)
-            const [suppliersData, uomsData, itemSuppliersData] = await Promise.all([
+            const [suppliersData, uomsData] = await Promise.all([
                 getSuppliers(),
                 getUnitsOfMeasure(),
-                getItemSuppliers(item.id),
             ])
             setSuppliers(suppliersData)
             setUoms(uomsData)
-            setItemSuppliers(itemSuppliersData)
+            await loadItemSuppliers()
             setIsLoading(false)
         }
         loadData()
@@ -162,6 +168,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                 minOrderQty: selectedSupplier.minOrderQty,
                 isPreferred: selectedSupplier.isPreferred,
                 priceUpdatedAt: selectedSupplier.priceUpdatedAt ? new Date(selectedSupplier.priceUpdatedAt) : new Date(),
+                supplierProductName: selectedSupplier.supplierProductName || '',
             })
         } else {
             form.reset({
@@ -174,6 +181,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                 minOrderQty: 1,
                 isPreferred: false,
                 priceUpdatedAt: new Date(),
+                supplierProductName: '',
             })
         }
     }, [selectedSupplier, form, item.baseUomId])
@@ -197,7 +205,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
         if (selectedSupplier) {
             try {
                 await deleteItemSupplier(selectedSupplier.id)
-                setItemSuppliers(prev => prev.filter(s => s.id !== selectedSupplier.id))
+                await loadItemSuppliers()
             } catch (error) {
                 console.error('Error deleting supplier:', error)
             }
@@ -222,9 +230,10 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     minOrderQty: data.minOrderQty,
                     isPreferred: data.isPreferred,
                     priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
+                    supplierProductName: data.supplierProductName,
                 })
                 if (updated) {
-                    setItemSuppliers(prev => prev.map(s => s.id === updated.id ? updated : s))
+                    await loadItemSuppliers()
                     // Auto-update item's lastPurchaseCost if preferred or if it's the only supplier
                     if (data.isPreferred || itemSuppliers.length === 1) {
                         const updatedItem = await updateItem(item.id, { lastPurchaseCost: unitPrice })
@@ -246,9 +255,10 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     minOrderQty: data.minOrderQty,
                     isPreferred: data.isPreferred,
                     priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
+                    supplierProductName: data.supplierProductName,
                 })
                 if (created) {
-                    setItemSuppliers(prev => [...prev, created])
+                    await loadItemSuppliers()
                     // Auto-update lastPurchaseCost if first supplier or preferred
                     if (data.isPreferred || itemSuppliers.length === 0) {
                         const updatedItem = await updateItem(item.id, { lastPurchaseCost: unitPrice })
@@ -427,6 +437,20 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                         <FormLabel>Supplier Part Number</FormLabel>
                                         <FormControl>
                                             <Input placeholder="รหัสสินค้าของ Supplier" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="supplierProductName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>รายการสินค้า</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="ชื่อสินค้าในใบเสนอราคา" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
