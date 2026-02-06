@@ -45,6 +45,7 @@ export interface CreateItemInput {
 }
 
 export interface UpdateItemInput {
+    code?: string
     name?: string
     categoryId?: string
     baseUomId?: string

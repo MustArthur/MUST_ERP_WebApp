@@ -123,6 +123,7 @@ export async function createItem(input: CreateItemInput): Promise<ItemType | nul
  */
 export async function updateItem(id: string, input: UpdateItemInput): Promise<ItemType | null> {
     const updateData: Record<string, any> = {}
+    if (input.code !== undefined) updateData.code = input.code
     if (input.name !== undefined) updateData.name = input.name
     if (input.categoryId !== undefined) updateData.category_id = input.categoryId
     if (input.baseUomId !== undefined) updateData.base_uom_id = input.baseUomId

@@ -113,6 +113,7 @@ export function ItemFormModal({
             setIsSubmitting(true)
             if (isEditing) {
                 await onSave({
+                    code: data.code,
                     name: data.name,
                     categoryId: data.categoryId,
                     baseUomId: data.baseUomId,
@@ -173,7 +174,7 @@ export function ItemFormModal({
                                         <Input
                                             placeholder="RM-XXX หรือ FG-XXX"
                                             {...field}
-                                            disabled={isEditing}
+                                            // disabled={isEditing} // Allow editing code
                                             className="font-mono"
                                         />
                                     </FormControl>
