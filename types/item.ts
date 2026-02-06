@@ -80,6 +80,7 @@ export interface ItemSupplier {
     minOrderQty: number
     isPreferred: boolean
     isActive: boolean
+    priceUpdatedAt?: string // ISO Date string
 }
 
 export interface CreateItemSupplierInput {
@@ -92,6 +93,7 @@ export interface CreateItemSupplierInput {
     leadTimeDays?: number
     minOrderQty?: number
     isPreferred?: boolean
+    priceUpdatedAt?: string
 }
 
 export interface UpdateItemSupplierInput {
@@ -103,5 +105,6 @@ export interface UpdateItemSupplierInput {
     minOrderQty?: number
     isPreferred?: boolean
     isActive?: boolean
+    priceUpdatedAt?: string
 }
 

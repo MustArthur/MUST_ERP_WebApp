@@ -328,6 +328,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
             min_order_qty,
             is_preferred,
             is_active,
+            price_updated_at,
             suppliers:supplier_id (id, code, name),
             units_of_measure:purchase_uom_id (id, code, name)
         `)
@@ -355,6 +356,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
         minOrderQty: d.min_order_qty || 1,
         isPreferred: d.is_preferred || false,
         isActive: d.is_active ?? true,
+        priceUpdatedAt: d.price_updated_at || null,
     }))
 }
 
@@ -374,6 +376,7 @@ export async function addItemSupplier(input: CreateItemSupplierInput): Promise<I
             lead_time_days: input.leadTimeDays || 7,
             min_order_qty: input.minOrderQty || 1,
             is_preferred: input.isPreferred || false,
+            price_updated_at: input.priceUpdatedAt,
         })
         .select()
         .single()
@@ -401,6 +404,7 @@ export async function updateItemSupplier(id: string, itemId: string, input: Upda
     if (input.minOrderQty !== undefined) updateData.min_order_qty = input.minOrderQty
     if (input.isPreferred !== undefined) updateData.is_preferred = input.isPreferred
     if (input.isActive !== undefined) updateData.is_active = input.isActive
+    if (input.priceUpdatedAt !== undefined) updateData.price_updated_at = input.priceUpdatedAt
 
     const { error } = await supabase
         .from('item_suppliers')

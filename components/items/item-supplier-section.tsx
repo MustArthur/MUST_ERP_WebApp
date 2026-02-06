@@ -59,7 +59,16 @@ import {
     Save,
     Loader2,
     Calculator,
+    Calendar as CalendarIcon,
 } from 'lucide-react'
+import { format } from 'date-fns'
+import { Calendar } from '@/components/ui/calendar'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
 const supplierFormSchema = z.object({
     supplierId: z.string().min(1, 'กรุณาเลือก Supplier'),
@@ -70,6 +79,7 @@ const supplierFormSchema = z.object({
     leadTimeDays: z.number().min(0),
     minOrderQty: z.number().min(0),
     isPreferred: z.boolean(),
+    priceUpdatedAt: z.date().optional(),
 })
 
 type SupplierFormValues = z.infer<typeof supplierFormSchema>
@@ -106,6 +116,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
             leadTimeDays: 7,
             minOrderQty: 1,
             isPreferred: false,
+            priceUpdatedAt: new Date(),
         },
     })
 
@@ -150,6 +161,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                 leadTimeDays: selectedSupplier.leadTimeDays,
                 minOrderQty: selectedSupplier.minOrderQty,
                 isPreferred: selectedSupplier.isPreferred,
+                priceUpdatedAt: selectedSupplier.priceUpdatedAt ? new Date(selectedSupplier.priceUpdatedAt) : new Date(),
             })
         } else {
             form.reset({
@@ -161,6 +173,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                 leadTimeDays: 7,
                 minOrderQty: 1,
                 isPreferred: false,
+                priceUpdatedAt: new Date(),
             })
         }
     }, [selectedSupplier, form, item.baseUomId])
@@ -208,6 +221,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     leadTimeDays: data.leadTimeDays,
                     minOrderQty: data.minOrderQty,
                     isPreferred: data.isPreferred,
+                    priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
                 })
                 if (updated) {
                     setItemSuppliers(prev => prev.map(s => s.id === updated.id ? updated : s))
@@ -231,6 +245,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     leadTimeDays: data.leadTimeDays,
                     minOrderQty: data.minOrderQty,
                     isPreferred: data.isPreferred,
+                    priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
                 })
                 if (created) {
                     setItemSuppliers(prev => [...prev, created])
@@ -292,6 +307,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">หน่วยซื้อ</th>
                                 <th className="px-3 py-2 text-right text-sm font-medium text-gray-600">ราคา/หน่วย</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">Lead Time</th>
+                                <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">ราคา ณ วันที่</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">MOQ</th>
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-600">จัดการ</th>
                             </tr>
@@ -333,6 +349,9 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                         </td>
                                         <td className="px-3 py-2 text-center text-sm">
                                             {supplier.leadTimeDays} วัน
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-sm">
+                                            {supplier.priceUpdatedAt ? format(new Date(supplier.priceUpdatedAt), 'dd/MM/yyyy') : '-'}
                                         </td>
                                         <td className="px-3 py-2 text-center text-sm">
                                             {supplier.minOrderQty}
@@ -470,6 +489,48 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                     </div>
                                 </div>
                             </div>
+
+                            <FormField
+                                control={form.control}
+                                name="priceUpdatedAt"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>ราคา ณ วันที่</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className={cn(
+                                                            "w-full pl-3 text-left font-normal",
+                                                            !field.value && "text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {field.value ? (
+                                                            format(field.value, "dd/MM/yyyy")
+                                                        ) : (
+                                                            <span>เลือกวันที่</span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date: Date) =>
+                                                        date > new Date() || date < new Date("1900-01-01")
+                                                    }
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             <FormField
                                 control={form.control}
