@@ -330,6 +330,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
             is_active,
             price_updated_at,
             supplier_product_name,
+            unit_price,
             suppliers:supplier_id (id, code, name),
             units_of_measure:purchase_uom_id (id, code, name)
         `)
@@ -360,6 +361,7 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
         isActive: d.is_active ?? true,
         priceUpdatedAt: d.price_updated_at || null,
         supplierProductName: d.supplier_product_name || '',
+        unitPrice: d.unit_price || (d.packaging_size > 0 ? (d.purchase_price || 0) / d.packaging_size : 0),
     }))
 }
 
@@ -381,6 +383,7 @@ export async function addItemSupplier(input: CreateItemSupplierInput): Promise<I
             is_preferred: input.isPreferred || false,
             price_updated_at: input.priceUpdatedAt,
             supplier_product_name: input.supplierProductName,
+            unit_price: input.unitPrice,
         })
         .select()
         .single()
@@ -410,6 +413,7 @@ export async function updateItemSupplier(id: string, itemId: string, input: Upda
     if (input.isActive !== undefined) updateData.is_active = input.isActive
     if (input.priceUpdatedAt !== undefined) updateData.price_updated_at = input.priceUpdatedAt
     if (input.supplierProductName !== undefined) updateData.supplier_product_name = input.supplierProductName
+    if (input.unitPrice !== undefined) updateData.unit_price = input.unitPrice
 
     const { error } = await supabase
         .from('item_suppliers')

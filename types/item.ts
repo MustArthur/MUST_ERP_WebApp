@@ -82,6 +82,7 @@ export interface ItemSupplier {
     isActive: boolean
     priceUpdatedAt?: string // ISO Date string
     supplierProductName?: string
+    unitPrice?: number
 }
 
 export interface CreateItemSupplierInput {
@@ -96,6 +97,7 @@ export interface CreateItemSupplierInput {
     isPreferred?: boolean
     priceUpdatedAt?: string
     supplierProductName?: string
+    unitPrice?: number
 }
 
 export interface UpdateItemSupplierInput {
@@ -109,5 +111,6 @@ export interface UpdateItemSupplierInput {
     isActive?: boolean
     priceUpdatedAt?: string
     supplierProductName?: string
+    unitPrice?: number
 }
 

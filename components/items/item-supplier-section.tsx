@@ -81,6 +81,8 @@ const supplierFormSchema = z.object({
     isPreferred: z.boolean(),
     priceUpdatedAt: z.date().optional(),
     supplierProductName: z.string().optional(),
+    unitPrice: z.number().min(0).optional(),
+    isAutoCalc: z.boolean().default(true),
 })
 
 type SupplierFormValues = z.infer<typeof supplierFormSchema>
@@ -119,20 +121,23 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
             isPreferred: false,
             priceUpdatedAt: new Date(),
             supplierProductName: '',
+            unitPrice: 0,
+            isAutoCalc: true,
         },
     })
 
-    // Watch for auto-calculation
+    // Watch fields
+    const watchedAutoCalc = useWatch({ control: form.control, name: 'isAutoCalc' })
     const watchedPrice = useWatch({ control: form.control, name: 'purchasePrice' })
     const watchedPackaging = useWatch({ control: form.control, name: 'packagingSize' })
 
-    // Calculate unit price
-    const calculatedUnitPrice = useMemo(() => {
-        if (watchedPackaging > 0) {
-            return watchedPrice / watchedPackaging
+    // Effect to auto-calculate unit price when auto-calc is ON
+    useEffect(() => {
+        if (watchedAutoCalc) {
+            const calculated = watchedPackaging > 0 ? watchedPrice / watchedPackaging : 0
+            form.setValue('unitPrice', calculated)
         }
-        return 0
-    }, [watchedPrice, watchedPackaging])
+    }, [watchedPrice, watchedPackaging, watchedAutoCalc, form])
 
     // Load data
     const loadItemSuppliers = async () => {
@@ -169,7 +174,21 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                 isPreferred: selectedSupplier.isPreferred,
                 priceUpdatedAt: selectedSupplier.priceUpdatedAt ? new Date(selectedSupplier.priceUpdatedAt) : new Date(),
                 supplierProductName: selectedSupplier.supplierProductName || '',
+                unitPrice: selectedSupplier.unitPrice || 0,
+                isAutoCalc: false,
             })
+
+            // Intelligent auto-calc detection
+            const calc = selectedSupplier.packagingSize > 0
+                ? selectedSupplier.purchasePrice / selectedSupplier.packagingSize
+                : 0
+            const stored = selectedSupplier.unitPrice || 0
+
+            // If stored price is close to calculated price (within small tolerance), enable auto-calc
+            // Or if stored price is 0/undefined, assume auto-calc
+            const isMatch = Math.abs(calc - stored) < 0.01
+            form.setValue('isAutoCalc', isMatch || !stored)
+
         } else {
             form.reset({
                 supplierId: '',
@@ -182,6 +201,8 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                 isPreferred: false,
                 priceUpdatedAt: new Date(),
                 supplierProductName: '',
+                unitPrice: 0,
+                isAutoCalc: true,
             })
         }
     }, [selectedSupplier, form, item.baseUomId])
@@ -217,7 +238,8 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
     const onSubmit = async (data: SupplierFormValues) => {
         try {
             setIsSubmitting(true)
-            const unitPrice = data.packagingSize > 0 ? data.purchasePrice / data.packagingSize : 0
+            // Use unitPrice from form directly (auto-calc or manual)
+            const unitPrice = data.unitPrice || 0
 
             if (selectedSupplier) {
                 // Update
@@ -230,7 +252,9 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     minOrderQty: data.minOrderQty,
                     isPreferred: data.isPreferred,
                     priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
+                    priceUpdatedAt: data.priceUpdatedAt?.toISOString(),
                     supplierProductName: data.supplierProductName,
+                    unitPrice: unitPrice,
                 })
                 if (updated) {
                     await loadItemSuppliers()
@@ -324,9 +348,9 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {itemSuppliers.map((supplier) => {
-                                const unitPrice = supplier.packagingSize > 0
-                                    ? supplier.purchasePrice / supplier.packagingSize
-                                    : supplier.purchasePrice
+                                const unitPrice = supplier.unitPrice ||
+                                    (supplier.packagingSize > 0 ? supplier.purchasePrice / supplier.packagingSize : supplier.purchasePrice)
+
                                 return (
                                     <tr key={supplier.id} className="hover:bg-gray-50">
                                         <td className="px-3 py-2">
@@ -459,9 +483,27 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
 
                             {/* Price & Packaging Section with Auto-Calculate */}
                             <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Calculator className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm font-medium text-blue-800">คำนวณราคาต่อหน่วยอัตโนมัติ</span>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <Calculator className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm font-medium text-blue-800">คำนวณราคาต่อหน่วย</span>
+                                    </div>
+                                    <FormField
+                                        control={form.control}
+                                        name="isAutoCalc"
+                                        render={({ field }) => (
+                                            <div className="flex items-center space-x-2">
+                                                <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    id="auto-calc-mode"
+                                                />
+                                                <label htmlFor="auto-calc-mode" className="text-sm text-blue-800">
+                                                    อัตโนมัติ
+                                                </label>
+                                            </div>
+                                        )}
+                                    />
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     <FormField
@@ -503,14 +545,35 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                         )}
                                     />
 
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700 mb-2 block">ราคา/หน่วย</label>
-                                        <div className="h-10 px-3 flex items-center bg-green-100 rounded-md border border-green-200">
-                                            <span className="font-bold text-green-700">
-                                                ฿{calculatedUnitPrice.toFixed(2)}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <FormField
+                                        control={form.control}
+                                        name="unitPrice"
+                                        render={({ field }) => (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-700 mb-2 block">ราคา/หน่วย</label>
+                                                <div className={cn(
+                                                    "h-10 px-3 flex items-center rounded-md border",
+                                                    watchedAutoCalc
+                                                        ? "bg-green-100 border-green-200"
+                                                        : "bg-white border-gray-200"
+                                                )}>
+                                                    {watchedAutoCalc ? (
+                                                        <span className="font-bold text-green-700">
+                                                            ฿{Number(field.value).toFixed(2)}
+                                                        </span>
+                                                    ) : (
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            className="w-full h-full bg-transparent outline-none font-bold text-gray-900"
+                                                            value={field.value}
+                                                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    />
                                 </div>
                             </div>
 
