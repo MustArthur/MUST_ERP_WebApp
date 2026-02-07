@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Trash2, Check } from 'lucide-react'
-import { getRawMaterials, getFinishedGoods, Item } from '@/lib/api/items'
+import { getRecipeIngredients, getFinishedGoods, Item } from '@/lib/api/items'
 
 interface RecipeFormModalProps {
   recipe?: Recipe | null
@@ -44,7 +44,7 @@ export function RecipeFormModal({
   const [isLoading, setIsLoading] = useState(false)
 
   // Items from Supabase
-  const [rawMaterials, setRawMaterials] = useState<Item[]>([])
+  const [ingredientItems, setIngredientItems] = useState<Item[]>([])
   const [finishedGoods, setFinishedGoods] = useState<Item[]>([])
 
   // Form state
@@ -79,11 +79,11 @@ export function RecipeFormModal({
   // Load items from Supabase on mount
   useEffect(() => {
     async function loadItems() {
-      const [rm, fg] = await Promise.all([
-        getRawMaterials(),
+      const [ing, fg] = await Promise.all([
+        getRecipeIngredients(),
         getFinishedGoods()
       ])
-      setRawMaterials(rm)
+      setIngredientItems(ing)
       setFinishedGoods(fg)
     }
     loadItems()
@@ -144,7 +144,7 @@ export function RecipeFormModal({
   }
 
   const handleMaterialSelect = (tempId: string, materialCode: string) => {
-    const material = rawMaterials.find(m => m.code === materialCode)
+    const material = ingredientItems.find(m => m.code === materialCode)
     if (material) {
       setIngredients(
         ingredients.map(ing =>
@@ -308,7 +308,7 @@ export function RecipeFormModal({
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-2 py-2 text-left">#</th>
-                    <th className="px-2 py-2 text-left">วัตถุดิบ</th>
+                    <th className="px-2 py-2 text-left">วัตถุดิบ (RM / SP)</th>
                     <th className="px-2 py-2 text-right w-24">ปริมาณ</th>
                     <th className="px-2 py-2 text-center w-20">หน่วย</th>
                     <th className="px-2 py-2 text-center w-20">% เสีย</th>
@@ -325,11 +325,18 @@ export function RecipeFormModal({
                           value={ing.code}
                           onValueChange={(v) => handleMaterialSelect(ing.tempId, v)}
                         >
-                          <SelectTrigger className="text-sm">
-                            <SelectValue placeholder="-- เลือก --" />
+                          <SelectTrigger className="text-sm w-full text-left">
+                            <span className="truncate">
+                              {ing.code
+                                ? ingredientItems.find(i => i.code === ing.code)
+                                  ? `${ing.code} - ${ingredientItems.find(i => i.code === ing.code)?.name}`
+                                  : ing.code
+                                : <span className="text-muted-foreground">-- เลือก --</span>
+                              }
+                            </span>
                           </SelectTrigger>
                           <SelectContent>
-                            {rawMaterials.map(mat => (
+                            {ingredientItems.map(mat => (
                               <SelectItem key={mat.code} value={mat.code}>
                                 {mat.code} - {mat.name}
                               </SelectItem>
