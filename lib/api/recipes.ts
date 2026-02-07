@@ -249,10 +249,48 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
         .update(updateData)
         .eq('id', id)
         .select()
+        .single()
 
     if (error) {
         console.error('Error updating recipe:', error)
         throw error
+    }
+
+    // Update ingredients if provided
+    if (input.ingredients) {
+        // 1. Delete existing lines
+        const { error: deleteError } = await supabase
+            .from('recipe_lines')
+            .delete()
+            .eq('recipe_id', id)
+
+        if (deleteError) {
+            console.error('Error deleting old recipe lines:', deleteError)
+            throw deleteError
+        }
+
+        // 2. Insert new lines
+        if (input.ingredients.length > 0) {
+            const lines = input.ingredients.map((ing, index) => ({
+                recipe_id: id,
+                line_no: index + 1,
+                item_id: ing.code, // Assuming code maps to item_id for now, but ideal is ID
+                qty_per_batch: ing.qty,
+                uom_id: ing.uom, // Assuming uom maps to uom_id
+                scrap_percent: ing.scrap,
+                is_critical: ing.isCritical,
+                is_optional: false,
+            }))
+
+            const { error: insertError } = await supabase
+                .from('recipe_lines')
+                .insert(lines)
+
+            if (insertError) {
+                console.error('Error inserting new recipe lines:', insertError)
+                throw insertError
+            }
+        }
     }
 
     console.log('Supabase update response:', data)
