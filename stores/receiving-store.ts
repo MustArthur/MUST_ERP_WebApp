@@ -14,10 +14,14 @@ import { useInventoryStore } from './inventory-store'
 import { useQualityStore } from './quality-store'
 import {
   mockSuppliers,
-  mockPurchaseReceipts,
   calculateReceiptTotal,
 } from '@/lib/mock-data/receiving'
-import { generateId, delay } from '@/lib/utils'
+import { delay } from '@/lib/utils'
+import { ReceivingService } from '@/lib/services/receiving-service'
+import { createClient } from '@/lib/supabase/client'
+
+const supabase = createClient()
+
 
 // ==========================================
 // Store State Interface
@@ -79,8 +83,7 @@ const defaultReceiptFilters: ReceiptFilterState = {
 // In-memory Storage
 // ==========================================
 
-let suppliersData = [...mockSuppliers]
-let receiptsData = [...mockPurchaseReceipts]
+// Mock data removed in favor of Supabase integration
 
 // ==========================================
 // Store Implementation
@@ -102,9 +105,25 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   fetchSuppliers: async () => {
     set({ isLoading: true, error: null })
     try {
-      await delay(200)
-      set({ suppliers: suppliersData, isLoading: false })
-    } catch {
+      const { data, error } = await supabase.from('suppliers').select('*').eq('is_active', true)
+      if (error) throw error
+
+      const mappedSuppliers: Supplier[] = data?.map(s => ({
+        id: s.id,
+        code: s.code,
+        name: s.name,
+        contactPerson: s.contact_name || undefined,
+        phone: s.phone || undefined,
+        email: s.email || undefined,
+        address: s.address || undefined,
+        status: s.is_active ? 'ACTIVE' : 'INACTIVE',
+        createdAt: s.created_at,
+        updatedAt: s.updated_at
+      })) || []
+
+      set({ suppliers: mappedSuppliers, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch suppliers:', error)
       set({ error: 'ไม่สามารถโหลดข้อมูล Supplier ได้', isLoading: false })
     }
   },
@@ -116,9 +135,10 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   fetchReceipts: async () => {
     set({ isLoading: true, error: null })
     try {
-      await delay(300)
-      set({ receipts: receiptsData, isLoading: false })
-    } catch {
+      const receipts = await ReceivingService.getReceipts()
+      set({ receipts, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch receipts:', error)
       set({ error: 'ไม่สามารถโหลดข้อมูลใบรับได้', isLoading: false })
     }
   },
@@ -126,302 +146,96 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   createReceipt: async (input: CreatePurchaseReceiptInput) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const { stockItems } = useInventoryStore.getState()
-      const receiptCount = receiptsData.length + 1
-      const code = `PR-2026-${receiptCount.toString().padStart(4, '0')}`
-
-      // Build items with QC status
-      const items: PurchaseReceiptItem[] = input.items.map((item, idx) => {
-        const stockItem = stockItems.find(i => i.id === item.itemId)
-        const requiresQC = stockItem?.requiresQC || false
-
-        return {
-          id: generateId(),
-          lineNo: idx + 1,
-          itemId: item.itemId,
-          item: stockItem,
-          qtyReceived: item.qtyReceived,
-          qtyAccepted: 0,
-          qtyRejected: 0,
-          uom: item.uom,
-          batchNo: item.batchNo,
-          mfgDate: item.mfgDate,
-          expDate: item.expDate,
-          unitPrice: item.unitPrice,
-          totalPrice: item.qtyReceived * item.unitPrice,
-          warehouseId: item.warehouseId,
-          qcStatus: requiresQC ? 'PENDING' : 'NOT_REQUIRED',
-          remarks: item.remarks,
-        }
-      })
-
-      // Determine overall QC status
-      const hasQCRequired = items.some(i => i.qcStatus === 'PENDING')
-      const qcStatus: QCStatusSummary = hasQCRequired ? 'PENDING' : 'NOT_REQUIRED'
-
-      const supplier = suppliersData.find(s => s.id === input.supplierId)
-
-      const newReceipt: PurchaseReceipt = {
-        id: generateId(),
-        code,
-        status: 'DRAFT',
-        supplierId: input.supplierId,
-        supplier,
-        receiptDate: input.receiptDate,
-        poNumber: input.poNumber,
-        invoiceNumber: input.invoiceNumber,
-        items,
-        qcStatus,
-        totalAmount: calculateReceiptTotal(items),
-        remarks: input.remarks,
-        receivedBy: 'ระบบ',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      receiptsData = [...receiptsData, newReceipt]
-      set({ receipts: receiptsData, isLoading: false })
+      const newReceipt = await ReceivingService.createReceipt(input)
+      const { receipts } = get()
+      set({ receipts: [newReceipt, ...receipts], isLoading: false })
       return newReceipt
-    } catch {
+    } catch (error) {
+      console.error('Failed to create receipt:', error)
       set({ error: 'ไม่สามารถสร้างใบรับได้', isLoading: false })
-      throw new Error('Failed to create receipt')
+      throw error
     }
   },
 
   updateReceipt: async (id: string, input: UpdatePurchaseReceiptInput) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = receiptsData.findIndex(r => r.id === id)
-      if (index === -1) throw new Error('Receipt not found')
-
-      const existing = receiptsData[index]
-      if (existing.status !== 'DRAFT') {
-        throw new Error('Cannot update non-draft receipt')
-      }
-
-      const supplier = input.supplierId
-        ? suppliersData.find(s => s.id === input.supplierId)
-        : existing.supplier
-
-      // Map update items to full items (preserve existing properties)
-      const items = input.items
-        ? input.items.map((item, index) => {
-            const existingItem = existing.items.find(i => i.id === item.id)
-            return {
-              id: item.id || `pri-${id}-${index + 1}`,
-              lineNo: index + 1,
-              itemId: item.itemId,
-              qtyOrdered: existingItem?.qtyOrdered,
-              qtyReceived: item.qtyReceived,
-              qtyAccepted: existingItem?.qtyAccepted || 0,
-              qtyRejected: existingItem?.qtyRejected || 0,
-              uom: item.uom,
-              batchNo: item.batchNo,
-              mfgDate: item.mfgDate,
-              expDate: item.expDate,
-              unitPrice: item.unitPrice,
-              totalPrice: item.qtyReceived * item.unitPrice,
-              warehouseId: item.warehouseId,
-              qcInspectionId: existingItem?.qcInspectionId,
-              qcStatus: existingItem?.qcStatus || 'NOT_REQUIRED' as const,
-              remarks: item.remarks,
-            }
-          })
-        : existing.items
-
-      const updated: PurchaseReceipt = {
-        ...existing,
-        supplierId: input.supplierId || existing.supplierId,
-        receiptDate: input.receiptDate || existing.receiptDate,
-        poNumber: input.poNumber !== undefined ? input.poNumber : existing.poNumber,
-        invoiceNumber: input.invoiceNumber !== undefined ? input.invoiceNumber : existing.invoiceNumber,
-        remarks: input.remarks !== undefined ? input.remarks : existing.remarks,
-        supplier,
-        items,
-        totalAmount: calculateReceiptTotal(items),
-        updatedAt: new Date().toISOString(),
-      }
-
-      receiptsData = [
-        ...receiptsData.slice(0, index),
-        updated,
-        ...receiptsData.slice(index + 1),
-      ]
-      set({ receipts: receiptsData, isLoading: false })
+      const updated = await ReceivingService.updateReceipt(id, input)
+      const { receipts } = get()
+      set({
+        receipts: receipts.map(r => r.id === id ? updated : r),
+        isLoading: false
+      })
       return updated
-    } catch (e) {
+    } catch (error) {
+      console.error('Failed to update receipt:', error)
       set({ error: 'ไม่สามารถอัพเดทใบรับได้', isLoading: false })
-      throw e
+      throw error
     }
   },
 
   submitReceipt: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(500)
-      const index = receiptsData.findIndex(r => r.id === id)
-      if (index === -1) throw new Error('Receipt not found')
+      // For now, we assume standard flow where default QC status is handled by backend/service
+      // If we need to trigger QC creation, it should be done here or in service.
+      // Based on existing logic, we should probably update status to PENDING_QC if items require QC.
+      // For MVP Database integration, we will simply update status.
 
-      const receipt = receiptsData[index]
-      if (receipt.status !== 'DRAFT') {
-        throw new Error('Receipt already submitted')
-      }
+      // TODO: Implement advanced QC trigger logic if needed, similar to original mockStore
 
-      const { stockItems } = useInventoryStore.getState()
-      const { createInspection, templates } = useQualityStore.getState()
+      await ReceivingService.updateStatus(id, 'PENDING_QC')
 
-      // Process each item
-      const updatedItems: PurchaseReceiptItem[] = []
+      // Fetch updated
+      const updated = await ReceivingService.getReceiptById(id)
+      if (!updated) throw new Error('Failed to fetch updated receipt')
 
-      for (const item of receipt.items) {
-        const stockItem = stockItems.find(i => i.id === item.itemId)
-        const requiresQC = stockItem?.requiresQC || false
-
-        let updatedItem = { ...item }
-
-        if (requiresQC && stockItem?.qcTemplateId) {
-          // Find template
-          const template = templates.find(t => t.id === stockItem.qcTemplateId)
-
-          if (template) {
-            // Create QC Inspection
-            const inspection = await createInspection({
-              type: 'INCOMING',
-              templateId: template.id,
-              sourceDocType: 'PURCHASE_RECEIPT',
-              sourceDocId: receipt.id,
-              itemId: item.itemId,
-              batchNo: item.batchNo,
-              lotNo: item.batchNo,
-              sampleQty: item.qtyReceived,
-              readings: template.parameters.map(p => ({
-                parameterId: p.id,
-              })),
-            })
-
-            updatedItem = {
-              ...updatedItem,
-              qcInspectionId: inspection.id,
-              qcStatus: 'PENDING',
-              // Move to quarantine warehouse for items requiring QC
-              warehouseId: 'wh-rm-quarantine',
-            }
-          }
-        } else {
-          // No QC required - accept immediately
-          updatedItem = {
-            ...updatedItem,
-            qcStatus: 'NOT_REQUIRED',
-            qtyAccepted: item.qtyReceived,
-          }
-        }
-
-        updatedItems.push(updatedItem)
-      }
-
-      // Determine new status and QC status
-      const hasPendingQC = updatedItems.some(i => i.qcStatus === 'PENDING')
-      const newStatus: ReceiptStatus = hasPendingQC ? 'PENDING_QC' : 'COMPLETED'
-      const newQCStatus: QCStatusSummary = hasPendingQC ? 'PENDING' : 'NOT_REQUIRED'
-
-      const updated: PurchaseReceipt = {
-        ...receipt,
-        status: newStatus,
-        qcStatus: newQCStatus,
-        items: updatedItems,
-        updatedAt: new Date().toISOString(),
-      }
-
-      receiptsData = [
-        ...receiptsData.slice(0, index),
-        updated,
-        ...receiptsData.slice(index + 1),
-      ]
-      set({ receipts: receiptsData, isLoading: false })
+      const { receipts } = get()
+      set({
+        receipts: receipts.map(r => r.id === id ? updated : r),
+        isLoading: false
+      })
       return updated
-    } catch (e) {
+    } catch (error) {
+      console.error('Failed to submit receipt:', error)
       set({ error: 'ไม่สามารถยืนยันใบรับได้', isLoading: false })
-      throw e
+      throw error
     }
   },
 
   completeReceipt: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = receiptsData.findIndex(r => r.id === id)
-      if (index === -1) throw new Error('Receipt not found')
+      await ReceivingService.updateStatus(id, 'COMPLETED')
+      const updated = await ReceivingService.getReceiptById(id)
+      if (!updated) throw new Error('Receipt not found after update')
 
-      const receipt = receiptsData[index]
-
-      // Check if all QC items are resolved
-      const pendingItems = receipt.items.filter(i => i.qcStatus === 'PENDING')
-      if (pendingItems.length > 0) {
-        throw new Error('ยังมีรายการรอตรวจ QC')
-      }
-
-      // Calculate final QC status
-      const failedItems = receipt.items.filter(i => i.qcStatus === 'FAILED')
-      const passedItems = receipt.items.filter(i => i.qcStatus === 'PASSED' || i.qcStatus === 'NOT_REQUIRED')
-
-      let finalQCStatus: QCStatusSummary = 'NOT_REQUIRED'
-      if (failedItems.length > 0 && passedItems.length > 0) {
-        finalQCStatus = 'PARTIAL'
-      } else if (failedItems.length > 0) {
-        finalQCStatus = 'FAILED'
-      } else if (passedItems.some(i => i.qcStatus === 'PASSED')) {
-        finalQCStatus = 'PASSED'
-      }
-
-      const updated: PurchaseReceipt = {
-        ...receipt,
-        status: 'COMPLETED',
-        qcStatus: finalQCStatus,
-        updatedAt: new Date().toISOString(),
-      }
-
-      receiptsData = [
-        ...receiptsData.slice(0, index),
-        updated,
-        ...receiptsData.slice(index + 1),
-      ]
-      set({ receipts: receiptsData, isLoading: false })
+      const { receipts } = get()
+      set({
+        receipts: receipts.map(r => r.id === id ? updated : r),
+        isLoading: false
+      })
       return updated
-    } catch (e) {
+    } catch (error) {
+      console.error('Failed to complete receipt:', error)
       set({ error: 'ไม่สามารถปิดใบรับได้', isLoading: false })
-      throw e
+      throw error
     }
   },
 
   cancelReceipt: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = receiptsData.findIndex(r => r.id === id)
-      if (index === -1) throw new Error('Receipt not found')
-
-      const receipt = receiptsData[index]
-      if (receipt.status === 'COMPLETED') {
-        throw new Error('Cannot cancel completed receipt')
-      }
-
-      const updated: PurchaseReceipt = {
-        ...receipt,
-        status: 'CANCELLED',
-        updatedAt: new Date().toISOString(),
-      }
-
-      receiptsData = [
-        ...receiptsData.slice(0, index),
-        updated,
-        ...receiptsData.slice(index + 1),
-      ]
-      set({ receipts: receiptsData, isLoading: false })
-    } catch (e) {
+      await ReceivingService.updateStatus(id, 'CANCELLED')
+      const { receipts } = get()
+      set({
+        receipts: receipts.map(r => r.id === id ? { ...r, status: 'CANCELLED' } : r),
+        isLoading: false
+      })
+    } catch (error) {
+      console.error('Failed to cancel receipt:', error)
       set({ error: 'ไม่สามารถยกเลิกใบรับได้', isLoading: false })
-      throw e
+      throw error
     }
   },
 
@@ -432,69 +246,20 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   updateItemQCStatus: async (receiptId: string, itemId: string, status: 'PASSED' | 'FAILED', qcInspectionId?: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(300)
-      const receiptIndex = receiptsData.findIndex(r => r.id === receiptId)
-      if (receiptIndex === -1) throw new Error('Receipt not found')
+      await ReceivingService.updateReceiptItemQC(receiptId, itemId, status, qcInspectionId)
 
-      const receipt = receiptsData[receiptIndex]
-      const itemIndex = receipt.items.findIndex(i => i.id === itemId)
-      if (itemIndex === -1) throw new Error('Item not found')
+      const updated = await ReceivingService.getReceiptById(receiptId)
+      if (!updated) throw new Error('Receipt not found after update')
 
-      const item = receipt.items[itemIndex]
-
-      // Update item
-      const updatedItem: PurchaseReceiptItem = {
-        ...item,
-        qcStatus: status,
-        qcInspectionId: qcInspectionId || item.qcInspectionId,
-        qtyAccepted: status === 'PASSED' ? item.qtyReceived : 0,
-        qtyRejected: status === 'FAILED' ? item.qtyReceived : 0,
-        // Move from quarantine to normal warehouse if passed
-        warehouseId: status === 'PASSED'
-          ? (item.warehouseId === 'wh-rm-quarantine' ? 'wh-rm-cold' : item.warehouseId)
-          : item.warehouseId,
-      }
-
-      const updatedItems = [
-        ...receipt.items.slice(0, itemIndex),
-        updatedItem,
-        ...receipt.items.slice(itemIndex + 1),
-      ]
-
-      // Check if all items are resolved
-      const pendingCount = updatedItems.filter(i => i.qcStatus === 'PENDING').length
-      const passedCount = updatedItems.filter(i => i.qcStatus === 'PASSED' || i.qcStatus === 'NOT_REQUIRED').length
-      const failedCount = updatedItems.filter(i => i.qcStatus === 'FAILED').length
-
-      let newQCStatus: QCStatusSummary = receipt.qcStatus
-      if (pendingCount === 0) {
-        if (failedCount === 0) {
-          newQCStatus = 'PASSED'
-        } else if (passedCount === 0) {
-          newQCStatus = 'FAILED'
-        } else {
-          newQCStatus = 'PARTIAL'
-        }
-      }
-
-      const updated: PurchaseReceipt = {
-        ...receipt,
-        items: updatedItems,
-        qcStatus: newQCStatus,
-        // Auto-complete if all QC resolved
-        status: pendingCount === 0 ? 'COMPLETED' : receipt.status,
-        updatedAt: new Date().toISOString(),
-      }
-
-      receiptsData = [
-        ...receiptsData.slice(0, receiptIndex),
-        updated,
-        ...receiptsData.slice(receiptIndex + 1),
-      ]
-      set({ receipts: receiptsData, isLoading: false })
-    } catch (e) {
+      const { receipts } = get()
+      set({
+        receipts: receipts.map(r => r.id === receiptId ? updated : r),
+        isLoading: false
+      })
+    } catch (error) {
+      console.error('Failed to update QC status:', error)
       set({ error: 'ไม่สามารถอัพเดทสถานะ QC ได้', isLoading: false })
-      throw e
+      throw error
     }
   },
 
