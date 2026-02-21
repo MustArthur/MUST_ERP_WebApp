@@ -199,9 +199,9 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
         const lines = input.ingredients.map((ing, index) => ({
             recipe_id: recipe.id,
             line_no: index + 1,
-            item_id: ing.code, // Will need actual item ID
+            item_id: ing.itemId, // UUID ของ item
             qty_per_batch: ing.qty,
-            uom_id: ing.uom, // Will need actual UOM ID
+            uom_id: ing.uomId, // UUID ของ UOM
             scrap_percent: ing.scrap,
             is_critical: ing.isCritical,
             is_optional: false,
@@ -278,9 +278,9 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
             const lines = input.ingredients.map((ing, index) => ({
                 recipe_id: id,
                 line_no: index + 1,
-                item_id: ing.code, // Assuming code maps to item_id for now, but ideal is ID
+                item_id: ing.itemId, // UUID ของ item
                 qty_per_batch: ing.qty,
-                uom_id: ing.uom, // Assuming uom maps to uom_id
+                uom_id: ing.uomId, // UUID ของ UOM
                 scrap_percent: ing.scrap,
                 is_critical: ing.isCritical,
                 is_optional: false,
@@ -340,6 +340,7 @@ function transformRecipeFromDB(data: any): Recipe {
             code: line.item?.code || line.item_id,
             qty: qty,
             uom: line.uom_code || line.uom_id, // Use resolved UOM code
+            uomId: line.uom_id, // UUID ของ UOM สำหรับบันทึก
             scrap: line.scrap_percent || 0,
             isCritical: line.is_critical,
             cost: itemCost, // Cost per unit

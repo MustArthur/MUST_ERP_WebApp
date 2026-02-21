@@ -66,10 +66,12 @@ export function RecipeFormModal({
   function createEmptyIngredient(): IngredientRow {
     return {
       tempId: `temp-${Date.now()}-${Math.random()}`,
+      itemId: '', // จะถูก set เมื่อเลือก material
       item: '',
       code: '',
       qty: 0,
       uom: 'G',
+      uomId: '',  // UUID ของ UOM จะถูก set เมื่อเลือก material
       scrap: 0,
       isCritical: true,
       cost: 0,
@@ -151,9 +153,11 @@ export function RecipeFormModal({
           ing.tempId === tempId
             ? {
               ...ing,
+              itemId: material.id, // UUID ของ item สำหรับบันทึก
               code: material.code,
               item: material.name,
               uom: material.base_uom_code as UnitOfMeasure || 'G',
+              uomId: material.base_uom_id, // UUID ของ UOM สำหรับบันทึก
               cost: material.last_purchase_cost,
             }
             : ing

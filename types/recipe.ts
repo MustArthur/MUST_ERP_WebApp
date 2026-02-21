@@ -14,6 +14,7 @@ export interface Ingredient {
   code: string          // รหัสวัตถุดิบ (RM-CHICKEN-001)
   qty: number           // ปริมาณ
   uom: UnitOfMeasure    // หน่วยวัด
+  uomId?: string        // UUID ของ UOM สำหรับบันทึก database
   scrap: number         // % ของเสีย
   isCritical: boolean   // วัตถุดิบหลัก
   cost: number          // ต้นทุนต่อหน่วย (บาท)
@@ -50,6 +51,7 @@ export interface CreateIngredientInput {
   code: string
   qty: number
   uom: UnitOfMeasure
+  uomId?: string      // UUID ของ UOM สำหรับบันทึก database
   scrap: number
   isCritical: boolean
   cost: number

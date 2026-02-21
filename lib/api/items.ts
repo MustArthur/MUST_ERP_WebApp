@@ -15,6 +15,7 @@ export interface Item {
     code: string
     name: string
     last_purchase_cost: number
+    base_uom_id?: string      // UUID ของ UOM
     base_uom_code?: string
     category_code?: string
 }
@@ -319,6 +320,7 @@ export async function getRecipeIngredients(): Promise<Item[]> {
         code: i.code,
         name: i.name,
         last_purchase_cost: i.last_purchase_cost || 0,
+        base_uom_id: i.base_uom_id,        // UUID ของ UOM
         base_uom_code: uomMap.get(i.base_uom_id) || 'G',
     }))
 }
