@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, Check } from 'lucide-react'
+import { Plus, Trash2, Check, Calculator } from 'lucide-react'
 import { getRecipeIngredients, getFinishedGoods, Item } from '@/lib/api/items'
 
 interface RecipeFormModalProps {
@@ -62,6 +62,32 @@ export function RecipeFormModal({
   const [ingredients, setIngredients] = useState<IngredientRow[]>([
     createEmptyIngredient(),
   ])
+
+  // Bottle calculation
+  const [bottleSize, setBottleSize] = useState(490)
+
+  // Convert to milliliters for calculation
+  const toMilliliters = (qty: number, uom: string): number => {
+    switch (uom) {
+      case 'L': return qty * 1000
+      case 'ML': return qty
+      case 'G': return qty  // 1g ≈ 1ml สำหรับของเหลว
+      default: return 0     // PC, BTL, PKG ไม่สามารถแปลงได้
+    }
+  }
+
+  // Calculate total milliliters from ingredients
+  const calculateTotalML = (): number => {
+    return ingredients
+      .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
+      .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
+  }
+
+  // Calculate number of bottles
+  const calculateBottles = (): number => {
+    const totalML = calculateTotalML()
+    return bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
+  }
 
   function createEmptyIngredient(): IngredientRow {
     return {
@@ -291,6 +317,43 @@ export function RecipeFormModal({
                 onChange={e => setEstimatedTime(Number(e.target.value))}
               />
             </div>
+          </div>
+
+          {/* Bottle Calculation */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Calculator className="w-4 h-4 text-blue-600" />
+              <Label className="text-blue-800 font-medium">คำนวณจำนวนขวด</Label>
+            </div>
+            <div className="grid grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="bottleSize" className="text-sm text-gray-600">ขนาดขวด (ML)</Label>
+                <Input
+                  id="bottleSize"
+                  type="number"
+                  value={bottleSize}
+                  onChange={e => setBottleSize(Number(e.target.value))}
+                  className="bg-white"
+                />
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-500">ปริมาณรวม</div>
+                <div className="text-lg font-semibold text-gray-700">
+                  {calculateTotalML().toLocaleString()} ML
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-500">จำนวนขวดที่ผลิตได้</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {calculateBottles().toLocaleString()} ขวด
+                </div>
+              </div>
+            </div>
+            {ingredients.some(ing => !['L', 'ML', 'G'].includes(ing.uom) && ing.qty > 0) && (
+              <p className="text-xs text-amber-600 mt-2">
+                * มีวัตถุดิบที่ไม่ใช่หน่วย G/ML/L จึงไม่ถูกนำมาคำนวณ
+              </p>
+            )}
           </div>
 
           {/* Ingredients */}
