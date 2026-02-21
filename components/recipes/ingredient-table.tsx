@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Ingredient } from '@/types/recipe'
 import { calculateIngredientCost } from '@/stores/recipe-store'
 import { formatNumber, formatCurrency } from '@/lib/utils'
@@ -45,8 +46,16 @@ export function IngredientTable({ ingredients, batchMultiplier = 1, showTotal = 
             return (
               <tr key={ing.id} className="hover:bg-gray-50">
                 <td className="px-3 py-2 text-sm text-gray-500">{ing.lineNo}</td>
-                <td className="px-3 py-2 text-sm font-mono text-blue-600">{ing.code}</td>
-                <td className="px-3 py-2 text-sm">{ing.item}</td>
+                <td className="px-3 py-2 text-sm font-mono">
+                  <Link href={`/items/${ing.itemId}`} className="text-blue-600 hover:underline">
+                    {ing.code}
+                  </Link>
+                </td>
+                <td className="px-3 py-2 text-sm">
+                  <Link href={`/items/${ing.itemId}`} className="hover:text-blue-600 hover:underline">
+                    {ing.item}
+                  </Link>
+                </td>
                 <td className="px-3 py-2 text-sm text-right">
                   {formatNumber(ing.qty * batchMultiplier, 2)} {ing.uom}
                 </td>

@@ -95,6 +95,7 @@ function createIngredients(items: [string, string, number, UnitOfMeasure, number
   return items.map((item, idx) => ({
     id: `ing-${Date.now()}-${idx}`,
     lineNo: idx + 1,
+    itemId: `item-${item[1]}`, // Generate itemId from code for mock data
     item: item[0],
     code: item[1],
     qty: item[2],

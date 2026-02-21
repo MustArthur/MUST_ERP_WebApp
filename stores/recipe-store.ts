@@ -112,6 +112,7 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
           ...ing,
           id: generateId(),
           lineNo: idx + 1,
+          itemId: ing.itemId || `item-${ing.code}`,
         })),
         createdAt: now,
         updatedAt: now,
@@ -159,6 +160,7 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
             ...ing,
             id: generateId(),
             lineNo: i + 1,
+            itemId: ing.itemId || `item-${ing.code}`,
           }))
           : recipesData[idx].ingredients,
         updatedAt: now,

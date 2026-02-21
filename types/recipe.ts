@@ -9,6 +9,7 @@ export type UnitOfMeasure = 'KG' | 'G' | 'L' | 'ML' | 'PC' | 'BTL' | 'PKG'
 export interface Ingredient {
   id: string
   lineNo: number
+  itemId: string        // ID ของ item สำหรับ link ไปหน้ารายละเอียด
   item: string          // ชื่อวัตถุดิบ
   code: string          // รหัสวัตถุดิบ (RM-CHICKEN-001)
   qty: number           // ปริมาณ
@@ -44,6 +45,7 @@ export interface Recipe {
 // ==========================================
 
 export interface CreateIngredientInput {
+  itemId?: string     // ID ของ item (optional - จะ generate ถ้าไม่ส่งมา)
   item: string
   code: string
   qty: number

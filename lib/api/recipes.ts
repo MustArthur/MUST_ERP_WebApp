@@ -329,6 +329,7 @@ function transformRecipeFromDB(data: any): Recipe {
         return {
             id: line.id,
             lineNo: line.line_no,
+            itemId: line.item_id, // ID ของ item สำหรับ link
             item: line.item?.name || 'Unknown',
             code: line.item?.code || line.item_id,
             qty: qty,
