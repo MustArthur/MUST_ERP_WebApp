@@ -139,8 +139,9 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
           const recipes = await recipeApi.getRecipes()
           set({ recipes, isLoading: false, selectedRecipe: updated })
           return updated
-        } catch (supabaseError) {
-          console.warn('Supabase update error, falling back to mock:', supabaseError)
+        } catch (supabaseError: any) {
+          console.warn('Supabase update error:', supabaseError)
+          throw new Error(supabaseError?.message || 'Supabase update failed')
         }
       }
 
@@ -170,9 +171,10 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
       set({ recipes: [...recipesData], isLoading: false, selectedRecipe: updated })
 
       return updated
-    } catch {
-      set({ error: 'ไม่สามารถแก้ไขสูตรได้', isLoading: false })
-      throw new Error('Failed to update recipe')
+    } catch (err: any) {
+      console.error('Update recipe error:', err)
+      set({ error: err?.message || 'ไม่สามารถแก้ไขสูตรได้', isLoading: false })
+      throw new Error(err?.message || 'Failed to update recipe')
     }
   },
 

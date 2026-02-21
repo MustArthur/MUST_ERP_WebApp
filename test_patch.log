@@ -1,0 +1,22 @@
+node:internal/modules/cjs/loader:1365
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module './lib/api/recipes'
+Require stack:
+- /Users/art_tamrongsak/Documents/MUST_ERP_WebApp/test_patch.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1021:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1026:22)
+    at Function._load (node:internal/modules/cjs/loader:1175:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1445:12)
+    at require (node:internal/modules/helpers:135:16)
+    at run (/Users/art_tamrongsak/Documents/MUST_ERP_WebApp/test_patch.js:14:30)
+    at Object.<anonymous> (/Users/art_tamrongsak/Documents/MUST_ERP_WebApp/test_patch.js:47:1) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ '/Users/art_tamrongsak/Documents/MUST_ERP_WebApp/test_patch.js' ]
+}
+
+Node.js v22.18.0

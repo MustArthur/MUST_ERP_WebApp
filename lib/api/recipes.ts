@@ -166,6 +166,8 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
 /**
  * Create new recipe
  */
+const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
 export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
     // First, create the recipe
     const { data: recipe, error: recipeError } = await supabase
@@ -204,6 +206,8 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
             is_critical: ing.isCritical,
             is_optional: false,
         }))
+
+        if (lines.length === 0) return getRecipeById(recipe.id) as Promise<Recipe>;
 
         const { error: linesError } = await supabase
             .from('recipe_lines')
@@ -281,6 +285,8 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
                 is_critical: ing.isCritical,
                 is_optional: false,
             }))
+
+            if (lines.length === 0) return getRecipeById(id) as Promise<Recipe>;
 
             const { error: insertError } = await supabase
                 .from('recipe_lines')

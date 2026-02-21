@@ -1,0 +1,11 @@
+Recipe: {
+  id: '24e24409-937e-4f79-b8f1-3c09b8d36c45',
+  code: 'BOM-CK-STRAWBERRY-001'
+}
+Inserting invalid lines...
+Insert Error: {
+  code: '22P02',
+  details: null,
+  hint: null,
+  message: 'invalid input syntax for type uuid: "some-invalid-uuid-or-code"'
+}

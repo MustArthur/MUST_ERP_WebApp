@@ -1,0 +1,72 @@
+Any lines? [
+  {
+    id: '533b627f-cb39-4523-bffe-0b12e26db37a',
+    recipe_id: '61656fa3-c9b8-492b-9b16-3759f9166121',
+    line_no: 1,
+    item_id: '79c89f06-8c2d-4128-a49b-887a78d8a486',
+    qty_per_batch: 4500,
+    uom_id: 'ab58e2b9-c8d0-40da-bee8-2860ad6a87ef',
+    scrap_percent: 0,
+    is_critical: true,
+    is_optional: false,
+    substitute_item_id: null,
+    notes: null,
+    created_at: '2026-01-31T13:53:57.889066+00:00'
+  },
+  {
+    id: '9d7d42c5-0477-4101-b161-66518c55a118',
+    recipe_id: '61656fa3-c9b8-492b-9b16-3759f9166121',
+    line_no: 2,
+    item_id: 'fa60a5e0-489a-40ec-a5c7-5940ed8efbf4',
+    qty_per_batch: 750,
+    uom_id: 'ab58e2b9-c8d0-40da-bee8-2860ad6a87ef',
+    scrap_percent: 0,
+    is_critical: true,
+    is_optional: false,
+    substitute_item_id: null,
+    notes: null,
+    created_at: '2026-01-31T13:53:57.889066+00:00'
+  },
+  {
+    id: '74208bcf-9bd0-4562-8ce7-86c11e9400d2',
+    recipe_id: '61656fa3-c9b8-492b-9b16-3759f9166121',
+    line_no: 3,
+    item_id: 'ccd21851-154e-4aed-b4a9-878a063cfbd1',
+    qty_per_batch: 15,
+    uom_id: 'ab58e2b9-c8d0-40da-bee8-2860ad6a87ef',
+    scrap_percent: 0,
+    is_critical: true,
+    is_optional: false,
+    substitute_item_id: null,
+    notes: null,
+    created_at: '2026-01-31T13:53:57.889066+00:00'
+  },
+  {
+    id: 'c472c123-904a-43f6-bda6-820ec1badce7',
+    recipe_id: '61656fa3-c9b8-492b-9b16-3759f9166121',
+    line_no: 4,
+    item_id: '109e7ef3-26bf-486e-b790-32835eb56cf5',
+    qty_per_batch: 18,
+    uom_id: 'ab58e2b9-c8d0-40da-bee8-2860ad6a87ef',
+    scrap_percent: 0,
+    is_critical: true,
+    is_optional: false,
+    substitute_item_id: null,
+    notes: null,
+    created_at: '2026-01-31T13:53:57.889066+00:00'
+  },
+  {
+    id: '50638849-22a6-49b7-889f-2dd283aca075',
+    recipe_id: '61656fa3-c9b8-492b-9b16-3759f9166121',
+    line_no: 5,
+    item_id: '630f9ef4-ae27-4625-8635-e65963c4eda1',
+    qty_per_batch: 15,
+    uom_id: 'ab58e2b9-c8d0-40da-bee8-2860ad6a87ef',
+    scrap_percent: 0,
+    is_critical: true,
+    is_optional: false,
+    substitute_item_id: null,
+    notes: null,
+    created_at: '2026-01-31T13:53:57.889066+00:00'
+  }
+]
