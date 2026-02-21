@@ -1,6 +1,7 @@
 'use client'
 
-import { Recipe } from '@/types/recipe'
+import { useState } from 'react'
+import { Recipe, Ingredient } from '@/types/recipe'
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,28 @@ export function RecipeDetailModal({
   onDuplicate,
   onDelete,
 }: RecipeDetailModalProps) {
+  const [bottleSize, setBottleSize] = useState(490)
+
+  // Bottle calculation functions
+  const toMilliliters = (qty: number, uom: string): number => {
+    switch (uom) {
+      case 'L': return qty * 1000
+      case 'ML': return qty
+      case 'G': return qty  // 1g ≈ 1ml สำหรับของเหลว
+      default: return 0
+    }
+  }
+
+  const calculateBottleCount = (ingredients: Ingredient[]): number => {
+    const totalML = ingredients
+      .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
+      .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
+    return bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
+  }
+
   if (!recipe) return null
+
+  const bottleCount = calculateBottleCount(recipe.ingredients)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -93,7 +115,10 @@ export function RecipeDetailModal({
           <div className="flex-1 overflow-y-auto mt-4">
             {/* Ingredients Tab */}
             <TabsContent value="ingredients" className="m-0">
-              <IngredientTable ingredients={recipe.ingredients} />
+              <IngredientTable
+                ingredients={recipe.ingredients}
+                bottleCount={bottleCount}
+              />
             </TabsContent>
 
             {/* Instructions Tab */}

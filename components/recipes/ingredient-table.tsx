@@ -9,9 +9,10 @@ interface IngredientTableProps {
   ingredients: Ingredient[]
   batchMultiplier?: number
   showTotal?: boolean
+  bottleCount?: number      // จำนวนขวดที่ผลิตได้ (ถ้ามีจะแสดงต้นทุนต่อขวด)
 }
 
-export function IngredientTable({ ingredients, batchMultiplier = 1, showTotal = true }: IngredientTableProps) {
+export function IngredientTable({ ingredients, batchMultiplier = 1, showTotal = true, bottleCount }: IngredientTableProps) {
   const calculateTotal = () => {
     return ingredients.reduce((sum, ing) => {
       const { totalCost } = calculateIngredientCost(ing.qty, ing.scrap, ing.cost)
@@ -82,10 +83,17 @@ export function IngredientTable({ ingredients, batchMultiplier = 1, showTotal = 
           <tfoot className="bg-blue-50">
             <tr>
               <td colSpan={7} className="px-3 py-3 text-right font-medium">
-                ต้นทุนวัตถุดิบรวม{batchMultiplier > 1 ? ` (${batchMultiplier} Batch)` : ' ต่อ Batch'}:
+                {bottleCount && bottleCount > 0 ? (
+                  `ต้นทุนต่อขวด (${bottleCount} ขวด):`
+                ) : (
+                  `ต้นทุนวัตถุดิบรวม${batchMultiplier > 1 ? ` (${batchMultiplier} Batch)` : ' ต่อ Batch'}:`
+                )}
               </td>
-              <td className="px-3 py-3 text-right font-bold text-blue-600">
-                {formatCurrency(total)}
+              <td className="px-3 py-3 text-right font-bold text-green-600">
+                {bottleCount && bottleCount > 0
+                  ? formatCurrency(total / bottleCount)
+                  : formatCurrency(total)
+                }
               </td>
               <td></td>
             </tr>

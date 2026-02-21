@@ -89,6 +89,21 @@ export function RecipeFormModal({
     return bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
   }
 
+  // Calculate total material cost
+  const calculateTotalCost = (): number => {
+    return ingredients.reduce((sum, ing) => {
+      const qtyWithScrap = ing.qty * (1 + ing.scrap / 100)
+      return sum + (qtyWithScrap * ing.cost)
+    }, 0)
+  }
+
+  // Calculate cost per bottle
+  const calculateCostPerBottle = (): number => {
+    const bottles = calculateBottles()
+    const totalCost = calculateTotalCost()
+    return bottles > 0 ? totalCost / bottles : 0
+  }
+
   function createEmptyIngredient(): IngredientRow {
     return {
       tempId: `temp-${Date.now()}-${Math.random()}`,
@@ -323,9 +338,9 @@ export function RecipeFormModal({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Calculator className="w-4 h-4 text-blue-600" />
-              <Label className="text-blue-800 font-medium">คำนวณจำนวนขวด</Label>
+              <Label className="text-blue-800 font-medium">คำนวณจำนวนขวด และต้นทุน</Label>
             </div>
-            <div className="grid grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
               <div className="space-y-2">
                 <Label htmlFor="bottleSize" className="text-sm text-gray-600">ขนาดขวด (ML)</Label>
                 <Input
@@ -343,15 +358,21 @@ export function RecipeFormModal({
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-sm text-gray-500">จำนวนขวดที่ผลิตได้</div>
+                <div className="text-sm text-gray-500">จำนวนขวด</div>
                 <div className="text-2xl font-bold text-blue-600">
                   {calculateBottles().toLocaleString()} ขวด
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-500">ต้นทุนต่อขวด</div>
+                <div className="text-2xl font-bold text-green-600">
+                  ฿{calculateCostPerBottle().toFixed(2)}
                 </div>
               </div>
             </div>
             {ingredients.some(ing => !['L', 'ML', 'G'].includes(ing.uom) && ing.qty > 0) && (
               <p className="text-xs text-amber-600 mt-2">
-                * มีวัตถุดิบที่ไม่ใช่หน่วย G/ML/L จึงไม่ถูกนำมาคำนวณ
+                * มีวัตถุดิบที่ไม่ใช่หน่วย G/ML/L จึงไม่ถูกนำมาคำนวณปริมาณ
               </p>
             )}
           </div>
