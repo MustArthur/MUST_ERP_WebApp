@@ -37,6 +37,7 @@ export interface Recipe {
   estimatedTime: number         // เวลาผลิตโดยประมาณ (นาที)
   ingredients: Ingredient[]     // รายการส่วนประกอบ
   instructions: string          // ขั้นตอนการผลิต
+  bottleSize?: number           // ขนาดขวด (ml) สำหรับคำนวณจำนวนขวด
   createdAt: string
   updatedAt: string
 }
@@ -70,6 +71,7 @@ export interface CreateRecipeInput {
   ingredients: CreateIngredientInput[]
   instructions: string
   status?: RecipeStatus
+  bottleSize?: number           // ขนาดขวด (ml) สำหรับคำนวณจำนวนขวด
 }
 
 export type UpdateRecipeInput = Partial<CreateRecipeInput>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Recipe, Ingredient } from '@/types/recipe'
 import {
   Dialog,
@@ -33,7 +33,14 @@ export function RecipeDetailModal({
   onDuplicate,
   onDelete,
 }: RecipeDetailModalProps) {
-  const [bottleSize, setBottleSize] = useState(490)
+  const [bottleSize, setBottleSize] = useState(recipe?.bottleSize || 490)
+
+  // Update bottleSize when recipe changes
+  useEffect(() => {
+    if (recipe?.bottleSize) {
+      setBottleSize(recipe.bottleSize)
+    }
+  }, [recipe])
 
   // Bottle calculation functions
   const toMilliliters = (qty: number, uom: string): number => {

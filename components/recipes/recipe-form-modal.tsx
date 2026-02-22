@@ -145,6 +145,7 @@ export function RecipeFormModal({
       setExpectedYield(recipe.expectedYield)
       setEstimatedTime(recipe.estimatedTime)
       setInstructions(recipe.instructions)
+      setBottleSize(recipe.bottleSize || 490)
       setIngredients(
         recipe.ingredients.map(ing => ({
           ...ing,
@@ -231,6 +232,7 @@ export function RecipeFormModal({
         instructions,
         ingredients: ingredients.map(({ tempId, ...ing }) => ing),
         status,
+        bottleSize,
       }
       await onSave(data, status)
       onClose()

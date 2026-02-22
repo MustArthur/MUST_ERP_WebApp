@@ -14,7 +14,7 @@ export async function getRecipes(status?: string): Promise<Recipe[]> {
     let query = supabase
         .from('recipes')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('updated_at', { ascending: false })
 
     if (status && status !== 'all') {
         query = query.eq('status', status.toUpperCase())
@@ -185,6 +185,7 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
             instructions: input.instructions,
             status: (input.status || 'DRAFT').toUpperCase(),
             version: 1,
+            bottle_size: input.bottleSize || 490, // ขนาดขวด (ml) default 490
         })
         .select()
         .single()
@@ -239,6 +240,7 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
     if (input.estimatedTime !== undefined) updateData.estimated_duration_minutes = input.estimatedTime
     if (input.instructions !== undefined) updateData.instructions = input.instructions
     if (input.status !== undefined) updateData.status = input.status.toUpperCase()
+    if (input.bottleSize !== undefined) updateData.bottle_size = input.bottleSize
 
     console.log('updateData being sent to Supabase:', updateData)
 
@@ -368,6 +370,7 @@ function transformRecipeFromDB(data: any): Recipe {
         estimatedTime: data.estimated_duration_minutes || 0,
         ingredients,
         instructions: data.instructions || '',
+        bottleSize: data.bottle_size || 490, // ขนาดขวด (ml) default 490
         createdAt: data.created_at,
         updatedAt: data.updated_at,
     }
