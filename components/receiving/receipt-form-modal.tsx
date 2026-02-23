@@ -12,7 +12,7 @@ import {
 import { UnitOfMeasure } from '@/types/inventory'
 import { useReceivingStore } from '@/stores/receiving-store'
 import { useInventoryStore } from '@/stores/inventory-store'
-import { getRawMaterials, Item } from '@/lib/api/items'
+import { getRawMaterials, getSupplierItems, Item } from '@/lib/api/items'
 import {
   Dialog,
   DialogContent,
@@ -134,19 +134,39 @@ export function ReceiptFormModal({
     name: 'items',
   })
 
+  // Watch supplier selection
+  const selectedSupplierId = form.watch('supplierId')
+
   // Load data on mount
   useEffect(() => {
     fetchSuppliers()
     fetchStockItems()
     fetchWarehouses()
-
-    // Load raw materials from Supabase
-    async function loadRawMaterials() {
-      const items = await getRawMaterials()
-      setRawMaterials(items)
-    }
-    loadRawMaterials()
   }, [fetchSuppliers, fetchStockItems, fetchWarehouses])
+
+  // Load items when supplier changes
+  useEffect(() => {
+    async function loadItemsForSupplier() {
+      if (selectedSupplierId) {
+        // Load items for this supplier
+        const items = await getSupplierItems(selectedSupplierId)
+        setRawMaterials(items)
+
+        // Clear existing item selections if supplier changed (except when editing)
+        if (!receipt) {
+          const currentItems = form.getValues('items')
+          currentItems.forEach((_, index) => {
+            form.setValue(`items.${index}.itemId`, '')
+            form.setValue(`items.${index}.unitPrice`, 0)
+          })
+        }
+      } else {
+        // No supplier selected, show empty list
+        setRawMaterials([])
+      }
+    }
+    loadItemsForSupplier()
+  }, [selectedSupplierId, receipt, form])
 
   // Populate form when editing
   useEffect(() => {
@@ -410,21 +430,34 @@ export function ReceiptFormModal({
                                     handleItemChange(index, value)
                                   }}
                                   value={field.value}
+                                  disabled={!selectedSupplierId}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="เลือกสินค้า" />
+                                      <SelectValue placeholder={
+                                        !selectedSupplierId
+                                          ? "กรุณาเลือก Supplier ก่อน"
+                                          : rawMaterials.length === 0
+                                            ? "ไม่พบสินค้าสำหรับ Supplier นี้"
+                                            : "เลือกสินค้า"
+                                      } />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {rawMaterials.map((item) => (
-                                      <SelectItem key={item.id} value={item.id}>
-                                        <div className="flex items-center gap-2">
-                                          <span>{item.name}</span>
-                                          <span className="text-gray-500">({item.code})</span>
-                                        </div>
-                                      </SelectItem>
-                                    ))}
+                                    {rawMaterials.length === 0 ? (
+                                      <div className="py-6 text-center text-sm text-gray-500">
+                                        ไม่พบสินค้าสำหรับ Supplier นี้
+                                      </div>
+                                    ) : (
+                                      rawMaterials.map((item) => (
+                                        <SelectItem key={item.id} value={item.id}>
+                                          <div className="flex items-center gap-2">
+                                            <span>{item.name}</span>
+                                            <span className="text-gray-500">({item.code})</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))
+                                    )}
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />

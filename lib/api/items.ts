@@ -285,6 +285,63 @@ export async function getRawMaterials(): Promise<Item[]> {
 }
 
 /**
+ * Get items for a specific supplier from item_suppliers junction table
+ */
+export async function getSupplierItems(supplierId: string): Promise<Item[]> {
+    const { data, error } = await supabase
+        .from('item_suppliers')
+        .select(`
+            item_id,
+            purchase_price,
+            items!inner (
+                id,
+                code,
+                name,
+                last_purchase_cost,
+                base_uom_id,
+                category_id
+            )
+        `)
+        .eq('supplier_id', supplierId)
+        .eq('is_active', true)
+
+    if (error) {
+        console.error('Error fetching supplier items:', error)
+        return []
+    }
+
+    if (!data || data.length === 0) {
+        return []
+    }
+
+    // Get UOMs for items
+    const uomIds = Array.from(new Set(
+        data.map(row => (row.items as any)?.base_uom_id).filter(Boolean)
+    ))
+
+    const { data: uoms } = await supabase
+        .from('units_of_measure')
+        .select('id, code')
+        .in('id', uomIds)
+
+    const uomMap = new Map((uoms || []).map(u => [u.id, u.code]))
+
+    // Transform to Item format
+    return data.map(row => {
+        const item = row.items as any
+        return {
+            id: item.id,
+            code: item.code,
+            name: item.name,
+            last_purchase_cost: row.purchase_price || item.last_purchase_cost || 0,
+            base_uom_id: item.base_uom_id,
+            base_uom_code: uomMap.get(item.base_uom_id) || 'G',
+            category_id: item.category_id,
+        }
+    })
+}
+
+/**
  * Get all ingredients for recipe (RM- and SP-)
  */
 export async function getRecipeIngredients(): Promise<Item[]> {
