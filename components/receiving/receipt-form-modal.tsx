@@ -38,6 +38,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { cn, formatCurrency } from '@/lib/utils'
 import {
   Plus,
@@ -101,9 +102,11 @@ export function ReceiptFormModal({
   const { stockItems, warehouses, fetchStockItems, fetchWarehouses } = useInventoryStore()
 
   // Filter raw material warehouses (including quarantine)
-  const rawMaterialWarehouses = warehouses.filter(
-    w => w.type === 'RAW_MATERIAL'
-  )
+  // Fallback: ถ้าไม่มี RAW_MATERIAL warehouse, แสดงทุก ACTIVE warehouse
+  const rawMaterialOnly = warehouses.filter(w => w.type === 'RAW_MATERIAL')
+  const rawMaterialWarehouses = rawMaterialOnly.length > 0
+    ? rawMaterialOnly
+    : warehouses.filter(w => w.status === 'ACTIVE')
 
   const form = useForm<ReceiptFormValues>({
     resolver: zodResolver(receiptFormSchema),
@@ -148,17 +151,13 @@ export function ReceiptFormModal({
   useEffect(() => {
     async function loadItemsForSupplier() {
       if (selectedSupplierId) {
-        // Load items for this supplier
-        const items = await getSupplierItems(selectedSupplierId)
-        setRawMaterials(items)
-
-        // Clear existing item selections if supplier changed (except when editing)
-        if (!receipt) {
-          const currentItems = form.getValues('items')
-          currentItems.forEach((_, index) => {
-            form.setValue(`items.${index}.itemId`, '')
-            form.setValue(`items.${index}.unitPrice`, 0)
-          })
+        try {
+          // Load items for this supplier
+          const items = await getSupplierItems(selectedSupplierId)
+          setRawMaterials(items)
+        } catch (error) {
+          console.error('Error loading supplier items:', error)
+          setRawMaterials([])
         }
       } else {
         // No supplier selected, show empty list
@@ -166,7 +165,8 @@ export function ReceiptFormModal({
       }
     }
     loadItemsForSupplier()
-  }, [selectedSupplierId, receipt, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSupplierId])
 
   // Populate form when editing
   useEffect(() => {
@@ -198,12 +198,16 @@ export function ReceiptFormModal({
     if (item) {
       form.setValue(`items.${index}.uom`, item.base_uom_code || 'KG')
       form.setValue(`items.${index}.unitPrice`, item.last_purchase_cost || 0)
-      // Set default warehouse based on item type
-      const defaultWarehouse = warehouses.find(
-        w => w.type === 'RAW_MATERIAL' && w.status === 'ACTIVE'
-      )
-      if (defaultWarehouse) {
-        form.setValue(`items.${index}.warehouseId`, defaultWarehouse.id)
+
+      // Auto-select warehouse: ถ้ามีแค่ 1 ตัว เลือกเลย
+      if (rawMaterialWarehouses.length === 1) {
+        form.setValue(`items.${index}.warehouseId`, rawMaterialWarehouses[0].id)
+      } else if (rawMaterialWarehouses.length > 1) {
+        // ถ้ามีหลายตัว เลือก default/active ตัวแรก
+        const defaultWarehouse = rawMaterialWarehouses.find(w => w.status === 'ACTIVE')
+        if (defaultWarehouse) {
+          form.setValue(`items.${index}.warehouseId`, defaultWarehouse.id)
+        }
       }
     }
   }
@@ -214,9 +218,22 @@ export function ReceiptFormModal({
     return sum + (item.qtyReceived || 0) * (item.unitPrice || 0)
   }, 0)
 
+  // Handle form validation errors
+  const onError = (errors: any) => {
+    console.error('Form validation errors:', errors)
+    // Show first error in alert for user visibility
+    const firstError = Object.values(errors)[0] as any
+    if (firstError?.message) {
+      alert(`Validation Error: ${firstError.message}`)
+    } else if (firstError?.root?.message) {
+      alert(`Validation Error: ${firstError.root.message}`)
+    }
+  }
+
   const onSubmit = async (data: ReceiptFormValues) => {
     try {
       setIsSubmitting(true)
+      console.log('Form submitted:', data)
       await onSave({
         supplierId: data.supplierId,
         receiptDate: data.receiptDate,
@@ -274,7 +291,7 @@ export function ReceiptFormModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+          <form onSubmit={form.handleSubmit(onSubmit, onError)} className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto space-y-6 py-4">
               {/* Header Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -284,27 +301,20 @@ export function ReceiptFormModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Supplier *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="เลือก Supplier" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {suppliers.map((supplier) => (
-                            <SelectItem key={supplier.id} value={supplier.id}>
-                              <div className="flex items-center gap-2">
-                                <span>{supplier.name}</span>
-                                {supplier.qualityScore && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {supplier.qualityScore}%
-                                  </Badge>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSelect
+                          options={suppliers.map(s => ({
+                            value: s.id,
+                            label: s.name,
+                            description: s.code,
+                          }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="เลือก Supplier"
+                          searchPlaceholder="พิมพ์ชื่อ Supplier..."
+                          emptyMessage="ไม่พบ Supplier"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
