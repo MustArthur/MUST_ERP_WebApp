@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Supplier, CreateSupplierInput, UpdateSupplierInput } from '@/types/supplier'
+import { generateSupplierCode } from '@/lib/api/suppliers'
 import {
     Dialog,
     DialogContent,
@@ -70,34 +71,50 @@ export function SupplierFormModal({
         },
     })
 
-    // Populate form when editing
+    // Populate form when editing or generate code for new supplier
     useEffect(() => {
-        if (supplier) {
-            form.reset({
-                code: supplier.code,
-                name: supplier.name,
-                contactName: supplier.contactName || '',
-                phone: supplier.phone || '',
-                email: supplier.email || '',
-                address: supplier.address || '',
-                taxId: supplier.taxId || '',
-                paymentTerms: supplier.paymentTerms,
-                isActive: supplier.isActive,
-            })
-        } else {
-            form.reset({
-                code: '',
-                name: '',
-                contactName: '',
-                phone: '',
-                email: '',
-                address: '',
-                taxId: '',
-                paymentTerms: 30,
-                isActive: true,
-            })
+        async function initializeForm() {
+            if (supplier) {
+                // Edit mode: populate existing data
+                form.reset({
+                    code: supplier.code,
+                    name: supplier.name,
+                    contactName: supplier.contactName || '',
+                    phone: supplier.phone || '',
+                    email: supplier.email || '',
+                    address: supplier.address || '',
+                    taxId: supplier.taxId || '',
+                    paymentTerms: supplier.paymentTerms,
+                    isActive: supplier.isActive,
+                })
+            } else {
+                // Create mode: generate new code
+                form.reset({
+                    code: '',
+                    name: '',
+                    contactName: '',
+                    phone: '',
+                    email: '',
+                    address: '',
+                    taxId: '',
+                    paymentTerms: 30,
+                    isActive: true,
+                })
+
+                // Auto-generate supplier code
+                try {
+                    const newCode = await generateSupplierCode()
+                    form.setValue('code', newCode)
+                } catch (error) {
+                    console.error('Failed to generate supplier code:', error)
+                }
+            }
         }
-    }, [supplier, form])
+
+        if (isOpen) {
+            initializeForm()
+        }
+    }, [supplier, form, isOpen])
 
     const onSubmit = async (data: SupplierFormValues) => {
         try {
@@ -163,9 +180,9 @@ export function SupplierFormModal({
                                         <FormLabel>รหัส *</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="SUP-XXX"
+                                                placeholder="SUP-YYYY-NNNN"
                                                 {...field}
-                                                disabled={isEditing}
+                                                disabled={true}
                                                 className="font-mono"
                                             />
                                         </FormControl>

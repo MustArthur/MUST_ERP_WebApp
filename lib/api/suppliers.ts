@@ -135,6 +135,26 @@ export async function deleteSupplier(id: string): Promise<boolean> {
 }
 
 /**
+ * Generate next supplier code in format: SUP-YYYY-NNNN
+ */
+export async function generateSupplierCode(): Promise<string> {
+    const year = new Date().getFullYear()
+
+    // Count existing suppliers to generate next number
+    const { count, error } = await supabase
+        .from('suppliers')
+        .select('*', { count: 'exact', head: true })
+
+    if (error) {
+        console.error('Error counting suppliers:', error)
+        throw error
+    }
+
+    const nextNum = (count || 0) + 1
+    return `SUP-${year}-${nextNum.toString().padStart(4, '0')}`
+}
+
+/**
  * Get items sold by a supplier
  */
 export interface SupplierItem {
