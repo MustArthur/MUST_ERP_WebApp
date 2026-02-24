@@ -370,6 +370,7 @@ export class ReceivingService {
                 qtyRejected: item.qty_rejected,
                 // Map UOM object back to string code to match types
                 uom: item.uom?.code as any,
+                uomId: item.uom_id, // Include UOM ID for inventory operations
                 batchNo: item.batch_no,
                 mfgDate: item.mfg_date,
                 expDate: item.exp_date,

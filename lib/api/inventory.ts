@@ -465,3 +465,79 @@ export async function adjustStock(input: {
         if (insertError) throw insertError
     }
 }
+
+// ==========================================
+// Receive Stock from Purchase Receipt
+// ==========================================
+
+export interface ReceiveStockInput {
+    receiptId: string
+    receiptCode: string
+    items: {
+        itemId: string
+        warehouseId: string
+        qty: number
+        unitPrice: number
+        batchNo?: string
+        mfgDate?: string
+        expDate?: string
+        uomId?: string
+    }[]
+}
+
+export async function receiveStock(input: ReceiveStockInput): Promise<void> {
+    // Import createTransaction dynamically to avoid circular dependency
+    const { createTransaction } = await import('./inventory-transactions')
+
+    for (const item of input.items) {
+        // 1. Create or update Lot if batch number exists
+        let lotId: string | null = null
+        if (item.batchNo) {
+            // Try to find existing lot
+            const { data: existingLot } = await supabase
+                .from('lots')
+                .select('id')
+                .eq('item_id', item.itemId)
+                .eq('lot_number', item.batchNo)
+                .maybeSingle()
+
+            if (existingLot) {
+                lotId = existingLot.id
+            } else {
+                // Create new lot
+                const { data: newLot, error: lotError } = await supabase
+                    .from('lots')
+                    .insert({
+                        item_id: item.itemId,
+                        lot_number: item.batchNo,
+                        manufactured_date: item.mfgDate || null,
+                        expiry_date: item.expDate || null,
+                        initial_qty: item.qty,
+                        status: 'AVAILABLE'
+                    })
+                    .select('id')
+                    .single()
+
+                if (lotError) {
+                    console.error('Error creating lot:', lotError)
+                } else {
+                    lotId = newLot.id
+                }
+            }
+        }
+
+        // 2. Create inventory transaction (this also updates stock_on_hand)
+        await createTransaction({
+            transactionType: 'RECEIVE',
+            itemId: item.itemId,
+            lotId: lotId || undefined,
+            toWarehouseId: item.warehouseId,
+            qty: item.qty,
+            uomId: item.uomId,
+            unitCost: item.unitPrice,
+            referenceType: 'PURCHASE_RECEIPT',
+            referenceId: input.receiptId,
+            notes: `รับสินค้าจากใบรับ ${input.receiptCode}`
+        })
+    }
+}

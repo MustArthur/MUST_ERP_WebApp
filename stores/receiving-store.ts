@@ -19,6 +19,7 @@ import {
 import { delay } from '@/lib/utils'
 import { ReceivingService } from '@/lib/services/receiving-service'
 import { createClient } from '@/lib/supabase/client'
+import { receiveStock } from '@/lib/api/inventory'
 
 const supabase = createClient()
 
@@ -188,8 +189,24 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
         // Has items requiring QC → set status to PENDING_QC
         await ReceivingService.updateStatus(id, 'PENDING_QC', 'PENDING')
       } else {
-        // No items requiring QC → set status to COMPLETED
+        // No items requiring QC → set status to COMPLETED and update stock
         await ReceivingService.updateStatus(id, 'COMPLETED', 'NOT_REQUIRED')
+
+        // Update stock for all items (no QC required means all items go to stock)
+        await receiveStock({
+          receiptId: receipt.id,
+          receiptCode: receipt.code,
+          items: receipt.items.map(item => ({
+            itemId: item.itemId,
+            warehouseId: item.warehouseId,
+            qty: item.qtyReceived,
+            unitPrice: item.unitPrice,
+            batchNo: item.batchNo,
+            mfgDate: item.mfgDate,
+            expDate: item.expDate,
+            uomId: item.uomId
+          }))
+        })
       }
 
       // Fetch updated receipt
@@ -212,7 +229,37 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   completeReceipt: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
+      // Get receipt first to update stock
+      const receipt = await ReceivingService.getReceiptById(id)
+      if (!receipt) throw new Error('Receipt not found')
+
+      // Update status to COMPLETED
       await ReceivingService.updateStatus(id, 'COMPLETED')
+
+      // Update stock for items that passed QC (or all items if QC not required)
+      // Use qtyAccepted if set, otherwise use qtyReceived
+      const itemsToReceive = receipt.items.filter(item =>
+        item.qcStatus === 'PASSED' || item.qcStatus === 'NOT_REQUIRED'
+      )
+
+      if (itemsToReceive.length > 0) {
+        await receiveStock({
+          receiptId: receipt.id,
+          receiptCode: receipt.code,
+          items: itemsToReceive.map(item => ({
+            itemId: item.itemId,
+            warehouseId: item.warehouseId,
+            qty: item.qtyAccepted > 0 ? item.qtyAccepted : item.qtyReceived,
+            unitPrice: item.unitPrice,
+            batchNo: item.batchNo,
+            mfgDate: item.mfgDate,
+            expDate: item.expDate,
+            uomId: item.uomId
+          }))
+        })
+      }
+
+      // Fetch updated receipt
       const updated = await ReceivingService.getReceiptById(id)
       if (!updated) throw new Error('Receipt not found after update')
 

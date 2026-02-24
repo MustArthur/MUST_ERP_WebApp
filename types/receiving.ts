@@ -44,6 +44,7 @@ export interface PurchaseReceiptItem {
   qtyAccepted: number             // After QC passed
   qtyRejected: number             // After QC failed
   uom: UnitOfMeasure
+  uomId?: string                  // UOM ID for inventory operations
   batchNo?: string
   mfgDate?: string
   expDate?: string
