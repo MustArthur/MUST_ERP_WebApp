@@ -177,16 +177,22 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   submitReceipt: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      // For now, we assume standard flow where default QC status is handled by backend/service
-      // If we need to trigger QC creation, it should be done here or in service.
-      // Based on existing logic, we should probably update status to PENDING_QC if items require QC.
-      // For MVP Database integration, we will simply update status.
+      // Get current receipt to check if any items require QC
+      const receipt = await ReceivingService.getReceiptById(id)
+      if (!receipt) throw new Error('Receipt not found')
 
-      // TODO: Implement advanced QC trigger logic if needed, similar to original mockStore
+      // Check if any items need QC
+      const itemsRequiringQC = receipt.items.filter(item => item.qcStatus === 'PENDING')
 
-      await ReceivingService.updateStatus(id, 'PENDING_QC')
+      if (itemsRequiringQC.length > 0) {
+        // Has items requiring QC → set status to PENDING_QC
+        await ReceivingService.updateStatus(id, 'PENDING_QC', 'PENDING')
+      } else {
+        // No items requiring QC → set status to COMPLETED
+        await ReceivingService.updateStatus(id, 'COMPLETED', 'NOT_REQUIRED')
+      }
 
-      // Fetch updated
+      // Fetch updated receipt
       const updated = await ReceivingService.getReceiptById(id)
       if (!updated) throw new Error('Failed to fetch updated receipt')
 

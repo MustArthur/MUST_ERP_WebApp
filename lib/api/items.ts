@@ -33,6 +33,7 @@ export async function getAllItems(): Promise<ItemType[]> {
           name,
           last_purchase_cost,
           is_active,
+          requires_qc,
           created_at,
           updated_at,
           base_uom_id,
@@ -80,6 +81,7 @@ export async function getAllItems(): Promise<ItemType[]> {
             stockUomName: (i.stock_uom as any)?.name || (i.units_of_measure as any)?.name || '',
             lastPurchaseCost: i.last_purchase_cost || 0,
             isActive: i.is_active ?? true,
+            requiresQC: (i as any).requires_qc ?? false,
             createdAt: i.created_at,
             updatedAt: i.updated_at,
             stockQty,
@@ -105,6 +107,7 @@ export async function createItem(input: CreateItemInput): Promise<ItemType | nul
             last_purchase_cost: input.lastPurchaseCost || 0,
             min_stock_qty: input.safetyStock || 0,
             is_active: true,
+            requires_qc: input.requiresQC ?? false,
         })
         .select()
         .single()
@@ -132,6 +135,7 @@ export async function updateItem(id: string, input: UpdateItemInput): Promise<It
     if (input.lastPurchaseCost !== undefined) updateData.last_purchase_cost = input.lastPurchaseCost
     if (input.safetyStock !== undefined) updateData.min_stock_qty = input.safetyStock
     if (input.isActive !== undefined) updateData.is_active = input.isActive
+    if (input.requiresQC !== undefined) updateData.requires_qc = input.requiresQC
 
     const { error } = await supabase
         .from('items')

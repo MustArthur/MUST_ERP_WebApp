@@ -42,6 +42,7 @@ const itemFormSchema = z.object({
     lastPurchaseCost: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
     safetyStock: z.number().min(0, 'Safety Stock ต้องไม่ติดลบ'),
     isActive: z.boolean(),
+    requiresQC: z.boolean(),
 })
 
 type ItemFormValues = z.infer<typeof itemFormSchema>
@@ -78,6 +79,7 @@ export function ItemFormModal({
             lastPurchaseCost: 0,
             safetyStock: 0,
             isActive: true,
+            requiresQC: false,
         },
     })
 
@@ -93,6 +95,7 @@ export function ItemFormModal({
                 lastPurchaseCost: item.lastPurchaseCost,
                 safetyStock: item.safetyStock || 0,
                 isActive: item.isActive,
+                requiresQC: item.requiresQC || false,
             })
         } else {
             form.reset({
@@ -104,6 +107,7 @@ export function ItemFormModal({
                 lastPurchaseCost: 0,
                 safetyStock: 0,
                 isActive: true,
+                requiresQC: false,
             })
         }
     }, [item, form])
@@ -121,6 +125,7 @@ export function ItemFormModal({
                     lastPurchaseCost: data.lastPurchaseCost,
                     safetyStock: data.safetyStock,
                     isActive: data.isActive,
+                    requiresQC: data.requiresQC,
                 }, false)
             } else {
                 await onSave({
@@ -131,6 +136,7 @@ export function ItemFormModal({
                     stockUomId: data.stockUomId,
                     lastPurchaseCost: data.lastPurchaseCost,
                     safetyStock: data.safetyStock,
+                    requiresQC: data.requiresQC,
                 }, true)
             }
             onClose()
@@ -334,6 +340,27 @@ export function ItemFormModal({
                                 )}
                             />
                         </div>
+
+                        <FormField
+                            control={form.control}
+                            name="requiresQC"
+                            render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-base">ต้องตรวจ QC</FormLabel>
+                                        <p className="text-sm text-muted-foreground">
+                                            สินค้านี้ต้องผ่านการตรวจ QC ก่อนนำไปใช้งาน
+                                        </p>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
 
                         {isEditing && (
                             <FormField

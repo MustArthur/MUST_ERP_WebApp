@@ -21,14 +21,17 @@ interface ItemTableProps {
     onView?: (item: Item) => void
 }
 
-const getItemTypeBadge = (code: string) => {
-    if (code.startsWith('RM-')) {
+const getItemTypeBadge = (item: Item) => {
+    const catCode = item.categoryCode || ''
+
+    // Use categoryCode to determine type (more accurate than item code prefix)
+    if (catCode.startsWith('CAT-RM')) {
         return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100"><Package className="w-3 h-3 mr-1" />วัตถุดิบ</Badge>
     }
-    if (code.startsWith('FG-')) {
+    if (catCode.startsWith('CAT-FG')) {
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><Box className="w-3 h-3 mr-1" />สินค้าสำเร็จ</Badge>
     }
-    if (code.startsWith('PKG-')) {
+    if (catCode.startsWith('CAT-PKG')) {
         return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100"><Tag className="w-3 h-3 mr-1" />บรรจุภัณฑ์</Badge>
     }
     return <Badge variant="outline">อื่นๆ</Badge>
@@ -75,7 +78,7 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                     <span className="text-gray-900">{item.name}</span>
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                    {getItemTypeBadge(item.code)}
+                                    {getItemTypeBadge(item)}
                                 </td>
                                 <td className="px-4 py-3 text-right">
                                     <div className="flex items-center justify-end gap-2">

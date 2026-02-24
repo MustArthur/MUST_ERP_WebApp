@@ -27,12 +27,14 @@ import {
   Send,
   Printer,
   ExternalLink,
+  Edit2,
 } from 'lucide-react'
 
 interface ReceiptDetailModalProps {
   receipt: PurchaseReceipt | null
   isOpen: boolean
   onClose: () => void
+  onEdit?: (receipt: PurchaseReceipt) => void
   onSubmit?: (receipt: PurchaseReceipt) => void
   onComplete?: (receipt: PurchaseReceipt) => void
   onCancel?: (receipt: PurchaseReceipt) => void
@@ -44,6 +46,7 @@ export function ReceiptDetailModal({
   receipt,
   isOpen,
   onClose,
+  onEdit,
   onSubmit,
   onComplete,
   onCancel,
@@ -539,6 +542,18 @@ export function ReceiptDetailModal({
               <Button variant="outline" onClick={() => onPrint(receipt)}>
                 <Printer className="w-4 h-4 mr-2" />
                 พิมพ์
+              </Button>
+            )}
+            {onEdit && receipt.status === 'DRAFT' && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onEdit(receipt)
+                  onClose()
+                }}
+              >
+                <Edit2 className="w-4 h-4 mr-2" />
+                แก้ไข
               </Button>
             )}
             {onCancel && (receipt.status === 'DRAFT' || receipt.status === 'PENDING_QC') && (

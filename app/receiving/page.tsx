@@ -9,6 +9,7 @@ import {
   ReceiptStatus,
   QCStatusSummary,
   CreatePurchaseReceiptInput,
+  UpdatePurchaseReceiptInput,
 } from '@/types/receiving'
 import {
   ReceiptCard,
@@ -61,6 +62,7 @@ export default function ReceivingPage() {
     fetchReceipts,
     fetchSuppliers,
     createReceipt,
+    updateReceipt,
     submitReceipt,
     completeReceipt,
     setReceiptFilters,
@@ -70,6 +72,7 @@ export default function ReceivingPage() {
 
   // Modal state
   const [selectedReceipt, setSelectedReceipt] = useState<PurchaseReceipt | null>(null)
+  const [editingReceipt, setEditingReceipt] = useState<PurchaseReceipt | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFormModal, setShowFormModal] = useState(false)
   const [showQCModal, setShowQCModal] = useState(false)
@@ -94,12 +97,31 @@ export default function ReceivingPage() {
   }
 
   const handleCreateReceipt = () => {
-    setSelectedReceipt(null)
+    setEditingReceipt(null)
+    setShowFormModal(true)
+  }
+
+  const handleEditReceipt = (receipt: PurchaseReceipt) => {
+    setEditingReceipt(receipt)
     setShowFormModal(true)
   }
 
   const handleSaveReceipt = async (data: CreatePurchaseReceiptInput) => {
-    await createReceipt(data)
+    if (editingReceipt) {
+      // Update existing receipt
+      const updateData: UpdatePurchaseReceiptInput = {
+        supplierId: data.supplierId,
+        receiptDate: data.receiptDate,
+        poNumber: data.poNumber,
+        invoiceNumber: data.invoiceNumber,
+        items: data.items,
+        remarks: data.remarks,
+      }
+      await updateReceipt(editingReceipt.id, updateData)
+    } else {
+      // Create new receipt
+      await createReceipt(data)
+    }
     fetchReceipts()
   }
 
@@ -429,6 +451,7 @@ export default function ReceivingPage() {
         receipt={selectedReceipt}
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
+        onEdit={handleEditReceipt}
         onSubmit={handleSubmitReceipt}
         onComplete={handleCompleteReceipt}
         onCancel={handleCancelReceipt}
@@ -437,8 +460,12 @@ export default function ReceivingPage() {
 
       {/* Form Modal */}
       <ReceiptFormModal
+        receipt={editingReceipt}
         isOpen={showFormModal}
-        onClose={() => setShowFormModal(false)}
+        onClose={() => {
+          setShowFormModal(false)
+          setEditingReceipt(null)
+        }}
         onSave={handleSaveReceipt}
       />
 

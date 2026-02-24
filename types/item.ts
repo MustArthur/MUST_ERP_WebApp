@@ -14,6 +14,7 @@ export interface Item {
     stockUomName: string
     lastPurchaseCost: number
     isActive: boolean
+    requiresQC: boolean       // ต้องตรวจ QC ก่อนนำไปใช้งาน
     createdAt: string
     updatedAt: string
     // Stock fields
@@ -42,6 +43,7 @@ export interface CreateItemInput {
     stockUomId?: string
     lastPurchaseCost?: number
     safetyStock?: number
+    requiresQC?: boolean
 }
 
 export interface UpdateItemInput {
@@ -53,6 +55,7 @@ export interface UpdateItemInput {
     lastPurchaseCost?: number
     safetyStock?: number
     isActive?: boolean
+    requiresQC?: boolean
 }
 
 export type ItemType = 'RAW_MATERIAL' | 'FINISHED_GOOD' | 'PACKAGING' | 'ALL'

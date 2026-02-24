@@ -107,8 +107,10 @@ export class ReceivingService {
         if (receiptError) throw receiptError
 
         // 2. Prepare Items
-        // We need to resolve UOM IDs first
+        // We need to resolve UOM IDs and check requires_qc for each item
         const itemsData = []
+        let hasQCRequired = false
+
         for (let i = 0; i < input.items.length; i++) {
             const item = input.items[i]
             // Resolve UOM ID
@@ -120,6 +122,16 @@ export class ReceivingService {
                 await this.supabase.from('purchase_receipts').delete().eq('id', receipt.id)
                 throw e
             }
+
+            // Check if item requires QC
+            const { data: itemInfo } = await this.supabase
+                .from('items')
+                .select('requires_qc')
+                .eq('id', item.itemId)
+                .single()
+
+            const requiresQC = itemInfo?.requires_qc ?? false
+            if (requiresQC) hasQCRequired = true
 
             itemsData.push({
                 receipt_id: receipt.id,
@@ -134,7 +146,7 @@ export class ReceivingService {
                 total_price: item.qtyReceived * item.unitPrice,
                 warehouse_id: item.warehouseId,
                 remarks: item.remarks || null,
-                qc_status: 'NOT_REQUIRED'
+                qc_status: requiresQC ? 'PENDING' : 'NOT_REQUIRED'
             })
         }
 
@@ -149,11 +161,14 @@ export class ReceivingService {
             throw itemsError
         }
 
-        // Recalculate total amount
+        // Recalculate total amount and update qc_status if needed
         const totalAmount = items.reduce((sum, item) => sum + (item.total_price || 0), 0)
         await this.supabase
             .from('purchase_receipts')
-            .update({ total_amount: totalAmount })
+            .update({
+                total_amount: totalAmount,
+                qc_status: hasQCRequired ? 'PENDING' : 'NOT_REQUIRED'
+            })
             .eq('id', receipt.id)
 
         // Return complete object
@@ -163,7 +178,7 @@ export class ReceivingService {
     }
 
     static async updateReceipt(id: string, input: UpdatePurchaseReceiptInput): Promise<PurchaseReceipt> {
-        // Update Header
+        // 1. Update Header
         const updateData: any = {
             updated_at: new Date().toISOString()
         }
@@ -179,6 +194,76 @@ export class ReceivingService {
             .eq('id', id)
 
         if (headerError) throw headerError
+
+        // 2. Handle Items Update (if provided)
+        if (input.items && input.items.length > 0) {
+            // 2.1 Delete existing items
+            const { error: deleteError } = await this.supabase
+                .from('purchase_receipt_items')
+                .delete()
+                .eq('receipt_id', id)
+
+            if (deleteError) throw deleteError
+
+            // 2.2 Insert new items
+            const itemsData = []
+            let hasQCRequired = false
+
+            for (let i = 0; i < input.items.length; i++) {
+                const item = input.items[i]
+                // Resolve UOM ID
+                let uomId: string
+                try {
+                    uomId = await this.getUomId(item.uom as string)
+                } catch (e) {
+                    console.error(e)
+                    throw e
+                }
+
+                // Check if item requires QC
+                const { data: itemInfo } = await this.supabase
+                    .from('items')
+                    .select('requires_qc')
+                    .eq('id', item.itemId)
+                    .single()
+
+                const requiresQC = itemInfo?.requires_qc ?? false
+                if (requiresQC) hasQCRequired = true
+
+                itemsData.push({
+                    receipt_id: id,
+                    line_no: i + 1,
+                    item_id: item.itemId,
+                    qty_received: item.qtyReceived,
+                    uom_id: uomId,
+                    batch_no: item.batchNo || null,
+                    mfg_date: item.mfgDate || null,
+                    exp_date: item.expDate || null,
+                    unit_price: item.unitPrice,
+                    total_price: item.qtyReceived * item.unitPrice,
+                    warehouse_id: item.warehouseId,
+                    remarks: item.remarks || null,
+                    qc_status: requiresQC ? 'PENDING' : 'NOT_REQUIRED'
+                })
+            }
+
+            const { data: items, error: itemsError } = await this.supabase
+                .from('purchase_receipt_items')
+                .insert(itemsData)
+                .select()
+
+            if (itemsError) throw itemsError
+
+            // 2.3 Recalculate total amount and update qc_status
+            const totalAmount = items.reduce((sum, item) => sum + (item.total_price || 0), 0)
+            await this.supabase
+                .from('purchase_receipts')
+                .update({
+                    total_amount: totalAmount,
+                    qc_status: hasQCRequired ? 'PENDING' : 'NOT_REQUIRED'
+                })
+                .eq('id', id)
+        }
 
         return this.getReceiptById(id) as Promise<PurchaseReceipt>
     }
