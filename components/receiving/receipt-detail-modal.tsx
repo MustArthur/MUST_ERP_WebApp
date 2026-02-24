@@ -65,10 +65,19 @@ export function ReceiptDetailModal({
     .slice(-5)
     .reverse()
 
-  // Get item details
-  const getItemName = (itemId: string): string => {
-    const item = stockItems.find(i => i.id === itemId)
-    return item?.name || itemId
+  // Get item details - prefer item data from receipt, fallback to stockItems
+  const getItemName = (receiptItem: PurchaseReceiptItem): string => {
+    // First try to use item data from receipt itself
+    if (receiptItem.item?.name) {
+      return receiptItem.item.name
+    }
+    // Fallback to stockItems
+    const item = stockItems.find(i => i.id === receiptItem.itemId)
+    if (item?.name) {
+      return item.name
+    }
+    // Show shortened UUID if not found
+    return `Item: ${receiptItem.itemId.substring(0, 8)}...`
   }
 
   // Get warehouse name
@@ -275,7 +284,7 @@ export function ReceiptDetailModal({
                           <div className="flex items-center gap-2">
                             <span className="text-gray-400">#{item.lineNo}</span>
                             <h4 className="font-medium text-gray-900">
-                              {getItemName(item.itemId)}
+                              {getItemName(item)}
                             </h4>
                           </div>
                           <p className="text-sm text-gray-500">
@@ -377,7 +386,7 @@ export function ReceiptDetailModal({
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Package className="w-4 h-4 text-gray-500" />
-                          <span className="font-medium">{getItemName(item.itemId)}</span>
+                          <span className="font-medium">{getItemName(item)}</span>
                         </div>
                         <Badge className={itemQCConfig.color}>{itemQCConfig.label}</Badge>
                       </div>

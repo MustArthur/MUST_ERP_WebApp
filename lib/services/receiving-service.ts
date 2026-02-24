@@ -50,7 +50,8 @@ export class ReceivingService {
         supplier:suppliers(*),
         items:purchase_receipt_items(
           *,
-          uom:units_of_measure(*)
+          uom:units_of_measure(*),
+          item:items(id, code, name)
         )
       `)
             .order('created_at', { ascending: false })
@@ -69,7 +70,8 @@ export class ReceivingService {
         supplier:suppliers(*),
         items:purchase_receipt_items(
           *,
-          uom:units_of_measure(*)
+          uom:units_of_measure(*),
+          item:items(id, code, name)
         )
       `)
             .eq('id', id)
@@ -272,6 +274,12 @@ export class ReceivingService {
                 id: item.id,
                 lineNo: item.line_no,
                 itemId: item.item_id,
+                // Include item data for display
+                item: item.item ? {
+                    id: item.item.id,
+                    code: item.item.code,
+                    name: item.item.name,
+                } : undefined,
                 qtyReceived: item.qty_received,
                 qtyAccepted: item.qty_accepted,
                 qtyRejected: item.qty_rejected,
