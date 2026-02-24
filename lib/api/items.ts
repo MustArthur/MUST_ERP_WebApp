@@ -303,6 +303,7 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
                 name,
                 last_purchase_cost,
                 base_uom_id,
+                stock_uom_id,
                 category_id
             )
         `)
@@ -318,9 +319,12 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
         return []
     }
 
-    // Get UOMs for items
+    // Get UOMs for items (both base and stock)
     const uomIds = Array.from(new Set(
-        data.map(row => (row.items as any)?.base_uom_id).filter(Boolean)
+        data.flatMap(row => {
+            const item = row.items as any
+            return [item?.base_uom_id, item?.stock_uom_id].filter(Boolean)
+        })
     ))
 
     const { data: uoms } = await supabase
@@ -333,6 +337,7 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
     // Transform to Item format
     return data.map(row => {
         const item = row.items as any
+        const stockUomId = item.stock_uom_id || item.base_uom_id
         return {
             id: item.id,
             code: item.code,
@@ -340,6 +345,8 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
             last_purchase_cost: row.purchase_price || item.last_purchase_cost || 0,
             base_uom_id: item.base_uom_id,
             base_uom_code: uomMap.get(item.base_uom_id) || 'G',
+            stock_uom_id: stockUomId,
+            stock_uom_code: uomMap.get(stockUomId) || uomMap.get(item.base_uom_id) || 'G',
             category_id: item.category_id,
         }
     })

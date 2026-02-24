@@ -28,7 +28,7 @@ export interface Warehouse {
 // Item Types
 export type ItemType = 'RAW_MATERIAL' | 'SEMI_FINISHED' | 'FINISHED_GOOD' | 'PACKAGING'
 
-export type UnitOfMeasure = 'KG' | 'G' | 'L' | 'ML' | 'PC' | 'BTL' | 'PKG' | 'BOX'
+export type UnitOfMeasure = 'KG' | 'G' | 'L' | 'ML' | 'PC' | 'BTL' | 'PKG' | 'BOX' | 'BAG'
 
 export interface StockItem {
   id: string

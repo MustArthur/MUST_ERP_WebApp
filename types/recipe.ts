@@ -4,7 +4,7 @@
 
 export type RecipeStatus = 'DRAFT' | 'ACTIVE' | 'OBSOLETE'
 
-export type UnitOfMeasure = 'KG' | 'G' | 'L' | 'ML' | 'PC' | 'BTL' | 'PKG'
+export type UnitOfMeasure = 'KG' | 'G' | 'L' | 'ML' | 'PC' | 'BTL' | 'PKG' | 'BOX' | 'BAG'
 
 export interface Ingredient {
   id: string

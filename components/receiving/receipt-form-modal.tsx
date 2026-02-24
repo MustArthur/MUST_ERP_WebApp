@@ -88,6 +88,7 @@ const UOM_OPTIONS: { value: UnitOfMeasure; label: string }[] = [
   { value: 'BOX', label: 'กล่อง (BOX)' },
   { value: 'PKG', label: 'แพ็ค (PKG)' },
   { value: 'BTL', label: 'ขวด (BTL)' },
+  { value: 'BAG', label: 'ถุง (BAG)' },
 ]
 
 export function ReceiptFormModal({
@@ -196,7 +197,8 @@ export function ReceiptFormModal({
   const handleItemChange = (index: number, itemId: string) => {
     const item = rawMaterials.find(i => i.id === itemId)
     if (item) {
-      form.setValue(`items.${index}.uom`, item.base_uom_code || 'KG')
+      // Use stock_uom_code (หน่วยสต๊อก) as default for receiving
+      form.setValue(`items.${index}.uom`, (item as any).stock_uom_code || item.base_uom_code || 'KG')
       form.setValue(`items.${index}.unitPrice`, item.last_purchase_cost || 0)
 
       // Auto-select warehouse: ถ้ามีแค่ 1 ตัว เลือกเลย
