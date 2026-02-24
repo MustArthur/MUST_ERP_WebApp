@@ -10,6 +10,7 @@ export interface Supplier {
     taxId: string | null
     paymentTerms: number
     isActive: boolean
+    purchaser: string | null
     createdAt: string
     updatedAt: string
 }
@@ -23,6 +24,7 @@ export interface CreateSupplierInput {
     address?: string
     taxId?: string
     paymentTerms?: number
+    purchaser?: string
 }
 
 export interface UpdateSupplierInput {
@@ -34,6 +36,7 @@ export interface UpdateSupplierInput {
     taxId?: string
     paymentTerms?: number
     isActive?: boolean
+    purchaser?: string
 }
 
 export interface SupplierFilters {

@@ -26,6 +26,7 @@ export async function getAllSuppliers(): Promise<Supplier[]> {
         taxId: s.tax_id,
         paymentTerms: s.payment_terms || 30,
         isActive: s.is_active ?? true,
+        purchaser: s.purchaser,
         createdAt: s.created_at,
         updatedAt: s.updated_at,
     }))
@@ -57,6 +58,7 @@ export async function getSupplierById(id: string): Promise<Supplier | null> {
         taxId: data.tax_id,
         paymentTerms: data.payment_terms || 30,
         isActive: data.is_active ?? true,
+        purchaser: data.purchaser,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
     }
@@ -78,6 +80,7 @@ export async function createSupplier(input: CreateSupplierInput): Promise<Suppli
             tax_id: input.taxId,
             payment_terms: input.paymentTerms || 30,
             is_active: true,
+            purchaser: input.purchaser,
         })
         .select()
         .single()
@@ -103,6 +106,7 @@ export async function updateSupplier(id: string, input: UpdateSupplierInput): Pr
     if (input.taxId !== undefined) updateData.tax_id = input.taxId
     if (input.paymentTerms !== undefined) updateData.payment_terms = input.paymentTerms
     if (input.isActive !== undefined) updateData.is_active = input.isActive
+    if (input.purchaser !== undefined) updateData.purchaser = input.purchaser
 
     const { error } = await supabase
         .from('suppliers')

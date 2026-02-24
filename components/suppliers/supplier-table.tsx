@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { Supplier } from '@/types/supplier'
 import { SupplierItem } from '@/lib/api/suppliers'
-import { formatCurrency } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -57,16 +56,15 @@ export function SupplierTable({ suppliers, onEdit, onDelete, onView }: SupplierT
 
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)]">
                 <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-gray-50 border-b sticky top-0 z-10">
                         <tr>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">รหัส</th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ชื่อ Supplier</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ผู้สั่งซื้อ</th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ชื่อสินค้า</th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Part Number</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">ราคาซื้อ</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">หน่วย</th>
                             <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">สถานะ</th>
                             <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">จัดการ</th>
                         </tr>
@@ -91,6 +89,11 @@ export function SupplierTable({ suppliers, onEdit, onDelete, onView }: SupplierT
                                                 <span className="font-medium text-gray-900">{row.supplier.name}</span>
                                             </div>
                                         </td>
+                                        <td className="px-4 py-3" rowSpan={row.rowSpan}>
+                                            <span className="text-sm text-gray-700">
+                                                {row.supplier.purchaser || '-'}
+                                            </span>
+                                        </td>
                                     </>
                                 )}
                                 <td className="px-4 py-3">
@@ -113,16 +116,6 @@ export function SupplierTable({ suppliers, onEdit, onDelete, onView }: SupplierT
                                 </td>
                                 <td className="px-4 py-3 text-sm font-mono text-gray-600">
                                     {row.item?.supplierPartNumber || '-'}
-                                </td>
-                                <td className="px-4 py-3 text-right text-sm font-medium">
-                                    {row.item ? formatCurrency(row.item.purchasePrice) : '-'}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    {row.item?.purchaseUomCode ? (
-                                        <Badge variant="outline" className="font-mono text-xs">
-                                            {row.item.purchaseUomCode}
-                                        </Badge>
-                                    ) : '-'}
                                 </td>
                                 {row.isFirst && (
                                     <>

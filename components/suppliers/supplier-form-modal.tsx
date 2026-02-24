@@ -36,6 +36,7 @@ const supplierFormSchema = z.object({
     taxId: z.string().optional(),
     paymentTerms: z.number().min(0, 'ต้องไม่ติดลบ'),
     isActive: z.boolean(),
+    purchaser: z.string().optional(),
 })
 
 type SupplierFormValues = z.infer<typeof supplierFormSchema>
@@ -68,6 +69,7 @@ export function SupplierFormModal({
             taxId: '',
             paymentTerms: 30,
             isActive: true,
+            purchaser: '',
         },
     })
 
@@ -86,6 +88,7 @@ export function SupplierFormModal({
                     taxId: supplier.taxId || '',
                     paymentTerms: supplier.paymentTerms,
                     isActive: supplier.isActive,
+                    purchaser: supplier.purchaser || '',
                 })
             } else {
                 // Create mode: generate new code
@@ -99,6 +102,7 @@ export function SupplierFormModal({
                     taxId: '',
                     paymentTerms: 30,
                     isActive: true,
+                    purchaser: '',
                 })
 
                 // Auto-generate supplier code
@@ -129,6 +133,7 @@ export function SupplierFormModal({
                     taxId: data.taxId,
                     paymentTerms: data.paymentTerms,
                     isActive: data.isActive,
+                    purchaser: data.purchaser,
                 }, false)
             } else {
                 await onSave({
@@ -140,6 +145,7 @@ export function SupplierFormModal({
                     address: data.address,
                     taxId: data.taxId,
                     paymentTerms: data.paymentTerms,
+                    purchaser: data.purchaser,
                 }, true)
             }
             onClose()
@@ -292,6 +298,20 @@ export function SupplierFormModal({
                                     <FormLabel>ที่อยู่</FormLabel>
                                     <FormControl>
                                         <Textarea placeholder="ที่อยู่เต็ม" {...field} rows={3} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="purchaser"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>ผู้สั่งซื้อ</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="ชื่อผู้รับผิดชอบสั่งซื้อ" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
