@@ -3,4 +3,5 @@ export * from './stock-item-card'
 export * from './inventory-detail-modal'
 export * from './stock-form-modal'
 export * from './inventory-table'
+export * from './warehouse-detail-modal'
 

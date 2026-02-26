@@ -204,3 +204,23 @@ export interface WarehouseWithStock extends Warehouse {
   lowStockItems: number           // Items below min
   expiringItems: number           // Items expiring soon
 }
+
+// Stock item detail for warehouse view
+export interface WarehouseStockLot {
+  id: string
+  lotNumber: string | null
+  qty: number
+  expDate: string | null
+  status: 'AVAILABLE' | 'RESERVED' | 'ON_HOLD' | 'QUARANTINE'
+}
+
+export interface WarehouseStockItem {
+  itemId: string
+  itemCode: string
+  itemName: string
+  totalQty: number
+  uomCode: string
+  unitCost: number
+  totalValue: number
+  lots: WarehouseStockLot[]
+}

@@ -8,7 +8,9 @@ import {
     CreateWarehouseInput,
     CreateStockItemInput,
     CreateStockEntryInput,
-    StockEntryStatus
+    StockEntryStatus,
+    WarehouseStockItem,
+    WarehouseStockLot
 } from '@/types/inventory'
 
 // ==========================================
@@ -110,6 +112,73 @@ export async function updateWarehouse(id: string, input: Partial<CreateWarehouse
         createdAt: data.created_at,
         updatedAt: data.updated_at
     }
+}
+
+/**
+ * Get all stock items in a specific warehouse with details
+ */
+export async function getWarehouseStock(warehouseId: string): Promise<WarehouseStockItem[]> {
+    const { data, error } = await supabase
+        .from('stock_on_hand')
+        .select(`
+            id,
+            item_id,
+            qty_on_hand,
+            lot_number,
+            exp_date,
+            status,
+            items:item_id (id, code, name, last_purchase_cost),
+            units_of_measure:uom_id (id, code, name)
+        `)
+        .eq('warehouse_id', warehouseId)
+        .gt('qty_on_hand', 0)
+
+    if (error) {
+        console.error('Error fetching warehouse stock:', error)
+        throw error
+    }
+
+    // Group by item and aggregate
+    const itemMap = new Map<string, WarehouseStockItem>()
+
+    for (const row of data || []) {
+        const item = row.items as any
+        const uom = row.units_of_measure as any
+
+        if (!item) continue
+
+        const lot: WarehouseStockLot = {
+            id: row.id,
+            lotNumber: row.lot_number,
+            qty: row.qty_on_hand || 0,
+            expDate: row.exp_date,
+            status: row.status || 'AVAILABLE'
+        }
+
+        if (itemMap.has(item.id)) {
+            const existing = itemMap.get(item.id)!
+            existing.lots.push(lot)
+            existing.totalQty += lot.qty
+            existing.totalValue = existing.totalQty * existing.unitCost
+        } else {
+            const unitCost = item.last_purchase_cost || 0
+            itemMap.set(item.id, {
+                itemId: item.id,
+                itemCode: item.code,
+                itemName: item.name,
+                totalQty: lot.qty,
+                uomCode: uom?.code || 'PC',
+                unitCost,
+                totalValue: lot.qty * unitCost,
+                lots: [lot]
+            })
+        }
+    }
+
+    // Sort by item name
+    return Array.from(itemMap.values()).sort((a, b) =>
+        a.itemName.localeCompare(b.itemName, 'th')
+    )
 }
 
 // ==========================================

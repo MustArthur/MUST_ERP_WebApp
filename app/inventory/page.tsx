@@ -14,19 +14,14 @@ import {
   InventoryDetailModal,
   StockFormModal,
   InventoryTable,
+  WarehouseDetailModal,
 } from '@/components/inventory'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatNumber, formatDate } from '@/lib/utils'
+import { formatCurrency, formatNumber } from '@/lib/utils'
 import {
   Search,
   Warehouse as WarehouseIcon,
@@ -34,7 +29,6 @@ import {
   Plus,
   AlertTriangle,
   Clock,
-  Thermometer,
   ArrowLeft,
 } from 'lucide-react'
 
@@ -370,65 +364,11 @@ export default function InventoryPage() {
       </main>
 
       {/* Warehouse Detail Modal */}
-      <Dialog open={showWarehouseModal} onOpenChange={setShowWarehouseModal}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <WarehouseIcon className="w-5 h-5" />
-              {selectedWarehouse?.name}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedWarehouse && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">รหัสคลัง</p>
-                  <p className="font-medium">{selectedWarehouse.code}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">สถานที่</p>
-                  <p className="font-medium">{selectedWarehouse.location || '-'}</p>
-                </div>
-              </div>
-
-              {selectedWarehouse.temperatureControlled && (
-                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                  <Thermometer className="w-5 h-5 text-blue-600" />
-                  <span>
-                    ควบคุมอุณหภูมิ {selectedWarehouse.minTemp}°C -{' '}
-                    {selectedWarehouse.maxTemp}°C
-                  </span>
-                </div>
-              )}
-
-              {selectedWarehouse.isQuarantine && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                  <span className="text-red-700">
-                    คลังกักกัน - ห้ามใช้ในการผลิต
-                  </span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm text-gray-500">ความจุ</p>
-                  <p className="text-lg font-semibold">
-                    {formatNumber(selectedWarehouse.currentStock || 0)} /{' '}
-                    {formatNumber(selectedWarehouse.capacity || 0)}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm text-gray-500">รายการสินค้า</p>
-                  <p className="text-lg font-semibold">
-                    {(selectedWarehouse as any).stockCount || 0} รายการ
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <WarehouseDetailModal
+        warehouse={selectedWarehouse}
+        isOpen={showWarehouseModal}
+        onClose={() => setShowWarehouseModal(false)}
+      />
 
       {/* Item Detail Modal - NEW */}
       <InventoryDetailModal
