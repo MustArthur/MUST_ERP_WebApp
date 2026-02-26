@@ -4,6 +4,12 @@ import { useRouter } from 'next/navigation'
 import { Item } from '@/types/item'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { formatCurrency } from '@/lib/utils'
 import {
     Edit2,
@@ -12,6 +18,7 @@ import {
     Box,
     Tag,
     Eye,
+    Warehouse,
 } from 'lucide-react'
 
 interface ItemTableProps {
@@ -85,9 +92,38 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                         {item.isLowStock && (
                                             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="สต็อกต่ำ" />
                                         )}
-                                        <span className={`font-medium ${item.isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
-                                            {item.stockQty.toLocaleString()}
-                                        </span>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <span className={`font-medium cursor-help ${item.isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
+                                                        {item.stockQty.toLocaleString()}
+                                                        {item.stockByWarehouse && item.stockByWarehouse.length > 0 && (
+                                                            <Warehouse className="w-3 h-3 inline ml-1 text-gray-400" />
+                                                        )}
+                                                    </span>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="left" className="p-3">
+                                                    <div className="text-sm">
+                                                        <p className="font-medium mb-2 flex items-center gap-1">
+                                                            <Warehouse className="w-4 h-4" />
+                                                            คลังสินค้า
+                                                        </p>
+                                                        {item.stockByWarehouse && item.stockByWarehouse.length > 0 ? (
+                                                            <ul className="space-y-1">
+                                                                {item.stockByWarehouse.map(w => (
+                                                                    <li key={w.warehouseId} className="flex justify-between gap-4">
+                                                                        <span className="text-gray-600">{w.warehouseCode}</span>
+                                                                        <span className="font-medium">{w.qty.toLocaleString()}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        ) : (
+                                                            <p className="text-gray-500 text-xs">ไม่มีสต็อก</p>
+                                                        )}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     </div>
                                 </td>
                                 <td className="px-4 py-3 text-right text-sm text-gray-600">

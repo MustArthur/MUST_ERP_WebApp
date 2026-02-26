@@ -607,6 +607,9 @@ export class QCService {
                                 qty_rejected: rejectedQty
                             })
                             .eq('qc_inspection_id', inspectionId)
+
+                        // Recalculate receipt header QC status
+                        await this.recalculateReceiptHeaderQCStatus(inspectionId)
                     }
                 } catch (quarantineError) {
                     console.error('Failed to create quarantine:', quarantineError)
@@ -623,6 +626,9 @@ export class QCService {
                             qty_rejected: 0
                         })
                         .eq('qc_inspection_id', inspectionId)
+
+                    // Recalculate receipt header QC status
+                    await this.recalculateReceiptHeaderQCStatus(inspectionId)
                 }
             }
         }
@@ -874,5 +880,64 @@ export class QCService {
 
         const nextNum = (count || 0) + 1
         return `QR-${year}-${nextNum.toString().padStart(4, '0')}`
+    }
+
+    /**
+     * Recalculate the receipt header QC status based on all items' QC statuses
+     * This should be called after updating any receipt item's QC status
+     */
+    private static async recalculateReceiptHeaderQCStatus(inspectionId: string): Promise<void> {
+        try {
+            // 1. Get receipt_id from the receipt item linked to this inspection
+            const { data: receiptItem } = await this.supabase
+                .from('purchase_receipt_items')
+                .select('receipt_id')
+                .eq('qc_inspection_id', inspectionId)
+                .single()
+
+            if (!receiptItem?.receipt_id) return
+
+            // 2. Get all items for this receipt
+            const { data: allItems } = await this.supabase
+                .from('purchase_receipt_items')
+                .select('qc_status')
+                .eq('receipt_id', receiptItem.receipt_id)
+
+            if (!allItems || allItems.length === 0) return
+
+            // 3. Calculate overall QC status
+            const pendingCount = allItems.filter(i => i.qc_status === 'PENDING').length
+            const passedCount = allItems.filter(i =>
+                i.qc_status === 'PASSED' ||
+                i.qc_status === 'NOT_REQUIRED' ||
+                i.qc_status === 'PARTIAL'
+            ).length
+            const failedCount = allItems.filter(i => i.qc_status === 'FAILED').length
+
+            let newQCStatus = 'PENDING'
+            if (pendingCount === 0) {
+                if (failedCount === 0) {
+                    newQCStatus = 'PASSED'
+                } else if (passedCount === 0) {
+                    newQCStatus = 'FAILED'
+                } else {
+                    newQCStatus = 'PARTIAL'
+                }
+            }
+
+            // 4. Update receipt header
+            await this.supabase
+                .from('purchase_receipts')
+                .update({
+                    qc_status: newQCStatus,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', receiptItem.receipt_id)
+
+            console.log(`Receipt ${receiptItem.receipt_id} QC status updated to: ${newQCStatus}`)
+        } catch (error) {
+            console.error('Failed to recalculate receipt header QC status:', error)
+            // Don't throw - this is a non-critical operation
+        }
     }
 }

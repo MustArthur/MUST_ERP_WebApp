@@ -1,3 +1,11 @@
+// Stock breakdown by warehouse
+export interface StockByWarehouse {
+    warehouseId: string
+    warehouseCode: string
+    warehouseName: string
+    qty: number
+}
+
 // Item Types
 export interface Item {
     id: string
@@ -19,6 +27,7 @@ export interface Item {
     updatedAt: string
     // Stock fields
     stockQty: number
+    stockByWarehouse: StockByWarehouse[]  // Stock breakdown by warehouse
     safetyStock: number
     isLowStock: boolean
 }

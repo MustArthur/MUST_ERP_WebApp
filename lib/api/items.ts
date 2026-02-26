@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import {
     Item as ItemType,
+    StockByWarehouse,
     Category,
     UnitOfMeasure as UOM,
     CreateItemInput,
@@ -51,16 +52,43 @@ export async function getAllItems(): Promise<ItemType[]> {
         return []
     }
 
-    // Get stock on hand summary per item
+    // Get stock on hand summary per item WITH warehouse info
     const { data: stockData } = await supabase
         .from('stock_on_hand')
-        .select('item_id, qty_on_hand')
+        .select(`
+            item_id,
+            qty_on_hand,
+            warehouse_id,
+            warehouses:warehouse_id (id, code, name)
+        `)
 
-    // Calculate total stock per item
+    // Calculate total stock per item AND breakdown by warehouse
     const stockByItem = new Map<string, number>()
+    const stockByWarehouseMap = new Map<string, StockByWarehouse[]>()
+
     for (const s of stockData || []) {
+        // Total stock per item
         const current = stockByItem.get(s.item_id) || 0
         stockByItem.set(s.item_id, current + (s.qty_on_hand || 0))
+
+        // Stock breakdown by warehouse
+        const warehouse = s.warehouses as any
+        if (warehouse && s.qty_on_hand > 0) {
+            const existing = stockByWarehouseMap.get(s.item_id) || []
+            // Check if warehouse already exists in the list (aggregate multiple lots)
+            const existingWarehouse = existing.find(w => w.warehouseId === s.warehouse_id)
+            if (existingWarehouse) {
+                existingWarehouse.qty += s.qty_on_hand
+            } else {
+                existing.push({
+                    warehouseId: s.warehouse_id,
+                    warehouseCode: warehouse.code,
+                    warehouseName: warehouse.name,
+                    qty: s.qty_on_hand
+                })
+            }
+            stockByWarehouseMap.set(s.item_id, existing)
+        }
     }
 
     return (items || []).map(i => {
@@ -85,6 +113,7 @@ export async function getAllItems(): Promise<ItemType[]> {
             createdAt: i.created_at,
             updatedAt: i.updated_at,
             stockQty,
+            stockByWarehouse: stockByWarehouseMap.get(i.id) || [],
             safetyStock,
             isLowStock: safetyStock > 0 && stockQty < safetyStock,
         }
