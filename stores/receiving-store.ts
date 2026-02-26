@@ -18,6 +18,7 @@ import {
 } from '@/lib/mock-data/receiving'
 import { delay } from '@/lib/utils'
 import { ReceivingService } from '@/lib/services/receiving-service'
+import { QCService } from '@/lib/services/qc-service'
 import { createClient } from '@/lib/supabase/client'
 import { receiveStock } from '@/lib/api/inventory'
 
@@ -188,6 +189,36 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
       if (itemsRequiringQC.length > 0) {
         // Has items requiring QC → set status to PENDING_QC
         await ReceivingService.updateStatus(id, 'PENDING_QC', 'PENDING')
+
+        // Auto-create QC Inspections for each item requiring QC
+        for (const item of itemsRequiringQC) {
+          try {
+            const inspection = await QCService.createInspectionForReceipt({
+              receiptId: receipt.id,
+              receiptCode: receipt.code,
+              itemId: item.itemId,
+              itemName: item.item?.name,
+              itemCode: item.item?.code,
+              batchNo: item.batchNo,
+              qty: item.qtyReceived,
+              warehouseId: item.warehouseId
+            })
+
+            // Link inspection back to receipt item
+            await ReceivingService.updateReceiptItemQC(
+              receipt.id,
+              item.id,
+              'PENDING',
+              inspection.id
+            )
+          } catch (qcError) {
+            console.error('Failed to create QC inspection for item:', item.itemId, qcError)
+            // Continue with other items even if one fails
+          }
+        }
+
+        // Refresh quality store so quality page shows new inspections
+        useQualityStore.getState().fetchInspections()
       } else {
         // No items requiring QC → set status to COMPLETED and update stock
         await ReceivingService.updateStatus(id, 'COMPLETED', 'NOT_REQUIRED')
@@ -237,9 +268,11 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
       await ReceivingService.updateStatus(id, 'COMPLETED')
 
       // Update stock for items that passed QC (or all items if QC not required)
-      // Use qtyAccepted if set, otherwise use qtyReceived
+      // Include PARTIAL status (partial pass) - will use qtyAccepted
       const itemsToReceive = receipt.items.filter(item =>
-        item.qcStatus === 'PASSED' || item.qcStatus === 'NOT_REQUIRED'
+        item.qcStatus === 'PASSED' ||
+        item.qcStatus === 'PARTIAL' ||
+        item.qcStatus === 'NOT_REQUIRED'
       )
 
       if (itemsToReceive.length > 0) {

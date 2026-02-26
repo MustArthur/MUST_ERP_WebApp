@@ -1,6 +1,7 @@
 export { InspectionCard } from './inspection-card'
 export { InspectionDetailModal } from './inspection-detail-modal'
 export { InspectionFormModal } from './inspection-form-modal'
+export { InspectionEntryModal } from './inspection-entry-modal'
 export { TemplateTable } from './template-table'
 export { TemplateFormModal } from './template-form-modal'
 export { QuarantineTable } from './quarantine-table'

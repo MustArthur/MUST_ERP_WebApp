@@ -19,6 +19,7 @@ import {
   InspectionCard,
   InspectionDetailModal,
   InspectionFormModal,
+  InspectionEntryModal,
   TemplateTable,
   TemplateFormModal,
   QuarantineTable,
@@ -82,6 +83,7 @@ export default function QualityPage() {
   const [selectedInspection, setSelectedInspection] = useState<QCInspection | null>(null)
   const [showInspectionDetail, setShowInspectionDetail] = useState(false)
   const [showInspectionForm, setShowInspectionForm] = useState(false)
+  const [showInspectionEntry, setShowInspectionEntry] = useState(false)
 
   // Template modals
   const [selectedTemplate, setSelectedTemplate] = useState<QCTemplate | null>(null)
@@ -127,6 +129,17 @@ export default function QualityPage() {
   const handleSaveInspection = () => {
     fetchInspections()
     setShowInspectionForm(false)
+  }
+
+  const handleStartInspection = (inspection: QCInspection) => {
+    setSelectedInspection(inspection)
+    setShowInspectionEntry(true)
+  }
+
+  const handleSaveInspectionEntry = () => {
+    fetchInspections()
+    setShowInspectionEntry(false)
+    setSelectedInspection(null)
   }
 
   // Template handlers
@@ -478,6 +491,7 @@ export default function QualityPage() {
                     key={inspection.id}
                     inspection={inspection}
                     onView={handleViewInspection}
+                    onStartInspection={handleStartInspection}
                   />
                 ))}
               </div>
@@ -636,6 +650,17 @@ export default function QualityPage() {
         isOpen={showInspectionForm}
         onClose={() => setShowInspectionForm(false)}
         onSave={handleSaveInspection}
+      />
+
+      {/* Inspection Entry Modal - For entering readings on existing inspection */}
+      <InspectionEntryModal
+        inspection={selectedInspection}
+        isOpen={showInspectionEntry}
+        onClose={() => {
+          setShowInspectionEntry(false)
+          setSelectedInspection(null)
+        }}
+        onSave={handleSaveInspectionEntry}
       />
 
       {/* Template Form Modal */}

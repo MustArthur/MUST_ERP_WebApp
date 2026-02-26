@@ -32,7 +32,7 @@ export type ReceiptStatus = 'DRAFT' | 'PENDING_QC' | 'COMPLETED' | 'CANCELLED'
 
 export type QCStatusSummary = 'NOT_REQUIRED' | 'PENDING' | 'PASSED' | 'FAILED' | 'PARTIAL'
 
-export type ItemQCStatus = 'NOT_REQUIRED' | 'PENDING' | 'PASSED' | 'FAILED'
+export type ItemQCStatus = 'NOT_REQUIRED' | 'PENDING' | 'PASSED' | 'FAILED' | 'PARTIAL'
 
 export interface PurchaseReceiptItem {
   id: string

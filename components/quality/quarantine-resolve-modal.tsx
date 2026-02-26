@@ -125,7 +125,7 @@ export function QuarantineResolveModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-yellow-600" />
@@ -133,7 +133,7 @@ export function QuarantineResolveModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto flex-1 pr-2">
           {/* Item Info */}
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-start gap-4">

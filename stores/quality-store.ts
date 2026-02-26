@@ -10,14 +10,9 @@ import {
   QCDashboard,
   InspectionStatus,
   InspectionType,
+  QuarantineAction,
 } from '@/types/quality'
-import {
-  mockQCTemplates,
-  mockQCInspections,
-  mockQuarantineRecords,
-  calculatePassRate,
-} from '@/lib/mock-data/quality'
-import { generateId, delay } from '@/lib/utils'
+import { QCService } from '@/lib/services/qc-service'
 
 // ==========================================
 // Store State Interface
@@ -48,11 +43,17 @@ interface QualityState {
   fetchInspections: () => Promise<void>
   createInspection: (input: CreateQCInspectionInput) => Promise<QCInspection>
   updateInspectionStatus: (id: string, status: InspectionStatus, remarks?: string) => Promise<QCInspection>
+  updateInspectionReadings: (
+    id: string,
+    readings: { parameterId: string; numericValue?: number; acceptanceValue?: string; remarks?: string }[],
+    quantities?: { acceptedQty: number; rejectedQty: number; quarantineAction?: QuarantineAction }
+  ) => Promise<QCInspection>
+  startInspection: (id: string) => Promise<QCInspection>
   approveInspection: (id: string, approvedBy: string) => Promise<QCInspection>
 
   // Quarantine Actions
   fetchQuarantine: () => Promise<void>
-  resolveQuarantine: (id: string, action: string, detail?: string) => Promise<void>
+  resolveQuarantine: (id: string, action: QuarantineAction, detail?: string) => Promise<void>
 
   // Filter Actions
   setTemplateFilters: (filters: Partial<QCTemplateFilterState>) => void
@@ -88,14 +89,6 @@ const defaultInspectionFilters: QCInspectionFilterState = {
 }
 
 // ==========================================
-// In-memory Storage
-// ==========================================
-
-let templatesData = [...mockQCTemplates]
-let inspectionsData = [...mockQCInspections]
-let quarantineData = [...mockQuarantineRecords]
-
-// ==========================================
 // Store Implementation
 // ==========================================
 
@@ -118,9 +111,10 @@ export const useQualityStore = create<QualityState>((set, get) => ({
   fetchTemplates: async () => {
     set({ isLoading: true, error: null })
     try {
-      await delay(300)
-      set({ templates: templatesData, isLoading: false })
-    } catch {
+      const templates = await QCService.getTemplates()
+      set({ templates, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch templates:', error)
       set({ error: 'ไม่สามารถโหลด QC Templates ได้', isLoading: false })
     }
   },
@@ -128,60 +122,31 @@ export const useQualityStore = create<QualityState>((set, get) => ({
   createTemplate: async (input: CreateQCTemplateInput) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const newTemplate: QCTemplate = {
-        ...input,
-        id: generateId(),
-        status: 'ACTIVE',
-        version: 1,
-        parameters: input.parameters.map((p, idx) => ({
-          ...p,
-          id: generateId(),
-          lineNo: idx + 1,
-        })),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      templatesData = [...templatesData, newTemplate]
-      set({ templates: templatesData, isLoading: false })
+      const newTemplate = await QCService.createTemplate(input)
+      const { templates } = get()
+      set({ templates: [newTemplate, ...templates], isLoading: false })
       return newTemplate
-    } catch {
+    } catch (error) {
+      console.error('Failed to create template:', error)
       set({ error: 'ไม่สามารถสร้าง QC Template ได้', isLoading: false })
-      throw new Error('Failed to create template')
+      throw error
     }
   },
 
   updateTemplate: async (id: string, input: Partial<CreateQCTemplateInput>) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = templatesData.findIndex(t => t.id === id)
-      if (index === -1) throw new Error('Template not found')
-
-      const existing = templatesData[index]
-      const updated: QCTemplate = {
-        ...existing,
-        ...input,
-        version: existing.version + 1,
-        parameters: input.parameters
-          ? input.parameters.map((p, idx) => ({
-              ...p,
-              id: generateId(),
-              lineNo: idx + 1,
-            }))
-          : existing.parameters,
-        updatedAt: new Date().toISOString(),
-      }
-      templatesData = [
-        ...templatesData.slice(0, index),
-        updated,
-        ...templatesData.slice(index + 1),
-      ]
-      set({ templates: templatesData, isLoading: false })
+      const updated = await QCService.updateTemplate(id, input)
+      const { templates } = get()
+      set({
+        templates: templates.map(t => t.id === id ? updated : t),
+        isLoading: false
+      })
       return updated
-    } catch {
+    } catch (error) {
+      console.error('Failed to update template:', error)
       set({ error: 'ไม่สามารถอัพเดท QC Template ได้', isLoading: false })
-      throw new Error('Failed to update template')
+      throw error
     }
   },
 
@@ -190,11 +155,14 @@ export const useQualityStore = create<QualityState>((set, get) => ({
   // ==========================================
 
   fetchInspections: async () => {
+    console.log('=== quality-store fetchInspections called ===')
     set({ isLoading: true, error: null })
     try {
-      await delay(300)
-      set({ inspections: inspectionsData, isLoading: false })
-    } catch {
+      const inspections = await QCService.getInspections()
+      console.log('Inspections fetched, count:', inspections.length)
+      set({ inspections, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch inspections:', error)
       set({ error: 'ไม่สามารถโหลดข้อมูลการตรวจสอบได้', isLoading: false })
     }
   },
@@ -202,124 +170,91 @@ export const useQualityStore = create<QualityState>((set, get) => ({
   createInspection: async (input: CreateQCInspectionInput) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const template = templatesData.find(t => t.id === input.templateId)
-      const inspectionCount = inspectionsData.length + 1
-      const code = `QI-2026-${inspectionCount.toString().padStart(4, '0')}`
-
-      // Determine status based on readings
-      const readings = input.readings.map(r => {
-        const param = template?.parameters.find(p => p.id === r.parameterId)
-        let status: 'PASS' | 'FAIL' | 'PENDING' = 'PENDING'
-
-        if (param) {
-          if (param.type === 'NUMERIC' && r.numericValue !== undefined) {
-            const minOk = param.minValue === undefined || r.numericValue >= param.minValue
-            const maxOk = param.maxValue === undefined || r.numericValue <= param.maxValue
-            status = minOk && maxOk ? 'PASS' : 'FAIL'
-          } else if (param.type === 'ACCEPTANCE' && r.acceptanceValue) {
-            status = param.acceptableValues?.includes(r.acceptanceValue) ? 'PASS' : 'FAIL'
-          }
-        }
-
-        return {
-          id: generateId(),
-          parameterId: r.parameterId,
-          numericValue: r.numericValue,
-          acceptanceValue: r.acceptanceValue,
-          status,
-          remarks: r.remarks,
-        }
-      })
-
-      const hasFail = readings.some(r => r.status === 'FAIL')
-      const allPass = readings.every(r => r.status === 'PASS')
-
-      const newInspection: QCInspection = {
-        id: generateId(),
-        code,
-        type: input.type,
-        status: hasFail ? 'FAILED' : allPass ? 'PASSED' : 'IN_PROGRESS',
-        templateId: input.templateId,
-        template,
-        sourceDocType: input.sourceDocType,
-        sourceDocId: input.sourceDocId,
-        itemId: input.itemId,
-        batchNo: input.batchNo,
-        lotNo: input.lotNo,
-        sampleQty: input.sampleQty,
-        inspectedQty: input.sampleQty,
-        acceptedQty: hasFail ? 0 : input.sampleQty,
-        rejectedQty: hasFail ? input.sampleQty : 0,
-        readings,
-        result: hasFail ? 'REJECTED' : allPass ? 'ACCEPTED' : undefined,
-        inspectionDate: new Date().toISOString().split('T')[0],
-        inspectionTime: new Date().toTimeString().slice(0, 5),
-        inspectedBy: 'ระบบ',
-        isCCP: template?.parameters.some(p => p.isCritical) || false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      inspectionsData = [...inspectionsData, newInspection]
-      set({ inspections: inspectionsData, isLoading: false })
+      const newInspection = await QCService.createInspection(input)
+      const { inspections } = get()
+      set({ inspections: [newInspection, ...inspections], isLoading: false })
       return newInspection
-    } catch {
+    } catch (error) {
+      console.error('Failed to create inspection:', error)
       set({ error: 'ไม่สามารถสร้างใบตรวจสอบได้', isLoading: false })
-      throw new Error('Failed to create inspection')
+      throw error
     }
   },
 
   updateInspectionStatus: async (id: string, status: InspectionStatus, remarks?: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = inspectionsData.findIndex(i => i.id === id)
-      if (index === -1) throw new Error('Inspection not found')
-
-      const updated: QCInspection = {
-        ...inspectionsData[index],
-        status,
-        resultRemarks: remarks,
-        result: status === 'PASSED' ? 'ACCEPTED' : status === 'FAILED' ? 'REJECTED' : undefined,
-        updatedAt: new Date().toISOString(),
-      }
-      inspectionsData = [
-        ...inspectionsData.slice(0, index),
-        updated,
-        ...inspectionsData.slice(index + 1),
-      ]
-      set({ inspections: inspectionsData, isLoading: false })
+      const updated = await QCService.updateInspectionStatus(id, status, remarks)
+      const { inspections } = get()
+      set({
+        inspections: inspections.map(i => i.id === id ? updated : i),
+        isLoading: false
+      })
       return updated
-    } catch {
+    } catch (error) {
+      console.error('Failed to update inspection status:', error)
       set({ error: 'ไม่สามารถอัพเดทสถานะได้', isLoading: false })
-      throw new Error('Failed to update status')
+      throw error
+    }
+  },
+
+  updateInspectionReadings: async (
+    id: string,
+    readings: { parameterId: string; numericValue?: number; acceptanceValue?: string; remarks?: string }[],
+    quantities?: { acceptedQty: number; rejectedQty: number; quarantineAction?: QuarantineAction }
+  ) => {
+    set({ isLoading: true, error: null })
+    try {
+      const updated = await QCService.updateInspectionReadings(id, readings, quantities)
+      const { inspections } = get()
+      set({
+        inspections: inspections.map(i => i.id === id ? updated : i),
+        isLoading: false
+      })
+      // Also refresh quarantine records if there was rejected qty
+      if (quantities?.rejectedQty && quantities.rejectedQty > 0) {
+        const quarantineRecords = await QCService.getQuarantineRecords()
+        set({ quarantineRecords })
+      }
+      return updated
+    } catch (error) {
+      console.error('Failed to update inspection readings:', error)
+      set({ error: 'ไม่สามารถอัพเดทค่าตรวจสอบได้', isLoading: false })
+      throw error
+    }
+  },
+
+  startInspection: async (id: string) => {
+    set({ isLoading: true, error: null })
+    try {
+      const updated = await QCService.updateInspectionStatus(id, 'IN_PROGRESS')
+      const { inspections } = get()
+      set({
+        inspections: inspections.map(i => i.id === id ? updated : i),
+        isLoading: false
+      })
+      return updated
+    } catch (error) {
+      console.error('Failed to start inspection:', error)
+      set({ error: 'ไม่สามารถเริ่มการตรวจสอบได้', isLoading: false })
+      throw error
     }
   },
 
   approveInspection: async (id: string, approvedBy: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = inspectionsData.findIndex(i => i.id === id)
-      if (index === -1) throw new Error('Inspection not found')
-
-      const updated: QCInspection = {
-        ...inspectionsData[index],
-        approvedBy,
-        approvedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      inspectionsData = [
-        ...inspectionsData.slice(0, index),
-        updated,
-        ...inspectionsData.slice(index + 1),
-      ]
-      set({ inspections: inspectionsData, isLoading: false })
+      const updated = await QCService.approveInspection(id, approvedBy)
+      const { inspections } = get()
+      set({
+        inspections: inspections.map(i => i.id === id ? updated : i),
+        isLoading: false
+      })
       return updated
-    } catch {
+    } catch (error) {
+      console.error('Failed to approve inspection:', error)
       set({ error: 'ไม่สามารถอนุมัติได้', isLoading: false })
-      throw new Error('Failed to approve')
+      throw error
     }
   },
 
@@ -330,32 +265,25 @@ export const useQualityStore = create<QualityState>((set, get) => ({
   fetchQuarantine: async () => {
     set({ isLoading: true, error: null })
     try {
-      await delay(300)
-      set({ quarantineRecords: quarantineData, isLoading: false })
-    } catch {
+      const quarantineRecords = await QCService.getQuarantineRecords()
+      set({ quarantineRecords, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch quarantine:', error)
       set({ error: 'ไม่สามารถโหลดข้อมูล Quarantine ได้', isLoading: false })
     }
   },
 
-  resolveQuarantine: async (id: string, action: string, detail?: string) => {
+  resolveQuarantine: async (id: string, action: QuarantineAction, detail?: string) => {
     set({ isLoading: true, error: null })
     try {
-      await delay(400)
-      const index = quarantineData.findIndex(q => q.id === id)
-      if (index === -1) throw new Error('Record not found')
-
-      quarantineData[index] = {
-        ...quarantineData[index],
-        status: action === 'DISPOSE' ? 'DISPOSED' : 'RESOLVED',
-        action: action as any,
-        actionDetail: detail,
-        resolvedBy: 'ผู้จัดการ',
-        resolvedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      set({ quarantineRecords: [...quarantineData], isLoading: false })
-    } catch {
+      await QCService.resolveQuarantine(id, action, detail)
+      // Refresh quarantine records
+      const quarantineRecords = await QCService.getQuarantineRecords()
+      set({ quarantineRecords, isLoading: false })
+    } catch (error) {
+      console.error('Failed to resolve quarantine:', error)
       set({ error: 'ไม่สามารถจัดการ Quarantine ได้', isLoading: false })
+      throw error
     }
   },
 
@@ -414,7 +342,7 @@ export const useQualityStore = create<QualityState>((set, get) => ({
       passRate: inspections.length > 0 ? Math.round((passed / inspections.length) * 100) : 0,
       ccpDeviations,
       quarantineItems,
-      recentInspections: inspections.slice(-5).reverse(),
+      recentInspections: inspections.slice(0, 5),
     }
   },
 

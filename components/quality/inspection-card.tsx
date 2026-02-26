@@ -15,14 +15,16 @@ import {
   AlertTriangle,
   Eye,
   User,
+  Play,
 } from 'lucide-react'
 
 interface InspectionCardProps {
   inspection: QCInspection
   onView: (inspection: QCInspection) => void
+  onStartInspection?: (inspection: QCInspection) => void
 }
 
-export function InspectionCard({ inspection, onView }: InspectionCardProps) {
+export function InspectionCard({ inspection, onView, onStartInspection }: InspectionCardProps) {
   const { templates } = useQualityStore()
 
   // Get template for parameter names
@@ -212,18 +214,32 @@ export function InspectionCard({ inspection, onView }: InspectionCardProps) {
         )}
 
         {/* Actions */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={(e) => {
-            e.stopPropagation()
-            onView(inspection)
-          }}
-        >
-          <Eye className="w-4 h-4 mr-1" />
-          ดูรายละเอียด
-        </Button>
+        {inspection.status === 'DRAFT' && onStartInspection ? (
+          <Button
+            size="sm"
+            className="w-full bg-blue-600 hover:bg-blue-700"
+            onClick={(e) => {
+              e.stopPropagation()
+              onStartInspection(inspection)
+            }}
+          >
+            <Play className="w-4 h-4 mr-1" />
+            เริ่มตรวจ
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation()
+              onView(inspection)
+            }}
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            ดูรายละเอียด
+          </Button>
+        )}
       </CardContent>
     </Card>
   )
