@@ -124,10 +124,9 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
             id,
             item_id,
             qty_on_hand,
-            lot_number,
-            exp_date,
-            status,
+            lot_id,
             items:item_id (id, code, name, last_purchase_cost),
+            lots:lot_id (id, lot_number, expiry_date, status),
             units_of_measure:uom_id (id, code, name)
         `)
         .eq('warehouse_id', warehouseId)
@@ -143,22 +142,23 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
 
     for (const row of data || []) {
         const item = row.items as any
+        const lot = row.lots as any  // Get lot data from joined lots table
         const uom = row.units_of_measure as any
 
         if (!item) continue
 
-        const lot: WarehouseStockLot = {
+        const lotData: WarehouseStockLot = {
             id: row.id,
-            lotNumber: row.lot_number,
+            lotNumber: lot?.lot_number || null,      // From lots table
             qty: row.qty_on_hand || 0,
-            expDate: row.exp_date,
-            status: row.status || 'AVAILABLE'
+            expDate: lot?.expiry_date || null,       // From lots table (expiry_date not exp_date)
+            status: lot?.status || 'AVAILABLE'       // From lots table
         }
 
         if (itemMap.has(item.id)) {
             const existing = itemMap.get(item.id)!
-            existing.lots.push(lot)
-            existing.totalQty += lot.qty
+            existing.lots.push(lotData)
+            existing.totalQty += lotData.qty
             existing.totalValue = existing.totalQty * existing.unitCost
         } else {
             const unitCost = item.last_purchase_cost || 0
@@ -166,11 +166,11 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
                 itemId: item.id,
                 itemCode: item.code,
                 itemName: item.name,
-                totalQty: lot.qty,
+                totalQty: lotData.qty,
                 uomCode: uom?.code || 'PC',
                 unitCost,
-                totalValue: lot.qty * unitCost,
-                lots: [lot]
+                totalValue: lotData.qty * unitCost,
+                lots: [lotData]
             })
         }
     }
