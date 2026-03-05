@@ -190,10 +190,9 @@ export async function getStockItems(): Promise<StockItem[]> {
         .from('items')
         .select(`
             *,
-            category:categories(id, name, type),
-            uom:units_of_measure(id, code)
+            category:category_id (id, name, type),
+            uom:base_uom_id (id, code)
         `)
-        .eq('is_active', true)
         .order('name')
 
     if (error) {
