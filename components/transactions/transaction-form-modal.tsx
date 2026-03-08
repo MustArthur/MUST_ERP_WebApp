@@ -23,6 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { Loader2 } from 'lucide-react'
 
 const transactionSchema = z.object({
@@ -232,21 +233,18 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
                     {/* Item */}
                     <div className="space-y-2">
                         <Label>สินค้า *</Label>
-                        <Select
+                        <SearchableSelect
+                            options={items.map(item => ({
+                                value: item.id,
+                                label: `${item.code} - ${item.name}`,
+                                description: item.baseUomCode || undefined
+                            }))}
                             value={watchedItem}
                             onValueChange={(v) => setValue('itemId', v)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="เลือกสินค้า" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {items.map((item) => (
-                                    <SelectItem key={item.id} value={item.id}>
-                                        {item.code} - {item.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            placeholder="เลือกสินค้า"
+                            searchPlaceholder="พิมพ์รหัสหรือชื่อสินค้า..."
+                            emptyMessage="ไม่พบสินค้าที่ค้นหา"
+                        />
                         {errors.itemId && (
                             <p className="text-sm text-red-500">{errors.itemId.message}</p>
                         )}

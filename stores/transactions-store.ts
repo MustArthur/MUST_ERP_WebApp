@@ -13,7 +13,8 @@ import {
     getLocationsByWarehouse,
     getItemsForTransaction,
     getLotsByItem,
-    getStockBalance
+    getStockBalance,
+    voidTransaction
 } from '@/lib/api/inventory-transactions'
 import { useInventoryStore } from './inventory-store'
 import { useItemsStore } from './items-store'
@@ -74,6 +75,7 @@ interface TransactionsState {
     fetchItems: () => Promise<void>
     fetchLots: (itemId: string) => Promise<void>
     createTransaction: (input: CreateTransactionInput) => Promise<InventoryTransaction | null>
+    voidTransaction: (transactionId: string) => Promise<void>
     setFilters: (filters: Partial<TransactionFilters>) => void
     resetFilters: () => void
     currentStock: number
@@ -185,6 +187,29 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
                 useItemsStore.getState().fetchItems()
             }
             return newTransaction
+        } catch (error) {
+            set({ error: (error as Error).message, isLoading: false })
+            throw error
+        }
+    },
+
+    // Void transaction
+    voidTransaction: async (transactionId: string) => {
+        set({ isLoading: true, error: null })
+        try {
+            await voidTransaction(transactionId)
+            // Refetch transactions and stats
+            const [transactions, stats] = await Promise.all([
+                getAllTransactions(),
+                getTransactionStats()
+            ])
+            set({ transactions, stats, isLoading: false })
+
+            // Sync with Inventory Store - update stock balances
+            useInventoryStore.getState().fetchStockBalances()
+
+            // Sync with Items Store - update stock quantities in items list
+            useItemsStore.getState().fetchItems()
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false })
             throw error

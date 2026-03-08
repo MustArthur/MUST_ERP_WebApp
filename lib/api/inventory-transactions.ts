@@ -50,6 +50,7 @@ export async function getAllTransactions(): Promise<InventoryTransaction[]> {
             notes,
             created_by,
             created_at,
+            is_posted,
             items:item_id (id, code, name),
             lots:lot_id (id, lot_number),
             from_warehouse:from_warehouse_id (id, name),
@@ -94,6 +95,7 @@ export async function getAllTransactions(): Promise<InventoryTransaction[]> {
         notes: t.notes,
         createdBy: t.created_by,
         createdAt: t.created_at,
+        isPosted: t.is_posted !== false, // default true if null
     }))
 }
 
@@ -379,4 +381,134 @@ export async function getStockBalance(itemId: string, warehouseId: string, locat
 
     const { data } = await query.maybeSingle()
     return data?.qty_on_hand || 0
+}
+
+/**
+ * Void a transaction and create reverse transaction to revert stock
+ */
+export async function voidTransaction(transactionId: string): Promise<InventoryTransaction | null> {
+    // 1. Fetch original transaction
+    const { data: original, error } = await supabase
+        .from('inventory_transactions')
+        .select('*')
+        .eq('id', transactionId)
+        .single()
+
+    if (error || !original) {
+        throw new Error('ไม่พบรายการ')
+    }
+
+    if (original.is_posted === false) {
+        throw new Error('รายการนี้ถูกยกเลิกไปแล้ว')
+    }
+
+    // 2. Determine reverse transaction type
+    const reverseTypeMap: Record<string, TransactionType> = {
+        'RECEIVE': 'ISSUE',
+        'ISSUE': 'RECEIVE',
+        'TRANSFER': 'TRANSFER',
+        'ADJUST_IN': 'ADJUST_OUT',
+        'ADJUST_OUT': 'ADJUST_IN',
+        'PRODUCTION_IN': 'PRODUCTION_OUT',
+        'PRODUCTION_OUT': 'PRODUCTION_IN',
+        'SCRAP': 'ADJUST_IN',
+        'RETURN': 'ISSUE',
+    }
+
+    const reverseType = reverseTypeMap[original.transaction_type]
+    if (!reverseType) {
+        throw new Error('ไม่สามารถยกเลิกรายการประเภทนี้ได้')
+    }
+
+    // 3. Create reverse transaction input
+    // For reversal: swap from/to warehouses
+    const reverseInput: CreateTransactionInput = {
+        transactionType: reverseType,
+        itemId: original.item_id,
+        lotId: original.lot_id || undefined,
+        // Swap from/to for proper reversal
+        fromWarehouseId: original.to_warehouse_id || undefined,
+        fromLocationId: original.to_location_id || undefined,
+        toWarehouseId: original.from_warehouse_id || undefined,
+        toLocationId: original.from_location_id || undefined,
+        qty: original.qty,
+        uomId: original.uom_id || undefined,
+        unitCost: original.unit_cost || 0,
+        referenceType: 'VOID',
+        referenceId: original.id,
+        notes: `ยกเลิกรายการ ${original.transaction_no}`,
+    }
+
+    // For non-TRANSFER types, use the correct warehouse direction
+    if (original.transaction_type !== 'TRANSFER') {
+        // IN types (RECEIVE, ADJUST_IN, etc.) - reverse should be OUT from the same warehouse
+        if (['RECEIVE', 'ADJUST_IN', 'PRODUCTION_IN', 'RETURN'].includes(original.transaction_type)) {
+            reverseInput.fromWarehouseId = original.to_warehouse_id || undefined
+            reverseInput.fromLocationId = original.to_location_id || undefined
+            reverseInput.toWarehouseId = undefined
+            reverseInput.toLocationId = undefined
+        }
+        // OUT types (ISSUE, ADJUST_OUT, etc.) - reverse should be IN to the same warehouse
+        else if (['ISSUE', 'ADJUST_OUT', 'PRODUCTION_OUT', 'SCRAP'].includes(original.transaction_type)) {
+            reverseInput.toWarehouseId = original.from_warehouse_id || undefined
+            reverseInput.toLocationId = original.from_location_id || undefined
+            reverseInput.fromWarehouseId = undefined
+            reverseInput.fromLocationId = undefined
+        }
+    }
+
+    // Generate void transaction number
+    const voidTransactionNo = `VOID-${original.transaction_no}`
+    const totalCost = (reverseInput.qty || 0) * (reverseInput.unitCost || 0)
+
+    // 4. Insert reverse transaction
+    const { data: reverseData, error: insertError } = await supabase
+        .from('inventory_transactions')
+        .insert({
+            transaction_no: voidTransactionNo,
+            transaction_type: reverseInput.transactionType,
+            transaction_date: new Date().toISOString(),
+            item_id: reverseInput.itemId,
+            lot_id: reverseInput.lotId || null,
+            from_warehouse_id: reverseInput.fromWarehouseId || null,
+            from_location_id: reverseInput.fromLocationId || null,
+            to_warehouse_id: reverseInput.toWarehouseId || null,
+            to_location_id: reverseInput.toLocationId || null,
+            qty: reverseInput.qty,
+            uom_id: reverseInput.uomId || null,
+            unit_cost: reverseInput.unitCost || 0,
+            total_cost: totalCost,
+            reference_type: 'VOID',
+            reference_id: original.id,
+            notes: reverseInput.notes,
+            is_posted: true,
+        })
+        .select()
+        .single()
+
+    if (insertError) {
+        console.error('Error creating void transaction:', insertError)
+        throw new Error('ไม่สามารถสร้างรายการยกเลิกได้')
+    }
+
+    // 5. Update stock via updateStockOnHand
+    await updateStockOnHand(reverseInput)
+
+    // 6. Mark original transaction as voided
+    const originalNotes = original.notes || ''
+    const { error: updateError } = await supabase
+        .from('inventory_transactions')
+        .update({
+            is_posted: false,
+            notes: originalNotes ? `${originalNotes} [VOIDED]` : '[VOIDED]'
+        })
+        .eq('id', transactionId)
+
+    if (updateError) {
+        console.error('Error marking transaction as voided:', updateError)
+    }
+
+    // 7. Return the void transaction
+    const transactions = await getAllTransactions()
+    return transactions.find(t => t.id === reverseData.id) || null
 }

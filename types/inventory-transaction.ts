@@ -41,6 +41,7 @@ export interface InventoryTransaction {
     createdBy?: string
     createdByName?: string
     createdAt: string
+    isPosted: boolean  // true = ปกติ, false = ถูกยกเลิก (VOIDED)
 }
 
 export interface CreateTransactionInput {

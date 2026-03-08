@@ -9,11 +9,13 @@ import {
     ArrowUpRight,
     ArrowLeftRight,
     Eye,
+    Ban,
 } from 'lucide-react'
 
 interface TransactionTableProps {
     transactions: InventoryTransaction[]
     onView?: (transaction: InventoryTransaction) => void
+    onVoid?: (transaction: InventoryTransaction) => void
 }
 
 function getTransactionIcon(type: TransactionType) {
@@ -29,7 +31,7 @@ function getTransactionIcon(type: TransactionType) {
     return <ArrowLeftRight className="w-4 h-4 text-blue-600" />
 }
 
-export function TransactionTable({ transactions, onView }: TransactionTableProps) {
+export function TransactionTable({ transactions, onView, onVoid }: TransactionTableProps) {
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <div className="overflow-x-auto">
@@ -45,7 +47,8 @@ export function TransactionTable({ transactions, onView }: TransactionTableProps
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ไป</th>
                             <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">จำนวน</th>
                             <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">มูลค่า</th>
-                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">ดู</th>
+                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">สถานะ</th>
+                            <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -54,7 +57,7 @@ export function TransactionTable({ transactions, onView }: TransactionTableProps
                             return (
                                 <tr
                                     key={t.id}
-                                    className="hover:bg-gray-50 transition-colors"
+                                    className={`hover:bg-gray-50 transition-colors ${!t.isPosted ? 'bg-red-50/50 opacity-60' : ''}`}
                                 >
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
@@ -111,14 +114,38 @@ export function TransactionTable({ transactions, onView }: TransactionTableProps
                                         {formatCurrency(t.totalCost)}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => onView?.(t)}
-                                            title="ดูรายละเอียด"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </Button>
+                                        {t.isPosted ? (
+                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                ปกติ
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                                ยกเลิก
+                                            </Badge>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => onView?.(t)}
+                                                title="ดูรายละเอียด"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                            {t.isPosted && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => onVoid?.(t)}
+                                                    title="ยกเลิกรายการ"
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    <Ban className="w-4 h-4" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             )

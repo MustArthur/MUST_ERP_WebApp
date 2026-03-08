@@ -5,6 +5,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useTransactionsStore } from '@/stores/transactions-store'
 import { InventoryTransaction, transactionTypeLabels, TransactionType } from '@/types/inventory-transaction'
 import { TransactionTable, TransactionFormModal } from '@/components/transactions'
+import { VoidTransactionDialog } from '@/components/transactions/void-transaction-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -44,11 +45,14 @@ export default function TransactionsPage() {
         fetchTransactions,
         fetchStats,
         setFilters,
+        voidTransaction,
     } = useTransactionsStore()
 
     const [showFormModal, setShowFormModal] = useState(false)
     const [showDetailModal, setShowDetailModal] = useState(false)
+    const [showVoidDialog, setShowVoidDialog] = useState(false)
     const [selectedTransaction, setSelectedTransaction] = useState<InventoryTransaction | null>(null)
+    const [transactionToVoid, setTransactionToVoid] = useState<InventoryTransaction | null>(null)
     const [defaultTransactionType, setDefaultTransactionType] = useState<TransactionType>('RECEIVE')
 
     // Load data on mount
@@ -90,6 +94,17 @@ export default function TransactionsPage() {
     const handleViewTransaction = (t: InventoryTransaction) => {
         setSelectedTransaction(t)
         setShowDetailModal(true)
+    }
+
+    const handleVoidTransaction = (t: InventoryTransaction) => {
+        setTransactionToVoid(t)
+        setShowVoidDialog(true)
+    }
+
+    const handleConfirmVoid = async () => {
+        if (transactionToVoid) {
+            await voidTransaction(transactionToVoid.id)
+        }
     }
 
     return (
@@ -269,6 +284,7 @@ export default function TransactionsPage() {
                     <TransactionTable
                         transactions={filteredTransactions}
                         onView={handleViewTransaction}
+                        onVoid={handleVoidTransaction}
                     />
                 )}
             </main>
@@ -293,6 +309,11 @@ export default function TransactionsPage() {
                                     {transactionTypeLabels[selectedTransaction.transactionType]}
                                 </Badge>
                                 <span className="font-mono font-medium">{selectedTransaction.transactionNo}</span>
+                                {!selectedTransaction.isPosted && (
+                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                        ยกเลิก
+                                    </Badge>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -353,6 +374,17 @@ export default function TransactionsPage() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Void Transaction Dialog */}
+            <VoidTransactionDialog
+                transaction={transactionToVoid}
+                isOpen={showVoidDialog}
+                onClose={() => {
+                    setShowVoidDialog(false)
+                    setTransactionToVoid(null)
+                }}
+                onConfirm={handleConfirmVoid}
+            />
         </div>
     )
 }
