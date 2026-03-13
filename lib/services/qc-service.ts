@@ -301,6 +301,31 @@ export class QCService {
         return (data || []).map((item) => this.mapInspectionFromDB(item))
     }
 
+    /**
+     * Cancel all inspections associated with a source document
+     * Used when the source document (e.g., purchase receipt) is cancelled
+     */
+    static async cancelInspectionsBySource(sourceDocType: string, sourceDocId: string): Promise<void> {
+        // Only cancel inspections that are still pending (DRAFT or IN_PROGRESS)
+        const { error } = await this.supabase
+            .from('qc_inspections')
+            .update({
+                status: 'CANCELLED',
+                result_remarks: sourceDocType === 'PURCHASE_RECEIPT'
+                    ? 'ยกเลิกเนื่องจากใบรับวัตถุดิบถูกยกเลิก'
+                    : 'ยกเลิกเนื่องจากเอกสารต้นทางถูกยกเลิก',
+                updated_at: new Date().toISOString()
+            })
+            .eq('source_doc_type', sourceDocType)
+            .eq('source_doc_id', sourceDocId)
+            .in('status', ['DRAFT', 'IN_PROGRESS'])
+
+        if (error) {
+            console.error('Failed to cancel inspections:', error)
+            throw error
+        }
+    }
+
     static async createInspection(input: CreateQCInspectionInput): Promise<QCInspection> {
         const template = input.templateId ? await this.getTemplateById(input.templateId) : null
 

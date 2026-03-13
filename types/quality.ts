@@ -45,7 +45,7 @@ export interface QCTemplate {
 }
 
 // QC Inspection
-export type InspectionStatus = 'DRAFT' | 'IN_PROGRESS' | 'PASSED' | 'FAILED' | 'ON_HOLD'
+export type InspectionStatus = 'DRAFT' | 'IN_PROGRESS' | 'PASSED' | 'FAILED' | 'ON_HOLD' | 'CANCELLED'
 
 export type InspectionType = 'INCOMING' | 'IN_PROCESS' | 'FINAL' | 'PATROL'
 

@@ -328,21 +328,23 @@ export const useQualityStore = create<QualityState>((set, get) => ({
 
   getDashboard: (): QCDashboard => {
     const { inspections, quarantineRecords } = get()
-    const passed = inspections.filter(i => i.status === 'PASSED').length
-    const failed = inspections.filter(i => i.status === 'FAILED').length
-    const pending = inspections.filter(i => i.status === 'IN_PROGRESS' || i.status === 'DRAFT').length
-    const ccpDeviations = inspections.filter(i => i.isCCP && i.status === 'FAILED').length
+    // Filter out CANCELLED inspections for all calculations
+    const activeInspections = inspections.filter(i => i.status !== 'CANCELLED')
+    const passed = activeInspections.filter(i => i.status === 'PASSED').length
+    const failed = activeInspections.filter(i => i.status === 'FAILED').length
+    const pending = activeInspections.filter(i => i.status === 'IN_PROGRESS' || i.status === 'DRAFT').length
+    const ccpDeviations = activeInspections.filter(i => i.isCCP && i.status === 'FAILED').length
     const quarantineItems = quarantineRecords.filter(q => q.status === 'PENDING').length
 
     return {
-      totalInspections: inspections.length,
+      totalInspections: activeInspections.length,
       passedCount: passed,
       failedCount: failed,
       pendingCount: pending,
-      passRate: inspections.length > 0 ? Math.round((passed / inspections.length) * 100) : 0,
+      passRate: activeInspections.length > 0 ? Math.round((passed / activeInspections.length) * 100) : 0,
       ccpDeviations,
       quarantineItems,
-      recentInspections: inspections.slice(0, 5),
+      recentInspections: activeInspections.slice(0, 5),
     }
   },
 
@@ -363,6 +365,11 @@ export function useFilteredInspections() {
   const { inspections, inspectionFilters } = useQualityStore()
 
   return inspections.filter(inspection => {
+    // Hide CANCELLED inspections by default (unless explicitly filtering for them)
+    if (inspection.status === 'CANCELLED' && inspectionFilters.status !== 'CANCELLED') {
+      return false
+    }
+
     // Search filter
     if (inspectionFilters.search) {
       const search = inspectionFilters.search.toLowerCase()
@@ -378,7 +385,12 @@ export function useFilteredInspections() {
     }
 
     // Status filter
-    if (inspectionFilters.status !== 'all' && inspection.status !== inspectionFilters.status) {
+    // Special case: DRAFT filter includes both DRAFT and IN_PROGRESS (รอตรวจ)
+    if (inspectionFilters.status === 'DRAFT') {
+      if (inspection.status !== 'DRAFT' && inspection.status !== 'IN_PROGRESS') {
+        return false
+      }
+    } else if (inspectionFilters.status !== 'all' && inspection.status !== inspectionFilters.status) {
       return false
     }
 

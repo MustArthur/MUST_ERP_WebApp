@@ -50,6 +50,7 @@ import {
   FileText,
   Package,
   ArrowLeft,
+  Clock,
 } from 'lucide-react'
 
 export default function QualityPage() {
@@ -269,7 +270,7 @@ export default function QualityPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
           <div className="bg-white rounded-xl p-4 shadow-sm border">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -278,6 +279,21 @@ export default function QualityPage() {
               <div>
                 <p className="text-sm text-gray-500">ตรวจทั้งหมด</p>
                 <p className="text-xl font-semibold">{dashboard.totalInspections}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* NEW: รอตรวจ Card */}
+          <div className="bg-white rounded-xl p-4 shadow-sm border">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Clock className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">รอตรวจ</p>
+                <p className="text-xl font-semibold text-yellow-600">
+                  {dashboard.pendingCount}
+                </p>
               </div>
             </div>
           </div>
@@ -439,7 +455,21 @@ export default function QualityPage() {
                 </div>
 
                 {/* Status & CCP Filter */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  {/* NEW: รอตรวจ filter */}
+                  <Button
+                    variant={inspectionFilters.status === 'DRAFT' ? 'default' : 'outline'}
+                    size="sm"
+                    className={cn(
+                      inspectionFilters.status === 'DRAFT' && 'bg-yellow-600 hover:bg-yellow-700'
+                    )}
+                    onClick={() => handleStatusFilter(
+                      inspectionFilters.status === 'DRAFT' ? 'all' : 'DRAFT'
+                    )}
+                  >
+                    <Clock className="w-4 h-4 mr-1" />
+                    รอตรวจ ({dashboard.pendingCount})
+                  </Button>
                   <Button
                     variant={inspectionFilters.status === 'PASSED' ? 'default' : 'outline'}
                     size="sm"

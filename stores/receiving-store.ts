@@ -312,12 +312,25 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
   cancelReceipt: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      await ReceivingService.updateStatus(id, 'CANCELLED')
+      // 1. Cancel any pending QC Inspections associated with this receipt
+      try {
+        await QCService.cancelInspectionsBySource('PURCHASE_RECEIPT', id)
+      } catch (qcError) {
+        console.error('Failed to cancel QC inspections:', qcError)
+        // Continue with receipt cancellation even if QC cancellation fails
+      }
+
+      // 2. Cancel the receipt (also clear QC status)
+      await ReceivingService.updateStatus(id, 'CANCELLED', 'NOT_REQUIRED')
+
       const { receipts } = get()
       set({
         receipts: receipts.map(r => r.id === id ? { ...r, status: 'CANCELLED' } : r),
         isLoading: false
       })
+
+      // 3. Refresh Quality Store to reflect cancelled inspections
+      useQualityStore.getState().fetchInspections()
     } catch (error) {
       console.error('Failed to cancel receipt:', error)
       set({ error: 'ไม่สามารถยกเลิกใบรับได้', isLoading: false })
