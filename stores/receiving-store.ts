@@ -52,6 +52,7 @@ interface ReceivingState {
   submitReceipt: (id: string) => Promise<PurchaseReceipt>
   completeReceipt: (id: string) => Promise<PurchaseReceipt>
   cancelReceipt: (id: string) => Promise<void>
+  fixQCStatusForCancelledReceipt: (id: string) => Promise<void>
 
   // QC Integration
   updateItemQCStatus: (receiptId: string, itemId: string, status: 'PASSED' | 'FAILED', qcInspectionId?: string) => Promise<void>
@@ -334,6 +335,36 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
     } catch (error) {
       console.error('Failed to cancel receipt:', error)
       set({ error: 'ไม่สามารถยกเลิกใบรับได้', isLoading: false })
+      throw error
+    }
+  },
+
+  fixQCStatusForCancelledReceipt: async (id: string) => {
+    set({ isLoading: true, error: null })
+    try {
+      // 1. Cancel any pending QC Inspections associated with this receipt
+      try {
+        await QCService.cancelInspectionsBySource('PURCHASE_RECEIPT', id)
+      } catch (qcError) {
+        console.error('Failed to cancel QC inspections:', qcError)
+        // Continue even if QC cancellation fails
+      }
+
+      // 2. Update only the QC status (status remains CANCELLED)
+      await ReceivingService.updateStatus(id, 'CANCELLED', 'NOT_REQUIRED')
+
+      // 3. Update local state
+      const { receipts } = get()
+      set({
+        receipts: receipts.map(r => r.id === id ? { ...r, qcStatus: 'NOT_REQUIRED' as QCStatusSummary } : r),
+        isLoading: false
+      })
+
+      // 4. Refresh Quality Store to reflect cancelled inspections
+      useQualityStore.getState().fetchInspections()
+    } catch (error) {
+      console.error('Failed to fix QC status:', error)
+      set({ error: 'ไม่สามารถแก้ไขสถานะ QC ได้', isLoading: false })
       throw error
     }
   },

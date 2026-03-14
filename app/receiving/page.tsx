@@ -81,6 +81,7 @@ export default function ReceivingPage() {
   // Confirmation dialogs
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [showFixQCConfirm, setShowFixQCConfirm] = useState(false)
   const [receiptToAction, setReceiptToAction] = useState<PurchaseReceipt | null>(null)
 
   // Load data on mount
@@ -151,6 +152,21 @@ export default function ReceivingPage() {
     await cancelReceipt(receiptToAction.id)
     fetchReceipts()
     setShowCancelConfirm(false)
+    setShowDetailModal(false)
+    setReceiptToAction(null)
+  }
+
+  const handleFixQCStatus = (receipt: PurchaseReceipt) => {
+    setReceiptToAction(receipt)
+    setShowFixQCConfirm(true)
+  }
+
+  const confirmFixQCStatus = async () => {
+    if (!receiptToAction) return
+    const { fixQCStatusForCancelledReceipt } = useReceivingStore.getState()
+    await fixQCStatusForCancelledReceipt(receiptToAction.id)
+    fetchReceipts()
+    setShowFixQCConfirm(false)
     setShowDetailModal(false)
     setReceiptToAction(null)
   }
@@ -455,6 +471,7 @@ export default function ReceivingPage() {
         onSubmit={handleSubmitReceipt}
         onComplete={handleCompleteReceipt}
         onCancel={handleCancelReceipt}
+        onFixQCStatus={handleFixQCStatus}
         onViewQC={handleViewQC}
       />
 
@@ -525,6 +542,31 @@ export default function ReceivingPage() {
               className="bg-red-600 hover:bg-red-700"
             >
               ยืนยันยกเลิก
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Fix QC Status Confirmation Dialog */}
+      <AlertDialog open={showFixQCConfirm} onOpenChange={setShowFixQCConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>แก้ไขสถานะ QC</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการล้างสถานะ QC ของใบรับ <strong>{receiptToAction?.code}</strong> หรือไม่?
+              <br /><br />
+              <span className="text-orange-600">
+                การดำเนินการนี้จะยกเลิก QC Inspection ที่ค้างอยู่ และเปลี่ยนสถานะ QC เป็น &quot;ไม่ต้อง QC&quot;
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmFixQCStatus}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              ยืนยันแก้ไข
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

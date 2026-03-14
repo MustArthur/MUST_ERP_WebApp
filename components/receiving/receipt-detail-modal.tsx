@@ -38,6 +38,7 @@ interface ReceiptDetailModalProps {
   onSubmit?: (receipt: PurchaseReceipt) => void
   onComplete?: (receipt: PurchaseReceipt) => void
   onCancel?: (receipt: PurchaseReceipt) => void
+  onFixQCStatus?: (receipt: PurchaseReceipt) => void
   onPrint?: (receipt: PurchaseReceipt) => void
   onViewQC?: (inspectionId: string) => void
 }
@@ -50,6 +51,7 @@ export function ReceiptDetailModal({
   onSubmit,
   onComplete,
   onCancel,
+  onFixQCStatus,
   onPrint,
   onViewQC,
 }: ReceiptDetailModalProps) {
@@ -225,6 +227,17 @@ export function ReceiptDetailModal({
             <div>
               <p className="font-medium text-red-800">สินค้าไม่ผ่านการตรวจ QC</p>
               <p className="text-sm text-red-600">กรุณาดำเนินการตามขั้นตอน</p>
+            </div>
+          </div>
+        )}
+
+        {/* Cancelled but still has pending QC - needs fix */}
+        {receipt.status === 'CANCELLED' && receipt.qcStatus === 'PENDING' && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-orange-600" />
+            <div>
+              <p className="font-medium text-orange-800">ใบรับนี้ถูกยกเลิกแล้วแต่ยังมีสถานะ QC ค้างอยู่</p>
+              <p className="text-sm text-orange-600">กดปุ่ม "แก้ไขสถานะ QC" ด้านล่างเพื่อล้างสถานะ</p>
             </div>
           </div>
         )}
@@ -564,6 +577,16 @@ export function ReceiptDetailModal({
               >
                 <XCircle className="w-4 h-4 mr-2" />
                 ยกเลิก
+              </Button>
+            )}
+            {onFixQCStatus && receipt.status === 'CANCELLED' && receipt.qcStatus === 'PENDING' && (
+              <Button
+                variant="outline"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                onClick={() => onFixQCStatus(receipt)}
+              >
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                แก้ไขสถานะ QC
               </Button>
             )}
             {onSubmit && receipt.status === 'DRAFT' && (
