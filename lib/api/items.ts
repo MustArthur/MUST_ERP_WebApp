@@ -445,6 +445,29 @@ export async function getFinishedGoods(): Promise<Item[]> {
     return items || []
 }
 
+/**
+ * Get all items that can be recipe outputs (FG and SP items)
+ */
+export async function getOutputProducts(): Promise<Item[]> {
+    const { data: items, error } = await supabase
+        .from('items')
+        .select(`
+            id,
+            code,
+            name,
+            last_purchase_cost
+        `)
+        .or('code.like.FG-%,code.like.SP-%')
+        .order('code')
+
+    if (error) {
+        console.error('Error fetching output products:', error)
+        return []
+    }
+
+    return items || []
+}
+
 // ============================================
 // ITEM SUPPLIERS
 // ============================================

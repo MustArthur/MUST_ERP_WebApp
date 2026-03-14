@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Trash2, Check, Calculator } from 'lucide-react'
-import { getRecipeIngredients, getFinishedGoods, Item } from '@/lib/api/items'
+import { getRecipeIngredients, getOutputProducts, Item } from '@/lib/api/items'
 
 interface RecipeFormModalProps {
   recipe?: Recipe | null
@@ -45,7 +45,7 @@ export function RecipeFormModal({
 
   // Items from Supabase
   const [ingredientItems, setIngredientItems] = useState<Item[]>([])
-  const [finishedGoods, setFinishedGoods] = useState<Item[]>([])
+  const [outputProducts, setOutputProducts] = useState<Item[]>([])
 
   // Form state
   const [code, setCode] = useState('')
@@ -122,12 +122,12 @@ export function RecipeFormModal({
   // Load items from Supabase on mount
   useEffect(() => {
     async function loadItems() {
-      const [ing, fg] = await Promise.all([
+      const [ing, outputs] = await Promise.all([
         getRecipeIngredients(),
-        getFinishedGoods()
+        getOutputProducts()
       ])
       setIngredientItems(ing)
-      setFinishedGoods(fg)
+      setOutputProducts(outputs)
     }
     loadItems()
   }, [])
@@ -208,8 +208,8 @@ export function RecipeFormModal({
     }
   }
 
-  const handleFinishedGoodSelect = (productCode: string) => {
-    const product = finishedGoods.find(p => p.code === productCode)
+  const handleOutputProductSelect = (productCode: string) => {
+    const product = outputProducts.find(p => p.code === productCode)
     if (product) {
       setOutputItemCode(product.code)
       setOutputItem(product.name)
@@ -276,14 +276,21 @@ export function RecipeFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>สินค้าที่ผลิตได้ *</Label>
-              <Select value={outputItemCode} onValueChange={handleFinishedGoodSelect}>
+              <Select value={outputItemCode} onValueChange={handleOutputProductSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder="-- เลือกสินค้า --" />
                 </SelectTrigger>
                 <SelectContent>
-                  {finishedGoods.map(fg => (
-                    <SelectItem key={fg.code} value={fg.code}>
-                      {fg.code} - {fg.name}
+                  {outputProducts.map(product => (
+                    <SelectItem key={product.code} value={product.code}>
+                      <div className="flex items-center gap-2">
+                        {product.code.startsWith('SP-') ? (
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-orange-100 text-orange-700">SP</span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-700">FG</span>
+                        )}
+                        <span>{product.code} - {product.name}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
