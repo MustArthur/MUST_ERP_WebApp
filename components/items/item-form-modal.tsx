@@ -27,6 +27,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Package, Save } from 'lucide-react'
@@ -36,6 +37,7 @@ import { useItemsStore } from '@/stores/items-store'
 const itemFormSchema = z.object({
     code: z.string().min(1, 'กรุณาระบุรหัส'),
     name: z.string().min(1, 'กรุณาระบุชื่อ'),
+    notes: z.string().optional(),
     categoryId: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
     baseUomId: z.string().min(1, 'กรุณาเลือกหน่วย'),
     stockUomId: z.string().min(1, 'กรุณาเลือกหน่วยสต๊อก'),
@@ -73,6 +75,7 @@ export function ItemFormModal({
         defaultValues: {
             code: '',
             name: '',
+            notes: '',
             categoryId: '',
             baseUomId: '',
             stockUomId: '',
@@ -89,6 +92,7 @@ export function ItemFormModal({
             form.reset({
                 code: item.code,
                 name: item.name,
+                notes: item.notes || '',
                 categoryId: item.categoryId,
                 baseUomId: item.baseUomId,
                 stockUomId: item.stockUomId || item.baseUomId,
@@ -101,6 +105,7 @@ export function ItemFormModal({
             form.reset({
                 code: '',
                 name: '',
+                notes: '',
                 categoryId: '',
                 baseUomId: '',
                 stockUomId: '',
@@ -119,6 +124,7 @@ export function ItemFormModal({
                 await onSave({
                     code: data.code,
                     name: data.name,
+                    notes: data.notes || undefined,
                     categoryId: data.categoryId,
                     baseUomId: data.baseUomId,
                     stockUomId: data.stockUomId,
@@ -131,6 +137,7 @@ export function ItemFormModal({
                 await onSave({
                     code: data.code,
                     name: data.name,
+                    notes: data.notes || undefined,
                     categoryId: data.categoryId,
                     baseUomId: data.baseUomId,
                     stockUomId: data.stockUomId,
@@ -197,6 +204,25 @@ export function ItemFormModal({
                                     <FormLabel>ชื่อ *</FormLabel>
                                     <FormControl>
                                         <Input placeholder="ชื่อวัตถุดิบหรือสินค้า" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="notes"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Note</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="รายละเอียดเพิ่มเติม เช่น ข้อควรระวัง, การจัดเก็บ, หมายเหตุ..."
+                                            rows={3}
+                                            className="resize-none"
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

@@ -32,6 +32,7 @@ export async function getAllItems(): Promise<ItemType[]> {
           id,
           code,
           name,
+          description,
           last_purchase_cost,
           is_active,
           requires_qc,
@@ -98,6 +99,7 @@ export async function getAllItems(): Promise<ItemType[]> {
             id: i.id,
             code: i.code,
             name: i.name,
+            notes: (i as any).description || undefined,
             categoryId: i.category_id || '',
             categoryCode: (i.categories as any)?.code || '',
             categoryName: (i.categories as any)?.name || '',
@@ -130,6 +132,7 @@ export async function createItem(input: CreateItemInput): Promise<ItemType | nul
         .insert({
             code: input.code,
             name: input.name,
+            description: input.notes || null,
             category_id: input.categoryId,
             base_uom_id: input.baseUomId,
             stock_uom_id: input.stockUomId || input.baseUomId,
@@ -158,6 +161,7 @@ export async function updateItem(id: string, input: UpdateItemInput): Promise<It
     const updateData: Record<string, any> = {}
     if (input.code !== undefined) updateData.code = input.code
     if (input.name !== undefined) updateData.name = input.name
+    if (input.notes !== undefined) updateData.description = input.notes || null
     if (input.categoryId !== undefined) updateData.category_id = input.categoryId
     if (input.baseUomId !== undefined) updateData.base_uom_id = input.baseUomId
     if (input.stockUomId !== undefined) updateData.stock_uom_id = input.stockUomId

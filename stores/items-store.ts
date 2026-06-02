@@ -89,12 +89,10 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         set({ isLoading: true, error: null })
         try {
             const newItem = await createItem(input)
-            if (newItem) {
-                set(state => ({
-                    items: [...state.items, newItem],
-                    isLoading: false
-                }))
-            }
+            set(state => ({
+                items: newItem ? [...state.items, newItem] : state.items,
+                isLoading: false,
+            }))
             return newItem
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false })
@@ -107,14 +105,12 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         set({ isLoading: true, error: null })
         try {
             const updatedItem = await updateItem(id, input)
-            if (updatedItem) {
-                set(state => ({
-                    items: state.items.map(item =>
-                        item.id === id ? updatedItem : item
-                    ),
-                    isLoading: false
-                }))
-            }
+            set(state => ({
+                items: updatedItem
+                    ? state.items.map(item => item.id === id ? updatedItem : item)
+                    : state.items,
+                isLoading: false,
+            }))
             return updatedItem
         } catch (error) {
             set({ error: (error as Error).message, isLoading: false })

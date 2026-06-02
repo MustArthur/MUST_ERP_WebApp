@@ -11,6 +11,7 @@ export interface Item {
     id: string
     code: string
     name: string
+    notes?: string            // หมายเหตุ / รายละเอียดเพิ่มเติม (maps to description column)
     categoryId: string
     categoryCode: string
     categoryName: string
@@ -47,6 +48,7 @@ export interface UnitOfMeasure {
 export interface CreateItemInput {
     code: string
     name: string
+    notes?: string
     categoryId: string
     baseUomId: string
     stockUomId?: string
@@ -58,6 +60,7 @@ export interface CreateItemInput {
 export interface UpdateItemInput {
     code?: string
     name?: string
+    notes?: string
     categoryId?: string
     baseUomId?: string
     stockUomId?: string
