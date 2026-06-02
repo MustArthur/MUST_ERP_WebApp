@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Trash2, Check, Calculator } from 'lucide-react'
-import { getRecipeIngredients, getOutputProducts, Item } from '@/lib/api/items'
+import { getRecipeIngredients, getOutputProducts, getUnitsOfMeasure, Item } from '@/lib/api/items'
+import type { UnitOfMeasure as UOMType } from '@/types/item'
 
 interface RecipeFormModalProps {
   recipe?: Recipe | null
@@ -44,8 +45,11 @@ export function RecipeFormModal({
   const [isLoading, setIsLoading] = useState(false)
 
   // Items from Supabase
+  const [itemsLoading, setItemsLoading] = useState(true)
   const [ingredientItems, setIngredientItems] = useState<Item[]>([])
   const [outputProducts, setOutputProducts] = useState<Item[]>([])
+  const [uomCodeToId, setUomCodeToId] = useState<Map<string, string>>(new Map())
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // Form state
   const [code, setCode] = useState('')
@@ -119,21 +123,29 @@ export function RecipeFormModal({
     }
   }
 
-  // Load items from Supabase on mount
+  // Load items and UOMs from Supabase on mount
   useEffect(() => {
     async function loadItems() {
-      const [ing, outputs] = await Promise.all([
-        getRecipeIngredients(),
-        getOutputProducts()
-      ])
-      setIngredientItems(ing)
-      setOutputProducts(outputs)
+      setItemsLoading(true)
+      try {
+        const [ing, outputs, uoms] = await Promise.all([
+          getRecipeIngredients(),
+          getOutputProducts(),
+          getUnitsOfMeasure(),
+        ])
+        setIngredientItems(ing)
+        setOutputProducts(outputs)
+        setUomCodeToId(new Map((uoms as UOMType[]).map(u => [u.code, u.id])))
+      } finally {
+        setItemsLoading(false)
+      }
     }
     loadItems()
   }, [])
 
   // Reset form when recipe changes
   useEffect(() => {
+    setSaveError(null)
     if (recipe) {
       setCode(recipe.code)
       setName(recipe.name)
@@ -217,6 +229,39 @@ export function RecipeFormModal({
   }
 
   const handleSubmit = async (status: 'DRAFT' | 'ACTIVE') => {
+    setSaveError(null)
+
+    // Validate required header fields
+    if (!code.trim() || !name.trim()) {
+      setSaveError('กรุณากรอกรหัสสูตรและชื่อสูตร')
+      return
+    }
+    if (!outputItemCode) {
+      setSaveError('กรุณาเลือกสินค้าที่ผลิตได้')
+      return
+    }
+
+    // Validate ingredients
+    for (const ing of ingredients) {
+      if (!ing.itemId) {
+        setSaveError('กรุณาเลือกวัตถุดิบจาก dropdown สำหรับทุกรายการ')
+        return
+      }
+      if (!ing.uomId) {
+        setSaveError('วัตถุดิบบางรายการไม่มีข้อมูล UOM ID — กรุณาเลือกวัตถุดิบใหม่จาก dropdown')
+        return
+      }
+    }
+
+    // Resolve UUIDs for the output product and its UOM (needed for Supabase insert)
+    const outputItemId = outputProducts.find(p => p.code === outputItemCode)?.id
+    const outputUomId = uomCodeToId.get(outputUom)
+
+    if (!outputUomId) {
+      setSaveError(`ไม่พบ UUID ของหน่วย "${outputUom}" ในระบบ — กรุณาตรวจสอบข้อมูลหน่วยใน Supabase`)
+      return
+    }
+
     setIsLoading(true)
     try {
       const data: CreateRecipeInput = {
@@ -224,8 +269,10 @@ export function RecipeFormModal({
         name,
         outputItem,
         outputItemCode,
+        outputItemId,
         outputQty,
         outputUom,
+        outputUomId,
         batchSize,
         expectedYield,
         estimatedTime,
@@ -236,6 +283,9 @@ export function RecipeFormModal({
       }
       await onSave(data, status)
       onClose()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'
+      setSaveError(message)
     } finally {
       setIsLoading(false)
     }
@@ -276,9 +326,9 @@ export function RecipeFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>สินค้าที่ผลิตได้ *</Label>
-              <Select value={outputItemCode} onValueChange={handleOutputProductSelect}>
+              <Select value={outputItemCode} onValueChange={handleOutputProductSelect} disabled={itemsLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="-- เลือกสินค้า --" />
+                  <SelectValue placeholder={itemsLoading ? 'กำลังโหลด...' : '-- เลือกสินค้า --'} />
                 </SelectTrigger>
                 <SelectContent>
                   {outputProducts.map(product => (
@@ -421,14 +471,17 @@ export function RecipeFormModal({
                         <Select
                           value={ing.code}
                           onValueChange={(v) => handleMaterialSelect(ing.tempId, v)}
+                          disabled={itemsLoading}
                         >
                           <SelectTrigger className="text-sm w-full text-left">
                             <span className="truncate">
-                              {ing.code
-                                ? ingredientItems.find(i => i.code === ing.code)
-                                  ? `${ing.code} - ${ingredientItems.find(i => i.code === ing.code)?.name}`
-                                  : ing.code
-                                : <span className="text-muted-foreground">-- เลือก --</span>
+                              {itemsLoading
+                                ? <span className="text-muted-foreground">กำลังโหลด...</span>
+                                : ing.code
+                                  ? ingredientItems.find(i => i.code === ing.code)
+                                    ? `${ing.code} - ${ingredientItems.find(i => i.code === ing.code)?.name}`
+                                    : ing.code
+                                  : <span className="text-muted-foreground">-- เลือก --</span>
                               }
                             </span>
                           </SelectTrigger>
@@ -452,7 +505,11 @@ export function RecipeFormModal({
                       <td className="px-2 py-2">
                         <Select
                           value={ing.uom}
-                          onValueChange={(v) => updateIngredient(ing.tempId, 'uom', v)}
+                          onValueChange={(v) => {
+                            updateIngredient(ing.tempId, 'uom', v)
+                            const resolvedId = uomCodeToId.get(v)
+                            if (resolvedId) updateIngredient(ing.tempId, 'uomId', resolvedId)
+                          }}
                         >
                           <SelectTrigger className="h-9">
                             <SelectValue />
@@ -513,6 +570,11 @@ export function RecipeFormModal({
         </div>
 
         {/* Footer */}
+        {saveError && (
+          <div className="px-1 py-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            ⚠️ {saveError}
+          </div>
+        )}
         <div className="pt-4 border-t flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1" disabled={isLoading}>
             ยกเลิก

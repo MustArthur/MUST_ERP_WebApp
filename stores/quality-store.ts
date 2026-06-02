@@ -155,11 +155,9 @@ export const useQualityStore = create<QualityState>((set, get) => ({
   // ==========================================
 
   fetchInspections: async () => {
-    console.log('=== quality-store fetchInspections called ===')
     set({ isLoading: true, error: null })
     try {
       const inspections = await QCService.getInspections()
-      console.log('Inspections fetched, count:', inspections.length)
       set({ inspections, isLoading: false })
     } catch (error) {
       console.error('Failed to fetch inspections:', error)

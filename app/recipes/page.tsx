@@ -28,8 +28,10 @@ export default function RecipesPage() {
     duplicateRecipe,
     deleteRecipe,
     isLoading,
+    error: storeError,
     filters,
     setFilters,
+    clearError,
   } = useRecipeStore()
 
   const filteredRecipes = useFilteredRecipes()
@@ -79,10 +81,14 @@ export default function RecipesPage() {
 
   const confirmDuplicate = async () => {
     if (!recipeToAction) return
-    await duplicateRecipe(recipeToAction.id)
-    setShowDuplicateConfirm(false)
-    setShowDetailModal(false)
-    setRecipeToAction(null)
+    try {
+      await duplicateRecipe(recipeToAction.id)
+      setShowDuplicateConfirm(false)
+      setShowDetailModal(false)
+      setRecipeToAction(null)
+    } catch {
+      setShowDuplicateConfirm(false)
+    }
   }
 
   const handleDelete = (recipe: Recipe) => {
@@ -92,10 +98,14 @@ export default function RecipesPage() {
 
   const confirmDelete = async () => {
     if (!recipeToAction) return
-    await deleteRecipe(recipeToAction.id)
-    setShowDeleteConfirm(false)
-    setShowDetailModal(false)
-    setRecipeToAction(null)
+    try {
+      await deleteRecipe(recipeToAction.id)
+      setShowDeleteConfirm(false)
+      setShowDetailModal(false)
+      setRecipeToAction(null)
+    } catch {
+      setShowDeleteConfirm(false)
+    }
   }
 
   const handleCloseForm = () => {
@@ -147,6 +157,14 @@ export default function RecipesPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Store error banner */}
+        {storeError && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <span>⚠️ {storeError}</span>
+            <button onClick={clearError} className="ml-4 text-red-500 hover:text-red-700 font-medium">✕</button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border">
           <div className="flex flex-col md:flex-row gap-4">

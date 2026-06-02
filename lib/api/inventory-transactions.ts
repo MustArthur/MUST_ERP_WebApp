@@ -215,8 +215,6 @@ async function updateStockOnHand(input: CreateTransactionInput): Promise<void> {
                     qty_on_hand: qty,
                     uom_id: uomId || null
                 }
-                console.log('Inserting stock_on_hand:', insertData)
-
                 const { error: insertError } = await supabase
                     .from('stock_on_hand')
                     .insert(insertData)

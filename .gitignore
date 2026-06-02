@@ -46,3 +46,6 @@ next-env.d.ts
 # Gemini/Claude temp
 .gemini/antigravity/
 .claude/
+.agents/
+.codex/
+AGENTS.md

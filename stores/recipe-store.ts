@@ -60,7 +60,6 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
           const recipes = await recipeApi.getRecipes()
           // If no recipes in DB, use mock data
           if (recipes.length === 0) {
-            console.log('No recipes in Supabase, using mock data')
             set({ recipes: recipesData, isLoading: false })
           } else {
             set({ recipes, isLoading: false })
@@ -94,10 +93,19 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
     }
   },
 
-  // Create new recipe
+  // Create new recipe - NOW USES SUPABASE
   createRecipe: async (input: CreateRecipeInput) => {
     set({ isLoading: true, error: null })
     try {
+      if (USE_SUPABASE) {
+        const created = await recipeApi.createRecipe(input)
+        // Refresh recipes list from DB
+        const recipes = await recipeApi.getRecipes()
+        set({ recipes, isLoading: false, selectedRecipe: created })
+        return created
+      }
+
+      // Fallback to mock data
       await delay(400)
 
       const now = new Date().toISOString().split('T')[0]
@@ -122,17 +130,19 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
       set({ recipes: recipesData, isLoading: false })
 
       return newRecipe
-    } catch {
-      set({ error: 'ไม่สามารถสร้างสูตรได้', isLoading: false })
-      throw new Error('Failed to create recipe')
+    } catch (err: any) {
+      console.error('Create recipe error:', err)
+      set({ error: err?.message || 'ไม่สามารถสร้างสูตรได้', isLoading: false })
+      throw new Error(err?.message || 'Failed to create recipe')
     }
   },
 
   // Update recipe - NOW USES SUPABASE
   updateRecipe: async (id: string, input: UpdateRecipeInput) => {
     set({ isLoading: true, error: null })
+    const isValidUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
     try {
-      if (USE_SUPABASE) {
+      if (USE_SUPABASE && isValidUUID(id)) {
         try {
           const updated = await recipeApi.updateRecipe(id, input)
           // Refresh recipes list
@@ -179,67 +189,73 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
   },
 
 
-  // Duplicate recipe
+  // Duplicate recipe - NOW USES SUPABASE
   duplicateRecipe: async (id: string) => {
     set({ isLoading: true, error: null })
+    const isValidUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
     try {
-      await delay(400)
-
-      const original = recipesData.find(r => r.id === id)
-      if (!original) {
-        throw new Error('Recipe not found')
+      if (USE_SUPABASE && isValidUUID(id)) {
+        const created = await recipeApi.duplicateRecipe(id)
+        const recipes = await recipeApi.getRecipes()
+        set({ recipes, isLoading: false })
+        return created
       }
 
+      // Fallback: use current store state (not stale in-memory mock)
+      await delay(400)
+      const original = get().recipes.find(r => r.id === id)
+      if (!original) throw new Error('Recipe not found')
+
+      const suffix = Date.now().toString(36).toUpperCase().slice(-4)
       const now = new Date().toISOString().split('T')[0]
       const newRecipe: Recipe = {
         ...original,
         id: generateId(),
-        code: `${original.code}-COPY`,
+        code: `${original.code}-COPY-${suffix}`,
         name: `${original.name} (สำเนา)`,
         status: 'DRAFT',
         version: 1,
         validFrom: now,
         validTo: null,
-        ingredients: original.ingredients.map(ing => ({
-          ...ing,
-          id: generateId(),
-        })),
+        ingredients: original.ingredients.map(ing => ({ ...ing, id: generateId() })),
         createdAt: now,
         updatedAt: now,
       }
 
       recipesData = [newRecipe, ...recipesData]
       set({ recipes: recipesData, isLoading: false })
-
       return newRecipe
-    } catch {
-      set({ error: 'ไม่สามารถคัดลอกสูตรได้', isLoading: false })
-      throw new Error('Failed to duplicate recipe')
+    } catch (err: any) {
+      console.error('Duplicate recipe error:', err)
+      set({ error: err?.message || 'ไม่สามารถคัดลอกสูตรได้', isLoading: false })
+      throw new Error(err?.message || 'Failed to duplicate recipe')
     }
   },
 
-  // Delete (set to OBSOLETE)
+  // Delete (set to OBSOLETE) - NOW USES SUPABASE
   deleteRecipe: async (id: string) => {
     set({ isLoading: true, error: null })
+    const isValidUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
     try {
-      await delay(300)
-
-      const idx = recipesData.findIndex(r => r.id === id)
-      if (idx === -1) {
-        throw new Error('Recipe not found')
+      if (USE_SUPABASE && isValidUUID(id)) {
+        await recipeApi.updateRecipe(id, { status: 'OBSOLETE' })
+        const recipes = await recipeApi.getRecipes()
+        set({ recipes, isLoading: false })
+        return
       }
+
+      // Fallback to mock
+      await delay(300)
+      const idx = recipesData.findIndex(r => r.id === id)
+      if (idx === -1) throw new Error('Recipe not found')
 
       const now = new Date().toISOString().split('T')[0]
-      recipesData[idx] = {
-        ...recipesData[idx],
-        status: 'OBSOLETE',
-        validTo: now,
-        updatedAt: now,
-      }
-
+      recipesData[idx] = { ...recipesData[idx], status: 'OBSOLETE', validTo: now, updatedAt: now }
       set({ recipes: [...recipesData], isLoading: false })
-    } catch {
-      set({ error: 'ไม่สามารถลบสูตรได้', isLoading: false })
+    } catch (err: any) {
+      console.error('Delete recipe error:', err)
+      set({ error: err?.message || 'ไม่สามารถยกเลิกสูตรได้', isLoading: false })
+      throw new Error(err?.message || 'Failed to delete recipe')
     }
   },
 

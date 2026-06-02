@@ -169,6 +169,14 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
 export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
+    // Validate required UUIDs before hitting the database
+    if (!input.outputItemId || !isUUID(input.outputItemId)) {
+        throw new Error('ไม่พบ ID ของสินค้าที่ผลิตได้ กรุณาเลือกสินค้าใหม่จาก dropdown')
+    }
+    if (!input.outputUomId || !isUUID(input.outputUomId)) {
+        throw new Error('ไม่พบ ID ของหน่วยผลผลิต กรุณาเลือกหน่วยใหม่')
+    }
+
     // First, create the recipe
     const { data: recipe, error: recipeError } = await supabase
         .from('recipes')
@@ -176,9 +184,9 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
             code: input.code,
             name: input.name,
             description: null,
-            output_item_id: input.outputItemCode, // Will need actual item ID
+            output_item_id: input.outputItemId, // UUID ของสินค้าที่ผลิตได้
             output_qty: input.outputQty,
-            output_uom_id: input.outputUom, // Will need actual UOM ID
+            output_uom_id: input.outputUomId, // UUID ของหน่วยผลผลิต
             standard_batch_size: input.batchSize,
             expected_yield_percent: input.expectedYield,
             estimated_duration_minutes: input.estimatedTime,
@@ -228,8 +236,6 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
  * Update existing recipe
  */
 export async function updateRecipe(id: string, input: UpdateRecipeInput): Promise<Recipe> {
-    console.log('updateRecipe called with:', { id, input })
-
     const updateData: Record<string, unknown> = {}
 
     if (input.name !== undefined) updateData.name = input.name
@@ -241,8 +247,6 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
     if (input.instructions !== undefined) updateData.instructions = input.instructions
     if (input.status !== undefined) updateData.status = input.status.toUpperCase()
     if (input.bottleSize !== undefined) updateData.bottle_size = input.bottleSize
-
-    console.log('updateData being sent to Supabase:', updateData)
 
     // If no fields to update, just refresh and return
     if (Object.keys(updateData).length === 0) {
@@ -301,9 +305,85 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
         }
     }
 
-    console.log('Supabase update response:', data)
-
     return getRecipeById(id) as Promise<Recipe>
+}
+
+
+/**
+ * Duplicate recipe — clones raw DB rows to avoid UUID resolution issues
+ */
+export async function duplicateRecipe(id: string): Promise<Recipe> {
+    // Fetch original recipe raw row (with UUIDs intact)
+    const { data: original, error: origError } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+    if (origError || !original) throw new Error('ไม่พบสูตรที่ต้องการคัดลอก')
+
+    // Fetch original recipe_lines
+    const { data: lines } = await supabase
+        .from('recipe_lines')
+        .select('*')
+        .eq('recipe_id', id)
+        .order('line_no')
+
+    // Generate unique code to avoid collisions on multiple duplicates
+    const suffix = Date.now().toString(36).toUpperCase().slice(-4)
+    const copyCode = `${original.code}-COPY-${suffix}`
+
+    // Insert new recipe header
+    const { data: newRecipe, error: insertError } = await supabase
+        .from('recipes')
+        .insert({
+            code: copyCode,
+            name: `${original.name} (สำเนา)`,
+            output_item_id: original.output_item_id,
+            output_qty: original.output_qty,
+            output_uom_id: original.output_uom_id,
+            standard_batch_size: original.standard_batch_size,
+            expected_yield_percent: original.expected_yield_percent,
+            estimated_duration_minutes: original.estimated_duration_minutes,
+            instructions: original.instructions,
+            status: 'DRAFT',
+            version: 1,
+            bottle_size: original.bottle_size,
+        })
+        .select()
+        .single()
+
+    if (insertError) {
+        console.error('Error duplicating recipe:', insertError)
+        throw insertError
+    }
+
+    // Copy recipe_lines, rollback if that fails
+    if (lines && lines.length > 0) {
+        const newLines = lines.map((line: any) => ({
+            recipe_id: newRecipe.id,
+            line_no: line.line_no,
+            item_id: line.item_id,
+            qty_per_batch: line.qty_per_batch,
+            uom_id: line.uom_id,
+            scrap_percent: line.scrap_percent,
+            is_critical: line.is_critical,
+            is_optional: line.is_optional,
+        }))
+
+        const { error: linesError } = await supabase
+            .from('recipe_lines')
+            .insert(newLines)
+
+        if (linesError) {
+            // Best-effort rollback
+            await supabase.from('recipes').delete().eq('id', newRecipe.id)
+            console.error('Error copying recipe lines, rolled back:', linesError)
+            throw linesError
+        }
+    }
+
+    return getRecipeById(newRecipe.id) as Promise<Recipe>
 }
 
 

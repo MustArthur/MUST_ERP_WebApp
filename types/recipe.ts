@@ -63,8 +63,10 @@ export interface CreateRecipeInput {
   name: string
   outputItem: string
   outputItemCode: string
+  outputItemId?: string         // UUID ของสินค้าที่ผลิตได้ สำหรับบันทึก database
   outputQty: number
   outputUom: UnitOfMeasure
+  outputUomId?: string          // UUID ของหน่วยผลผลิต สำหรับบันทึก database
   batchSize: number
   expectedYield: number
   estimatedTime: number
