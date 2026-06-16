@@ -1,9 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { IBM_Plex_Sans_Thai } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { AppShell } from '@/components/layout'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
+  subsets: ['thai', 'latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'MUST ERP - ระบบจัดการการผลิต',
@@ -17,8 +22,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th" suppressHydrationWarning>
-      <body className={inter.className}>
-        {children}
+      <body className={ibmPlexSansThai.className}>
+        <AppShell>{children}</AppShell>
         <Toaster position="top-right" richColors />
       </body>
     </html>

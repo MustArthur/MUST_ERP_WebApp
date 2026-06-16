@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -44,7 +45,7 @@ const formSchema = z.object({
 interface WorkOrderFormModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (data: CreateWorkOrderInput) => void
+  onSave: (data: CreateWorkOrderInput) => Promise<void>
   recipes: Recipe[]
 }
 
@@ -54,6 +55,9 @@ export function WorkOrderFormModal({
   onSave,
   recipes,
 }: WorkOrderFormModalProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,13 +74,24 @@ export function WorkOrderFormModal({
   // Determine if recipe is chicken-based (has CCP operations)
   const isChickenRecipe = selectedRecipe?.code.startsWith('BOM-CK')
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    onSave(data)
-    form.reset()
-    onClose()
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setSaveError(null)
+    setIsLoading(true)
+    try {
+      await onSave(data)
+      form.reset()
+      onClose()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'
+      setSaveError(message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleClose = () => {
+    if (isLoading) return
+    setSaveError(null)
     form.reset()
     onClose()
   }
@@ -238,13 +253,20 @@ export function WorkOrderFormModal({
               )}
             />
 
+            {saveError && (
+              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                {saveError}
+              </div>
+            )}
+
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
+              <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
                 ยกเลิก
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isLoading}>
                 <Factory className="w-4 h-4 mr-2" />
-                สร้างใบสั่งผลิต
+                {isLoading ? 'กำลังสร้าง...' : 'สร้างใบสั่งผลิต'}
               </Button>
             </DialogFooter>
           </form>

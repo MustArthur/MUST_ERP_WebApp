@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useQualityStore, useFilteredInspections, useFilteredTemplates } from '@/stores/quality-store'
 import { useInventoryStore } from '@/stores/inventory-store'
 import {
@@ -49,7 +49,6 @@ import {
   Plus,
   FileText,
   Package,
-  ArrowLeft,
   Clock,
 } from 'lucide-react'
 
@@ -122,9 +121,14 @@ export default function QualityPage() {
 
   const handleApproveInspection = async (inspection: QCInspection) => {
     const { approveInspection } = useQualityStore.getState()
-    await approveInspection(inspection.id, 'ผู้จัดการ QC')
-    setShowInspectionDetail(false)
-    fetchInspections()
+    try {
+      await approveInspection(inspection.id, 'ผู้จัดการ QC')
+      toast.success('อนุมัติผลตรวจสอบสำเร็จ')
+      setShowInspectionDetail(false)
+      fetchInspections()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถอนุมัติผลตรวจสอบได้')
+    }
   }
 
   const handleSaveInspection = () => {
@@ -165,24 +169,35 @@ export default function QualityPage() {
   }
 
   const confirmDeleteTemplate = async () => {
-    if (templateToDelete) {
+    if (!templateToDelete) return
+    try {
       // Soft delete by updating status to INACTIVE
-      await updateTemplate(templateToDelete.id, { status: 'INACTIVE' } as any)
+      await updateTemplate(templateToDelete.id, { status: 'INACTIVE' })
+      toast.success('ปิดใช้งาน Template สำเร็จ')
       fetchTemplates()
+      setShowDeleteConfirm(false)
+      setTemplateToDelete(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถปิดใช้งาน Template ได้')
     }
-    setShowDeleteConfirm(false)
-    setTemplateToDelete(null)
   }
 
   const handleSaveTemplate = async (data: CreateQCTemplateInput) => {
-    if (selectedTemplate) {
-      await updateTemplate(selectedTemplate.id, data)
-    } else {
-      await createTemplate(data)
+    try {
+      if (selectedTemplate) {
+        await updateTemplate(selectedTemplate.id, data)
+        toast.success('แก้ไข Template สำเร็จ')
+      } else {
+        await createTemplate(data)
+        toast.success('สร้าง Template สำเร็จ')
+      }
+      fetchTemplates()
+      setShowTemplateForm(false)
+      setSelectedTemplate(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึก Template ได้')
+      throw error
     }
-    fetchTemplates()
-    setShowTemplateForm(false)
-    setSelectedTemplate(null)
   }
 
   // Quarantine handlers
@@ -197,10 +212,16 @@ export default function QualityPage() {
   }
 
   const handleQuarantineResolved = async (id: string, action: QuarantineAction, detail?: string) => {
-    await resolveQuarantine(id, action, detail)
-    fetchQuarantine()
-    setShowQuarantineResolve(false)
-    setSelectedQuarantine(null)
+    try {
+      await resolveQuarantine(id, action, detail)
+      toast.success('จัดการ Quarantine สำเร็จ')
+      fetchQuarantine()
+      setShowQuarantineResolve(false)
+      setSelectedQuarantine(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถจัดการ Quarantine ได้')
+      throw error
+    }
   }
 
   // Filter handlers
@@ -239,12 +260,6 @@ export default function QualityPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  หน้าแรก
-                </Button>
-              </Link>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">ควบคุมคุณภาพ (QC)</h1>
                 <p className="text-sm text-gray-500">ตรวจสอบคุณภาพวัตถุดิบและสินค้า</p>
@@ -531,8 +546,13 @@ export default function QualityPage() {
             {!isLoading && filteredInspections.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl border">
                 <ClipboardCheck className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500">ไม่พบรายการตรวจสอบที่ค้นหา</p>
-                <Button variant="outline" className="mt-4" onClick={handleCreateInspection}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">ไม่พบรายการตรวจสอบ</h3>
+                <p className="text-gray-500 mb-4">
+                  {inspectionFilters.search || inspectionFilters.type !== 'all' || inspectionFilters.status !== 'all' || inspectionFilters.isCCPOnly
+                    ? 'ลองปรับเงื่อนไขการค้นหา'
+                    : 'ยังไม่มีรายการตรวจสอบในระบบ'}
+                </p>
+                <Button onClick={handleCreateInspection}>
                   <Plus className="w-4 h-4 mr-2" />
                   สร้างใบตรวจสอบใหม่
                 </Button>
@@ -641,6 +661,8 @@ export default function QualityPage() {
                 onView={handleViewTemplate}
                 onEdit={handleEditTemplate}
                 onDelete={handleDeleteTemplate}
+                isFiltered={Boolean(templateFilters.search) || templateFilters.type !== 'all' || templateFilters.status !== 'all'}
+                onCreate={handleCreateTemplate}
               />
             )}
           </TabsContent>

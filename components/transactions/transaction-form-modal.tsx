@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useTransactionsStore } from '@/stores/transactions-store'
 import { TransactionType, transactionTypeLabels } from '@/types/inventory-transaction'
 import {
@@ -24,7 +25,6 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/ui/searchable-select'
-import { Loader2 } from 'lucide-react'
 
 const transactionSchema = z.object({
     transactionType: z.string().min(1, 'กรุณาเลือกประเภท'),
@@ -191,9 +191,11 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
                 unitCost: data.unitCost || 0,
                 notes: data.notes || undefined,
             })
+            toast.success('บันทึกรายการสำเร็จ')
             onClose()
         } catch (error) {
             console.error('Error creating transaction:', error)
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกรายการได้')
         } finally {
             setIsSubmitting(false)
         }
@@ -379,12 +381,11 @@ export function TransactionFormModal({ isOpen, onClose, defaultType }: Transacti
 
                     {/* Actions */}
                     <div className="flex justify-end gap-2 pt-4 border-t">
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                             ยกเลิก
                         </Button>
                         <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            บันทึก
+                            {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
                         </Button>
                     </div>
                 </form>

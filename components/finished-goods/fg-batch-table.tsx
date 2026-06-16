@@ -178,6 +178,8 @@ export function FGBatchTable({
                         size="sm"
                         variant="ghost"
                         onClick={() => onViewDetails?.(entry)}
+                        aria-label="ดูรายละเอียด"
+                        title="ดูรายละเอียด"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>

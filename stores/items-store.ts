@@ -59,8 +59,9 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
         try {
             const items = await getAllItems()
             set({ items, isLoading: false })
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
+        } catch (error: any) {
+            console.error('Fetch items error:', error)
+            set({ error: error?.message || 'ไม่สามารถโหลดข้อมูลสินค้าได้', isLoading: false })
         }
     },
 
@@ -94,9 +95,10 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
                 isLoading: false,
             }))
             return newItem
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
-            throw error
+        } catch (error: any) {
+            console.error('Create item error:', error)
+            set({ error: error?.message || 'ไม่สามารถสร้างสินค้าได้', isLoading: false })
+            throw new Error(error?.message || 'ไม่สามารถสร้างสินค้าได้')
         }
     },
 
@@ -112,9 +114,10 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
                 isLoading: false,
             }))
             return updatedItem
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
-            throw error
+        } catch (error: any) {
+            console.error('Update item error:', error)
+            set({ error: error?.message || 'ไม่สามารถแก้ไขสินค้าได้', isLoading: false })
+            throw new Error(error?.message || 'ไม่สามารถแก้ไขสินค้าได้')
         }
     },
 
@@ -128,9 +131,10 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
                 isLoading: false
             }))
             return true
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
-            throw error
+        } catch (error: any) {
+            console.error('Delete item error:', error)
+            set({ error: error?.message || 'ไม่สามารถลบสินค้าได้', isLoading: false })
+            throw new Error(error?.message || 'ไม่สามารถลบสินค้าได้')
         }
     },
 

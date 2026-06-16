@@ -11,6 +11,7 @@ import {
   InspectionStatus,
   InspectionType,
   QuarantineAction,
+  TemplateStatus,
 } from '@/types/quality'
 import { QCService } from '@/lib/services/qc-service'
 
@@ -37,7 +38,7 @@ interface QualityState {
   // Template Actions
   fetchTemplates: () => Promise<void>
   createTemplate: (input: CreateQCTemplateInput) => Promise<QCTemplate>
-  updateTemplate: (id: string, input: Partial<CreateQCTemplateInput>) => Promise<QCTemplate>
+  updateTemplate: (id: string, input: Partial<CreateQCTemplateInput> & { status?: TemplateStatus }) => Promise<QCTemplate>
 
   // Inspection Actions
   fetchInspections: () => Promise<void>
@@ -133,7 +134,7 @@ export const useQualityStore = create<QualityState>((set, get) => ({
     }
   },
 
-  updateTemplate: async (id: string, input: Partial<CreateQCTemplateInput>) => {
+  updateTemplate: async (id: string, input: Partial<CreateQCTemplateInput> & { status?: TemplateStatus }) => {
     set({ isLoading: true, error: null })
     try {
       const updated = await QCService.updateTemplate(id, input)

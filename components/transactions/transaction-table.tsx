@@ -131,6 +131,7 @@ export function TransactionTable({ transactions, onView, onVoid }: TransactionTa
                                                 size="sm"
                                                 onClick={() => onView?.(t)}
                                                 title="ดูรายละเอียด"
+                                                aria-label="ดูรายละเอียด"
                                             >
                                                 <Eye className="w-4 h-4" />
                                             </Button>
@@ -140,6 +141,7 @@ export function TransactionTable({ transactions, onView, onVoid }: TransactionTa
                                                     size="sm"
                                                     onClick={() => onVoid?.(t)}
                                                     title="ยกเลิกรายการ"
+                                                    aria-label="ยกเลิกรายการ"
                                                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                                 >
                                                     <Ban className="w-4 h-4" />

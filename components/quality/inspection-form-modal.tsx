@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { QCInspection, QCTemplate, InspectionType, CreateQCInspectionInput } from '@/types/quality'
 import { useQualityStore } from '@/stores/quality-store'
 import { useInventoryStore } from '@/stores/inventory-store'
@@ -172,10 +173,12 @@ export function InspectionFormModal({
       }
 
       const savedInspection = await createInspection(input)
+      toast.success('สร้างใบตรวจสอบสำเร็จ')
       onSave(savedInspection)
       onClose()
     } catch (error) {
       console.error('Failed to create inspection:', error)
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถสร้างใบตรวจสอบได้')
     }
   }
 

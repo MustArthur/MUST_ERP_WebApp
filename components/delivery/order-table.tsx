@@ -73,8 +73,9 @@ export function OrderTable({
         <TableBody>
           {orders.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                ไม่พบคำสั่งซื้อ
+              <TableCell colSpan={9} className="text-center py-12">
+                <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500">ยังไม่มีคำสั่งซื้อในระบบ</p>
               </TableCell>
             </TableRow>
           ) : (
@@ -134,6 +135,8 @@ export function OrderTable({
                         size="sm"
                         variant="ghost"
                         onClick={() => onViewDetails?.(order)}
+                        aria-label="ดูรายละเอียด"
+                        title="ดูรายละเอียด"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>

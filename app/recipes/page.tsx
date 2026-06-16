@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useRecipeStore, useFilteredRecipes } from '@/stores/recipe-store'
 import { Recipe, RecipeStatus, CreateRecipeInput } from '@/types/recipe'
 import { RecipeCard, RecipeTable, RecipeDetailModal, RecipeFormModal } from '@/components/recipes'
@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Plus, Search, BookOpen, ArrowLeft } from 'lucide-react'
+import { Plus, Search, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function RecipesPage() {
@@ -83,6 +83,7 @@ export default function RecipesPage() {
     if (!recipeToAction) return
     try {
       await duplicateRecipe(recipeToAction.id)
+      toast.success('คัดลอกสูตรสำเร็จ')
       setShowDuplicateConfirm(false)
       setShowDetailModal(false)
       setRecipeToAction(null)
@@ -100,6 +101,7 @@ export default function RecipesPage() {
     if (!recipeToAction) return
     try {
       await deleteRecipe(recipeToAction.id)
+      toast.success('ยกเลิกสูตรสำเร็จ')
       setShowDeleteConfirm(false)
       setShowDetailModal(false)
       setRecipeToAction(null)
@@ -117,8 +119,10 @@ export default function RecipesPage() {
     const input = { ...data, status }
     if (editingRecipe) {
       await updateRecipe(editingRecipe.id, input)
+      toast.success('แก้ไขสูตรสำเร็จ')
     } else {
       await createRecipe(input)
+      toast.success('สร้างสูตรสำเร็จ')
     }
   }
 
@@ -137,12 +141,6 @@ export default function RecipesPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  หน้าแรก
-                </Button>
-              </Link>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">สูตรการผลิต (BOM)</h1>
                 <p className="text-sm text-gray-500">จัดการสูตรและส่วนประกอบการผลิต</p>
@@ -161,7 +159,7 @@ export default function RecipesPage() {
         {storeError && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             <span>⚠️ {storeError}</span>
-            <button onClick={clearError} className="ml-4 text-red-500 hover:text-red-700 font-medium">✕</button>
+            <button onClick={clearError} aria-label="ปิดข้อความแจ้งเตือน" className="ml-4 text-red-500 hover:text-red-700 font-medium">✕</button>
           </div>
         )}
 
@@ -241,8 +239,13 @@ export default function RecipesPage() {
         {!isLoading && filteredRecipes.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl border">
             <BookOpen className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">ไม่พบสูตรที่ค้นหา</p>
-            <Button variant="outline" className="mt-4" onClick={handleCreate}>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">ไม่พบสูตรการผลิต</h3>
+            <p className="text-gray-500 mb-4">
+              {filters.search || filters.status !== 'all'
+                ? 'ลองปรับเงื่อนไขการค้นหา'
+                : 'ยังไม่มีสูตรการผลิตในระบบ'}
+            </p>
+            <Button onClick={handleCreate}>
               <Plus className="w-4 h-4 mr-2" />
               สร้างสูตรใหม่
             </Button>

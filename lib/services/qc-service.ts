@@ -171,7 +171,7 @@ export class QCService {
         return result
     }
 
-    static async updateTemplate(id: string, input: Partial<CreateQCTemplateInput>): Promise<QCTemplate> {
+    static async updateTemplate(id: string, input: Partial<CreateQCTemplateInput> & { status?: TemplateStatus }): Promise<QCTemplate> {
         const existing = await this.getTemplateById(id)
         if (!existing) throw new Error('Template not found')
 
@@ -180,6 +180,7 @@ export class QCService {
         if (input.code) updateData.code = input.code
         if (input.name) updateData.name = input.name
         if (input.type) updateData.type = input.type
+        if (input.status) updateData.status = input.status
         if (input.description !== undefined) updateData.description = input.description
         if (input.appliesTo) updateData.applies_to = input.appliesTo
 
@@ -231,8 +232,6 @@ export class QCService {
     // ==========================================
 
     static async getInspections(): Promise<QCInspection[]> {
-        console.log('=== QCService.getInspections() called ===')
-
         const { data, error } = await this.supabase
             .from('qc_inspections')
             .select(`
@@ -246,19 +245,12 @@ export class QCService {
             `)
             .order('created_at', { ascending: false })
 
-        console.log('Supabase response - data:', data)
-        console.log('Supabase response - error:', error)
-        console.log('Number of inspections:', data?.length || 0)
-
         if (error) {
             console.error('Supabase error in getInspections:', error)
             throw error
         }
 
-        const mapped = (data || []).map((item) => this.mapInspectionFromDB(item))
-        console.log('Mapped inspections:', mapped)
-
-        return mapped
+        return (data || []).map((item) => this.mapInspectionFromDB(item))
     }
 
     static async getInspectionById(id: string): Promise<QCInspection | null> {
@@ -958,8 +950,6 @@ export class QCService {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', receiptItem.receipt_id)
-
-            console.log(`Receipt ${receiptItem.receipt_id} QC status updated to: ${newQCStatus}`)
         } catch (error) {
             console.error('Failed to recalculate receipt header QC status:', error)
             // Don't throw - this is a non-critical operation

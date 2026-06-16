@@ -139,7 +139,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
       await new Promise(resolve => setTimeout(resolve, 300))
       set({ workOrders: [...mockWorkOrders], isLoading: false })
     } catch (error) {
-      set({ error: 'Failed to fetch work orders', isLoading: false })
+      set({ error: 'ไม่สามารถโหลดข้อมูลใบสั่งผลิตได้', isLoading: false })
     }
   },
 
@@ -149,7 +149,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
       await new Promise(resolve => setTimeout(resolve, 200))
       set({ operations: [...mockOperations], isLoading: false })
     } catch (error) {
-      set({ error: 'Failed to fetch operations', isLoading: false })
+      set({ error: 'ไม่สามารถโหลดข้อมูลขั้นตอนการผลิตได้', isLoading: false })
     }
   },
 
@@ -159,7 +159,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
       await new Promise(resolve => setTimeout(resolve, 200))
       set({ workstations: [...mockWorkstations], isLoading: false })
     } catch (error) {
-      set({ error: 'Failed to fetch workstations', isLoading: false })
+      set({ error: 'ไม่สามารถโหลดข้อมูลสถานีงานได้', isLoading: false })
     }
   },
 
@@ -230,7 +230,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
 
       return newWorkOrder
     } catch (error) {
-      set({ error: 'Failed to create work order', isLoading: false })
+      set({ error: 'ไม่สามารถสร้างใบสั่งผลิตได้', isLoading: false })
       throw error
     }
   },
@@ -249,7 +249,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to release work order', isLoading: false })
+      set({ error: 'ไม่สามารถปล่อยใบสั่งผลิตได้', isLoading: false })
     }
   },
 
@@ -272,7 +272,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to start work order', isLoading: false })
+      set({ error: 'ไม่สามารถเริ่มการผลิตได้', isLoading: false })
     }
   },
 
@@ -321,7 +321,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to complete work order', isLoading: false })
+      set({ error: 'ไม่สามารถปิดใบสั่งผลิตได้', isLoading: false })
     }
   },
 
@@ -339,7 +339,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to cancel work order', isLoading: false })
+      set({ error: 'ไม่สามารถยกเลิกใบสั่งผลิตได้', isLoading: false })
     }
   },
 
@@ -370,7 +370,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to start job card', isLoading: false })
+      set({ error: 'ไม่สามารถเริ่ม Job Card ได้', isLoading: false })
     }
   },
 
@@ -427,7 +427,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to complete job card', isLoading: false })
+      set({ error: 'ไม่สามารถปิด Job Card ได้', isLoading: false })
     }
   },
 
@@ -460,7 +460,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
         isLoading: false,
       }))
     } catch (error) {
-      set({ error: 'Failed to fail job card', isLoading: false })
+      set({ error: 'ไม่สามารถบันทึกความล้มเหลวของ Job Card ได้', isLoading: false })
     }
   },
 
@@ -578,7 +578,7 @@ export const useProductionStore = create<ProductionState>((set, get) => ({
 
       return { canProceed: true }
     } catch (error) {
-      set({ error: 'Failed to record CCP reading', isLoading: false })
+      set({ error: 'ไม่สามารถบันทึกค่า CCP ได้', isLoading: false })
       throw error
     }
   },

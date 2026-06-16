@@ -29,7 +29,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2 } from 'lucide-react'
 import { CreateFGEntryInput } from '@/types/finished-goods'
 import { mockFGWarehouses } from '@/lib/mock-data/finished-goods'
 
@@ -232,12 +231,11 @@ export function FGEntryModal({ open, onClose, onSubmit }: FGEntryModalProps) {
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                 ยกเลิก
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                บันทึก
+                {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
               </Button>
             </DialogFooter>
           </form>

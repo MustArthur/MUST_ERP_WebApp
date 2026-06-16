@@ -1,17 +1,15 @@
 'use client'
 
-import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Package, Loader2, AlertCircle } from 'lucide-react'
+import { Factory, Loader2, AlertCircle } from 'lucide-react'
 
 function LoginForm() {
     const router = useRouter()
-    const searchParams = useSearchParams()
-    const redirectTo = '/' // Always redirect to homepage after login
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -39,13 +37,13 @@ function LoginForm() {
             return
         }
 
-        router.push(redirectTo)
+        router.push('/dashboard')
         router.refresh()
     }
 
     return (
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-6">เข้าสู่ระบบ</h2>
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">เข้าสู่ระบบ</h2>
 
             {/* Error Message */}
             {error && (
@@ -103,45 +101,23 @@ function LoginForm() {
     )
 }
 
-function LoginFormFallback() {
-    return (
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-6">เข้าสู่ระบบ</h2>
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <div className="h-4 w-16 bg-slate-200 rounded animate-pulse" />
-                    <div className="h-11 bg-slate-100 rounded-md animate-pulse" />
-                </div>
-                <div className="space-y-2">
-                    <div className="h-4 w-20 bg-slate-200 rounded animate-pulse" />
-                    <div className="h-11 bg-slate-100 rounded-md animate-pulse" />
-                </div>
-                <div className="h-11 bg-slate-200 rounded-md animate-pulse mt-2" />
-            </div>
-        </div>
-    )
-}
-
 export default function LoginPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
             <div className="w-full max-w-md">
                 {/* Logo & Title */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-                        <Package className="h-8 w-8 text-white" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-lg">
+                        <Factory className="h-8 w-8" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900">MUST ERP</h1>
-                    <p className="text-slate-500 mt-1">ระบบจัดการการผลิต</p>
+                    <h1 className="text-2xl font-bold text-gray-900">MUST ERP</h1>
+                    <p className="text-gray-500 mt-1">ระบบจัดการการผลิต</p>
                 </div>
 
-                {/* Login Form with Suspense */}
-                <Suspense fallback={<LoginFormFallback />}>
-                    <LoginForm />
-                </Suspense>
+                <LoginForm />
 
                 {/* Footer */}
-                <p className="text-center text-sm text-slate-500 mt-6">
+                <p className="text-center text-sm text-gray-500 mt-6">
                     MUST ERP v1.0 - Food Manufacturing
                 </p>
             </div>

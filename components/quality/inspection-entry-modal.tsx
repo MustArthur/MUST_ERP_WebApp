@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { QCInspection, QCParameter, QuarantineAction } from '@/types/quality'
 import { useQualityStore } from '@/stores/quality-store'
 import {
@@ -150,10 +151,12 @@ export function InspectionEntryModal({
       } : undefined
 
       await updateInspectionReadings(inspection.id, readings, quantities)
+      toast.success('บันทึกผลตรวจสอบสำเร็จ')
       onSave()
       onClose()
     } catch (error) {
       console.error('Failed to save inspection readings:', error)
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกผลตรวจสอบได้')
     }
   }
 

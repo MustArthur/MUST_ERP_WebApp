@@ -148,6 +148,7 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                             size="sm"
                                             onClick={() => handleRowClick(item)}
                                             title="ดูรายละเอียด"
+                                            aria-label="ดูรายละเอียด"
                                         >
                                             <Eye className="w-4 h-4" />
                                         </Button>
@@ -156,6 +157,7 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                             size="sm"
                                             onClick={() => onEdit(item)}
                                             title="แก้ไข"
+                                            aria-label="แก้ไข"
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
@@ -165,6 +167,7 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                             onClick={() => onDelete(item)}
                                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                             title="ลบ"
+                                            aria-label="ลบ"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>

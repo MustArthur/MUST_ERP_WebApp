@@ -18,6 +18,9 @@ export interface Item {
     last_purchase_cost: number
     base_uom_id?: string      // UUID ของ UOM
     base_uom_code?: string
+    stock_uom_id?: string
+    stock_uom_code?: string
+    category_id?: string
     category_code?: string
 }
 

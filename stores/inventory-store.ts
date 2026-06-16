@@ -128,9 +128,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         isLoading: false
       }))
       return newWarehouse
-    } catch {
-      set({ error: 'ไม่สามารถสร้างคลังสินค้าได้', isLoading: false })
-      throw new Error('Failed to create warehouse')
+    } catch (error: any) {
+      console.error('Create warehouse error:', error)
+      set({ error: error?.message || 'ไม่สามารถสร้างคลังสินค้าได้', isLoading: false })
+      throw new Error(error?.message || 'ไม่สามารถสร้างคลังสินค้าได้')
     }
   },
 
@@ -143,9 +144,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         isLoading: false
       }))
       return updated
-    } catch {
-      set({ error: 'ไม่สามารถอัพเดทคลังสินค้าได้', isLoading: false })
-      throw new Error('Failed to update warehouse')
+    } catch (error: any) {
+      console.error('Update warehouse error:', error)
+      set({ error: error?.message || 'ไม่สามารถอัพเดทคลังสินค้าได้', isLoading: false })
+      throw new Error(error?.message || 'ไม่สามารถอัพเดทคลังสินค้าได้')
     }
   },
 
@@ -172,9 +174,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         isLoading: false
       }))
       return newItem
-    } catch {
-      set({ error: 'ไม่สามารถสร้างรายการสินค้าได้', isLoading: false })
-      throw new Error('Failed to create stock item')
+    } catch (error: any) {
+      console.error('Create stock item error:', error)
+      set({ error: error?.message || 'ไม่สามารถสร้างรายการสินค้าได้', isLoading: false })
+      throw new Error(error?.message || 'ไม่สามารถสร้างรายการสินค้าได้')
     }
   },
 
@@ -187,9 +190,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         isLoading: false
       }))
       return updated
-    } catch {
-      set({ error: 'ไม่สามารถอัพเดทรายการสินค้าได้', isLoading: false })
-      throw new Error('Failed to update stock item')
+    } catch (error: any) {
+      console.error('Update stock item error:', error)
+      set({ error: error?.message || 'ไม่สามารถอัพเดทรายการสินค้าได้', isLoading: false })
+      throw new Error(error?.message || 'ไม่สามารถอัพเดทรายการสินค้าได้')
     }
   },
 
@@ -234,9 +238,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         isLoading: false
       }))
       return newEntry
-    } catch {
-      set({ error: 'ไม่สามารถสร้างใบรับ/จ่ายได้', isLoading: false })
-      throw new Error('Failed to create stock entry')
+    } catch (error: any) {
+      console.error('Create stock entry error:', error)
+      set({ error: error?.message || 'ไม่สามารถสร้างใบรับ/จ่ายได้', isLoading: false })
+      throw new Error(error?.message || 'ไม่สามารถสร้างใบรับ/จ่ายได้')
     }
   },
 
@@ -311,9 +316,10 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
 
       set({ isLoading: false })
       return updatedEntry
-    } catch {
-      set({ error: 'ไม่สามารถยืนยันใบรับ/จ่ายได้', isLoading: false })
-      throw new Error('Failed to submit stock entry')
+    } catch (error: any) {
+      console.error('Submit stock entry error:', error)
+      set({ error: error?.message || 'ไม่สามารถยืนยันใบรับ/จ่ายได้', isLoading: false })
+      throw new Error(error?.message || 'ไม่สามารถยืนยันใบรับ/จ่ายได้')
     }
   },
 

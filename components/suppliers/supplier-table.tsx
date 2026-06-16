@@ -133,6 +133,7 @@ export function SupplierTable({ suppliers, onEdit, onDelete, onView }: SupplierT
                                                     size="sm"
                                                     onClick={() => onEdit(row.supplier)}
                                                     title="แก้ไข"
+                                                    aria-label="แก้ไข"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
                                                 </Button>
@@ -142,6 +143,7 @@ export function SupplierTable({ suppliers, onEdit, onDelete, onView }: SupplierT
                                                     onClick={() => onDelete(row.supplier)}
                                                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                                     title="ลบ"
+                                                    aria-label="ลบ"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>

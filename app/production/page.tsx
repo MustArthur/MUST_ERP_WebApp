@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useProductionStore } from '@/stores/production-store'
 import { useRecipeStore } from '@/stores/recipe-store'
 import {
@@ -43,7 +43,6 @@ import {
   AlertTriangle,
   LayoutGrid,
   List,
-  ArrowLeft,
 } from 'lucide-react'
 
 export default function ProductionPage() {
@@ -94,21 +93,37 @@ export default function ProductionPage() {
   }
 
   const handleSaveWorkOrder = async (data: { recipeId: string; plannedQty: number; plannedDate: string; remarks?: string }) => {
-    await createWorkOrder(data)
-    await fetchWorkOrders()
+    try {
+      await createWorkOrder(data)
+      await fetchWorkOrders()
+      toast.success('สร้างใบสั่งผลิตสำเร็จ')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถสร้างใบสั่งผลิตได้')
+      throw error
+    }
   }
 
   const handleReleaseWorkOrder = async (workOrder: WorkOrder) => {
-    await releaseWorkOrder(workOrder.id)
-    await fetchWorkOrders()
-    setShowDetailModal(false)
+    try {
+      await releaseWorkOrder(workOrder.id)
+      await fetchWorkOrders()
+      setShowDetailModal(false)
+      toast.success('ปล่อยใบสั่งผลิตสำเร็จ')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถปล่อยใบสั่งผลิตได้')
+    }
   }
 
   const handleStartWorkOrder = async (workOrder: WorkOrder) => {
-    await startWorkOrder(workOrder.id)
-    await fetchWorkOrders()
-    // Update selected work order
-    setSelectedWorkOrder(workOrders.find(wo => wo.id === workOrder.id) || null)
+    try {
+      await startWorkOrder(workOrder.id)
+      await fetchWorkOrders()
+      // Update selected work order
+      setSelectedWorkOrder(workOrders.find(wo => wo.id === workOrder.id) || null)
+      toast.success('เริ่มการผลิตแล้ว')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถเริ่มการผลิตได้')
+    }
   }
 
   const handleCompleteWorkOrder = async (workOrder: WorkOrder) => {
@@ -116,30 +131,37 @@ export default function ProductionPage() {
       await completeWorkOrder(workOrder.id)
       await fetchWorkOrders()
       setShowDetailModal(false)
+      toast.success('ใบสั่งผลิตเสร็จสิ้น')
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        alert(error.message)
-      }
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถปิดใบสั่งผลิตได้')
     }
   }
 
   const handleCancelWorkOrder = async (workOrder: WorkOrder) => {
-    if (confirm('ยืนยันการยกเลิกใบสั่งผลิตนี้?')) {
+    if (!confirm('ยืนยันการยกเลิกใบสั่งผลิตนี้?')) return
+    try {
       await cancelWorkOrder(workOrder.id)
       await fetchWorkOrders()
       setShowDetailModal(false)
+      toast.success('ยกเลิกใบสั่งผลิตแล้ว')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถยกเลิกใบสั่งผลิตได้')
     }
   }
 
   const handleStartJobCard = async (jobCard: JobCard) => {
     const operator = prompt('ชื่อผู้ปฏิบัติงาน:', operators[0]?.name)
-    if (operator) {
+    if (!operator) return
+    try {
       await startJobCard(jobCard.id, operator)
       await fetchWorkOrders()
       // Update selected work order
       if (selectedWorkOrder) {
         setSelectedWorkOrder(workOrders.find(wo => wo.id === selectedWorkOrder.id) || null)
       }
+      toast.success('เริ่ม Job Card แล้ว')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถเริ่ม Job Card ได้')
     }
   }
 
@@ -151,10 +173,9 @@ export default function ProductionPage() {
       if (selectedWorkOrder) {
         setSelectedWorkOrder(workOrders.find(wo => wo.id === selectedWorkOrder.id) || null)
       }
+      toast.success('ปิด Job Card สำเร็จ')
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        alert(error.message)
-      }
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถปิด Job Card ได้')
     }
   }
 
@@ -164,16 +185,22 @@ export default function ProductionPage() {
   }
 
   const handleSaveCCPReading = async (input: RecordCCPReadingInput) => {
-    const result = await recordCCPReading(input)
-    await fetchWorkOrders()
+    try {
+      const result = await recordCCPReading(input)
+      await fetchWorkOrders()
 
-    if (!result.canProceed) {
-      alert(`CCP ไม่ผ่าน: ${result.reason}`)
-    }
+      if (!result.canProceed) {
+        toast.error(`CCP ไม่ผ่าน: ${result.reason}`, { duration: 10000 })
+      } else {
+        toast.success('บันทึกค่า CCP สำเร็จ')
+      }
 
-    // Update selected work order
-    if (selectedWorkOrder) {
-      setSelectedWorkOrder(workOrders.find(wo => wo.id === selectedWorkOrder.id) || null)
+      // Update selected work order
+      if (selectedWorkOrder) {
+        setSelectedWorkOrder(workOrders.find(wo => wo.id === selectedWorkOrder.id) || null)
+      }
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกค่า CCP ได้')
     }
   }
 
@@ -218,12 +245,6 @@ export default function ProductionPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  หน้าแรก
-                </Button>
-              </Link>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">การผลิต</h1>
                 <p className="text-sm text-gray-500">จัดการใบสั่งผลิตและ Job Cards</p>

@@ -113,8 +113,10 @@ export function UnitManagerModal({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"
+                                    className="h-8 w-8 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                                     onClick={() => handleDelete(uom.id)}
+                                    aria-label={`ลบหน่วย ${uom.name}`}
+                                    title="ลบหน่วยนี้"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </Button>

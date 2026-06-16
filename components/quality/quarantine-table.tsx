@@ -20,6 +20,7 @@ import {
   Clock,
   Eye,
   Wrench,
+  LucideIcon,
 } from 'lucide-react'
 
 interface QuarantineTableProps {
@@ -48,7 +49,7 @@ const reasonColors: Record<QuarantineReason, string> = {
   OTHER: 'bg-gray-100 text-gray-800',
 }
 
-const statusConfig: Record<QuarantineStatus, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<QuarantineStatus, { label: string; color: string; icon: LucideIcon }> = {
   PENDING: { label: 'รอดำเนินการ', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   RESOLVED: { label: 'แก้ไขแล้ว', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   DISPOSED: { label: 'ทำลายแล้ว', color: 'bg-red-100 text-red-800', icon: XCircle },
@@ -156,6 +157,8 @@ export function QuarantineTable({ records, onView, onResolve }: QuarantineTableP
                         variant="ghost"
                         size="sm"
                         onClick={() => onView(record)}
+                        aria-label="ดูรายละเอียด"
+                        title="ดูรายละเอียด"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>

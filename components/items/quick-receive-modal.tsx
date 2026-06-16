@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { Item, UnitOfMeasure } from '@/types/item'
 import { useTransactionsStore } from '@/stores/transactions-store'
 import {
@@ -154,10 +155,12 @@ export function QuickReceiveModal({ item, items, uoms, isOpen, onClose, onSucces
                 notes: data.notes || `รับเข้า ${targetItem.name}`,
             })
             form.reset()
+            toast.success('บันทึกรับเข้าสำเร็จ')
             onSuccess()
             onClose()
         } catch (error) {
             console.error('Error creating receive transaction:', error)
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกรับเข้าได้')
         } finally {
             setIsSubmitting(false)
         }
@@ -415,7 +418,7 @@ export function QuickReceiveModal({ item, items, uoms, isOpen, onClose, onSucces
                         />
 
                         <div className="flex justify-end gap-2 pt-4">
-                            <Button type="button" variant="outline" onClick={onClose}>
+                            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                                 ยกเลิก
                             </Button>
                             <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">

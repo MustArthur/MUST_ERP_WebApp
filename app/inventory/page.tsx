@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   useInventoryStore,
@@ -29,7 +28,6 @@ import {
   Plus,
   AlertTriangle,
   Clock,
-  ArrowLeft,
 } from 'lucide-react'
 
 export default function InventoryPage() {
@@ -134,12 +132,6 @@ export default function InventoryPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  หน้าแรก
-                </Button>
-              </Link>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">คลังสินค้า</h1>
                 <p className="text-sm text-gray-500">จัดการวัตถุดิบและสินค้าสำเร็จรูป</p>
@@ -220,15 +212,23 @@ export default function InventoryPage() {
 
           {/* Warehouses Tab */}
           <TabsContent value="warehouses">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {warehouses.map(warehouse => (
-                <WarehouseCard
-                  key={warehouse.id}
-                  warehouse={warehouse}
-                  onView={handleViewWarehouse}
-                />
-              ))}
-            </div>
+            {warehouses.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl border">
+                <WarehouseIcon className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">ยังไม่มีคลังสินค้าในระบบ</h3>
+                <p className="text-gray-500">ติดต่อผู้ดูแลระบบเพื่อเพิ่มคลังสินค้า</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {warehouses.map(warehouse => (
+                  <WarehouseCard
+                    key={warehouse.id}
+                    warehouse={warehouse}
+                    onView={handleViewWarehouse}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Items Tab */}
@@ -356,7 +356,16 @@ export default function InventoryPage() {
             {!isLoading && filteredItems.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl border">
                 <Package className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500">ไม่พบรายการสินค้าที่ค้นหา</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">ไม่พบรายการสินค้า</h3>
+                <p className="text-gray-500 mb-4">
+                  {inventoryFilters.search || inventoryFilters.itemType !== 'all' || inventoryFilters.status !== 'all'
+                    ? 'ลองปรับเงื่อนไขการค้นหา'
+                    : 'ยังไม่มีรายการสินค้าในระบบ'}
+                </p>
+                <Button onClick={handleAddItem}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  เพิ่มสินค้าใหม่
+                </Button>
               </div>
             )}
           </TabsContent>

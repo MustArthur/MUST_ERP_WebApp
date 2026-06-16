@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState, useMemo } from 'react'
+import { toast } from 'sonner'
 import { useTransactionsStore } from '@/stores/transactions-store'
 import { InventoryTransaction, transactionTypeLabels, TransactionType } from '@/types/inventory-transaction'
 import { TransactionTable, TransactionFormModal } from '@/components/transactions'
@@ -30,7 +30,6 @@ import {
     Search,
     Package,
     Calendar,
-    ArrowLeft,
 } from 'lucide-react'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -102,8 +101,13 @@ export default function TransactionsPage() {
     }
 
     const handleConfirmVoid = async () => {
-        if (transactionToVoid) {
+        if (!transactionToVoid) return
+        try {
             await voidTransaction(transactionToVoid.id)
+            toast.success('ยกเลิกรายการสำเร็จ')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถยกเลิกรายการได้')
+            throw error
         }
     }
 
@@ -114,20 +118,9 @@ export default function TransactionsPage() {
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Link href="/">
-                                <Button variant="ghost" size="sm">
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    หน้าแรก
-                                </Button>
-                            </Link>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg">
-                                    <ArrowLeftRight className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl font-bold text-gray-900">Inventory Transactions</h1>
-                                    <p className="text-gray-500">บันทึกการรับ-เบิก-โอนย้ายสินค้า</p>
-                                </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">รายการเคลื่อนไหว</h1>
+                                <p className="text-sm text-gray-500">บันทึกการรับ-เบิก-โอนย้ายสินค้า</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">

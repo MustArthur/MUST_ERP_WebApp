@@ -20,6 +20,8 @@ import {
   CheckCircle,
   Clock,
   Eye,
+  Plus,
+  LucideIcon,
 } from 'lucide-react'
 
 interface TemplateTableProps {
@@ -27,6 +29,8 @@ interface TemplateTableProps {
   onView: (template: QCTemplate) => void
   onEdit: (template: QCTemplate) => void
   onDelete: (template: QCTemplate) => void
+  isFiltered?: boolean
+  onCreate?: () => void
 }
 
 const typeLabels: Record<TemplateType, string> = {
@@ -43,18 +47,27 @@ const typeColors: Record<TemplateType, string> = {
   PROCESS: 'bg-purple-100 text-purple-800',
 }
 
-const statusConfig: Record<TemplateStatus, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<TemplateStatus, { label: string; color: string; icon: LucideIcon }> = {
   ACTIVE: { label: 'ใช้งาน', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   INACTIVE: { label: 'ปิดใช้งาน', color: 'bg-gray-100 text-gray-800', icon: Clock },
   DRAFT: { label: 'ร่าง', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
 }
 
-export function TemplateTable({ templates, onView, onEdit, onDelete }: TemplateTableProps) {
+export function TemplateTable({ templates, onView, onEdit, onDelete, isFiltered, onCreate }: TemplateTableProps) {
   if (templates.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-xl border">
         <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-        <p className="text-gray-500">ไม่พบ QC Template</p>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">ไม่พบ QC Template</h3>
+        <p className="text-gray-500 mb-4">
+          {isFiltered ? 'ลองปรับเงื่อนไขการค้นหา' : 'ยังไม่มี QC Template ในระบบ'}
+        </p>
+        {onCreate && (
+          <Button onClick={onCreate}>
+            <Plus className="w-4 h-4 mr-2" />
+            สร้าง Template ใหม่
+          </Button>
+        )}
       </div>
     )
   }
@@ -129,6 +142,8 @@ export function TemplateTable({ templates, onView, onEdit, onDelete }: TemplateT
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="ดูรายละเอียด"
+                      title="ดูรายละเอียด"
                       onClick={(e) => {
                         e.stopPropagation()
                         onView(template)
@@ -139,6 +154,8 @@ export function TemplateTable({ templates, onView, onEdit, onDelete }: TemplateT
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="แก้ไข"
+                      title="แก้ไข"
                       onClick={(e) => {
                         e.stopPropagation()
                         onEdit(template)
@@ -150,6 +167,8 @@ export function TemplateTable({ templates, onView, onEdit, onDelete }: TemplateT
                       variant="ghost"
                       size="sm"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      aria-label="ลบ"
+                      title="ลบ"
                       onClick={(e) => {
                         e.stopPropagation()
                         onDelete(template)

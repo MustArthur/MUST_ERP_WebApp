@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState, useMemo } from 'react'
+import { toast } from 'sonner'
 import { useSuppliersStore } from '@/stores/suppliers-store'
 import { Supplier, CreateSupplierInput, UpdateSupplierInput } from '@/types/supplier'
 import { SupplierTable, SupplierFormModal } from '@/components/suppliers'
@@ -32,7 +32,6 @@ import {
     Users,
     CheckCircle,
     XCircle,
-    ArrowLeft,
 } from 'lucide-react'
 
 export default function SuppliersPage() {
@@ -101,22 +100,29 @@ export default function SuppliersPage() {
     }
 
     const handleConfirmDelete = async () => {
-        if (selectedSupplier) {
-            try {
-                await deleteSupplier(selectedSupplier.id)
-            } catch (error) {
-                console.error('Error deleting supplier:', error)
-            }
+        if (!selectedSupplier) return
+        try {
+            await deleteSupplier(selectedSupplier.id)
+            toast.success('ลบ Supplier สำเร็จ')
+            setShowDeleteModal(false)
+            setSelectedSupplier(null)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถลบ Supplier ได้')
         }
-        setShowDeleteModal(false)
-        setSelectedSupplier(null)
     }
 
     const handleSaveSupplier = async (data: CreateSupplierInput | UpdateSupplierInput, isNew: boolean) => {
-        if (isNew) {
-            await createSupplier(data as CreateSupplierInput)
-        } else if (selectedSupplier) {
-            await updateSupplier(selectedSupplier.id, data as UpdateSupplierInput)
+        try {
+            if (isNew) {
+                await createSupplier(data as CreateSupplierInput)
+                toast.success('เพิ่ม Supplier สำเร็จ')
+            } else if (selectedSupplier) {
+                await updateSupplier(selectedSupplier.id, data as UpdateSupplierInput)
+                toast.success('แก้ไข Supplier สำเร็จ')
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึก Supplier ได้')
+            throw error
         }
     }
 
@@ -127,20 +133,9 @@ export default function SuppliersPage() {
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Link href="/">
-                                <Button variant="ghost" size="sm">
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    หน้าแรก
-                                </Button>
-                            </Link>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
-                                    <Building2 className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
-                                    <p className="text-gray-500">จัดการข้อมูล Suppliers</p>
-                                </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">ซัพพลายเออร์</h1>
+                                <p className="text-sm text-gray-500">จัดการข้อมูลซัพพลายเออร์</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">

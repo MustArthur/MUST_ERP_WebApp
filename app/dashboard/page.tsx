@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Header } from '@/components/layout/header'
 import { StatsCard, StatsGrid, SimpleAreaChart, SimpleBarChart, SimplePieChart } from '@/components/dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,12 +12,18 @@ import {
     Package,
     AlertTriangle,
     Clock,
-    TrendingUp,
 } from 'lucide-react'
 import { useProductionStore } from '@/stores/production-store'
 import { useQualityStore } from '@/stores/quality-store'
 import { useDeliveryStore } from '@/stores/delivery-store'
 import { useFinishedGoodsStore } from '@/stores/finished-goods-store'
+
+// Maps a rate (0-100) to its semantic health color, not arbitrary per-card decoration
+function rateColorClass(rate: number) {
+    if (rate >= 90) return { text: 'text-emerald-600', bg: 'bg-emerald-50' }
+    if (rate >= 70) return { text: 'text-amber-600', bg: 'bg-amber-50' }
+    return { text: 'text-red-600', bg: 'bg-red-50' }
+}
 
 export default function DashboardPage() {
     const { workOrders, fetchWorkOrders } = useProductionStore()
@@ -48,10 +53,15 @@ export default function DashboardPage() {
     const pendingQuarantine = quarantineRecords.filter(q => q.status === 'PENDING').length
 
     // Calculate Delivery Stats
-    const totalOrders = orders.length
     const pendingOrders = orders.filter(o => o.status === 'DRAFT' || o.status === 'CONFIRMED').length
-    const deliveredToday = deliveryNotes.filter(d => d.status === 'DELIVERED').length
-    const onTimeRate = 95 // Mock value - would calculate from actual data
+    const deliveredNotes = deliveryNotes.filter(d => d.status === 'DELIVERED' && d.deliveryCompletedTime)
+    const deliveredToday = deliveredNotes.length
+    const onTimeDeliveries = deliveredNotes.filter(d => {
+        const requestedDate = d.order?.requestedDeliveryDate
+        if (!requestedDate || !d.deliveryCompletedTime) return false
+        return d.deliveryCompletedTime.slice(0, 10) <= requestedDate.slice(0, 10)
+    }).length
+    const onTimeRate = deliveredNotes.length > 0 ? Math.round((onTimeDeliveries / deliveredNotes.length) * 100) : 0
 
     // Calculate Cold Chain Stats
     const coldChainCompliant = deliveryNotes.filter(d => d.coldChainCompliant).length
@@ -92,15 +102,15 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header title="Dashboard" showBack backHref="/" />
-
-            <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-                {/* Page Title */}
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            {/* Header */}
+            <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                    <h1 className="text-2xl font-bold text-gray-900">แดชบอร์ด</h1>
                     <p className="text-sm text-gray-500">ภาพรวมการดำเนินงาน MUST ERP</p>
                 </div>
+            </header>
 
+            <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
                 {/* Key Metrics */}
                 <StatsGrid>
                     <StatsCard
@@ -108,33 +118,33 @@ export default function DashboardPage() {
                         value={`${productionRate}%`}
                         subtitle={`${completedWOs} จาก ${totalWOs} ใบสั่งผลิต`}
                         icon={Factory}
-                        color="text-blue-600"
-                        bgColor="bg-blue-50"
+                        color={rateColorClass(productionRate).text}
+                        bgColor={rateColorClass(productionRate).bg}
                         trend={{ value: 5, isUp: true }}
                     />
                     <StatsCard
-                        title="QC Pass Rate"
+                        title="อัตราผ่าน QC"
                         value={`${qcPassRate}%`}
                         subtitle={`${passedInspections} จาก ${totalInspections} รายการ`}
                         icon={CheckCircle2}
-                        color="text-green-600"
-                        bgColor="bg-green-50"
+                        color={rateColorClass(qcPassRate).text}
+                        bgColor={rateColorClass(qcPassRate).bg}
                     />
                     <StatsCard
-                        title="On-Time Delivery"
+                        title="อัตราส่งตรงเวลา"
                         value={`${onTimeRate}%`}
                         subtitle={`จัดส่งวันนี้ ${deliveredToday} รายการ`}
                         icon={Truck}
-                        color="text-violet-600"
-                        bgColor="bg-violet-50"
+                        color={rateColorClass(onTimeRate).text}
+                        bgColor={rateColorClass(onTimeRate).bg}
                     />
                     <StatsCard
-                        title="Cold Chain Compliance"
+                        title="อัตรา Cold Chain ตามเกณฑ์"
                         value={`${coldChainRate}%`}
                         subtitle="อุณหภูมิตามเกณฑ์"
                         icon={Thermometer}
-                        color="text-cyan-600"
-                        bgColor="bg-cyan-50"
+                        color={rateColorClass(coldChainRate).text}
+                        bgColor={rateColorClass(coldChainRate).bg}
                     />
                 </StatsGrid>
 
@@ -178,7 +188,7 @@ export default function DashboardPage() {
                     <SimpleAreaChart
                         title="จำนวนจัดส่ง (7 วันล่าสุด)"
                         data={deliveryTrend}
-                        color="#8b5cf6"
+                        color="#8d4326"
                         height={200}
                     />
 
@@ -188,12 +198,12 @@ export default function DashboardPage() {
                             <CardTitle className="text-base font-medium">สรุปวันนี้</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div className="flex items-center gap-3">
-                                    <Factory className="h-5 w-5 text-blue-600" />
+                                    <Factory className="h-5 w-5 text-gray-600" />
                                     <span className="text-sm">กำลังผลิต</span>
                                 </div>
-                                <span className="font-bold text-blue-600">{inProgressWOs} รายการ</span>
+                                <span className="font-bold text-gray-700">{inProgressWOs} รายการ</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
                                 <div className="flex items-center gap-3">

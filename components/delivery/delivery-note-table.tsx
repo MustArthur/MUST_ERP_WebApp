@@ -75,8 +75,10 @@ export function DeliveryNoteTable({
         <TableBody>
           {deliveryNotes.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                ไม่พบใบส่งสินค้า
+              <TableCell colSpan={8} className="text-center py-12">
+                <Truck className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500">ยังไม่มีใบส่งสินค้าในระบบ</p>
+                <p className="text-sm text-gray-400 mt-1">สร้างใบส่งสินค้าได้จากปุ่ม &quot;สร้าง Pick List&quot; ในคำสั่งซื้อที่ยืนยันแล้ว</p>
               </TableCell>
             </TableRow>
           ) : (
@@ -164,6 +166,8 @@ export function DeliveryNoteTable({
                         size="sm"
                         variant="ghost"
                         onClick={() => onViewDetails?.(note)}
+                        aria-label="ดูรายละเอียด"
+                        title="ดูรายละเอียด"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>

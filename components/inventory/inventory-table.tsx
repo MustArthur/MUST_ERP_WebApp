@@ -105,6 +105,8 @@ export function InventoryTable({ items, onView }: InventoryTableProps) {
                                         e.stopPropagation()
                                         onView(item)
                                     }}
+                                    aria-label="ดูรายละเอียด"
+                                    title="ดูรายละเอียด"
                                 >
                                     <Eye className="w-4 h-4 text-gray-500" />
                                 </Button>

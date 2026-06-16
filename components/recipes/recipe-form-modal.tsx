@@ -545,6 +545,8 @@ export function RecipeFormModal({
                           className="h-8 w-8 text-red-500 hover:bg-red-50"
                           onClick={() => removeIngredient(ing.tempId)}
                           disabled={ingredients.length <= 1}
+                          aria-label="ลบวัตถุดิบนี้"
+                          title="ลบวัตถุดิบนี้"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

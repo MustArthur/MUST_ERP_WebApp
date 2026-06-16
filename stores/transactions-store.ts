@@ -108,8 +108,9 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
         try {
             const transactions = await getAllTransactions()
             set({ transactions, isLoading: false })
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
+        } catch (error: any) {
+            console.error('Fetch transactions error:', error)
+            set({ error: error?.message || 'ไม่สามารถโหลดข้อมูลรายการเคลื่อนไหวได้', isLoading: false })
         }
     },
 
@@ -187,9 +188,10 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
                 useItemsStore.getState().fetchItems()
             }
             return newTransaction
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
-            throw error
+        } catch (error: any) {
+            console.error('Create transaction error:', error)
+            set({ error: error?.message || 'ไม่สามารถบันทึกรายการเคลื่อนไหวได้', isLoading: false })
+            throw new Error(error?.message || 'ไม่สามารถบันทึกรายการเคลื่อนไหวได้')
         }
     },
 
@@ -210,9 +212,10 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
 
             // Sync with Items Store - update stock quantities in items list
             useItemsStore.getState().fetchItems()
-        } catch (error) {
-            set({ error: (error as Error).message, isLoading: false })
-            throw error
+        } catch (error: any) {
+            console.error('Void transaction error:', error)
+            set({ error: error?.message || 'ไม่สามารถยกเลิกรายการเคลื่อนไหวได้', isLoading: false })
+            throw new Error(error?.message || 'ไม่สามารถยกเลิกรายการเคลื่อนไหวได้')
         }
     },
 

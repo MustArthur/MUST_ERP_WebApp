@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState, useMemo } from 'react'
+import { toast } from 'sonner'
 import { useItemsStore } from '@/stores/items-store'
-import { Item, CreateItemInput, UpdateItemInput } from '@/types/item'
+import { Item, ItemType, CreateItemInput, UpdateItemInput } from '@/types/item'
 import { ItemTable, ItemFormModal, QuickReceiveModal } from '@/components/items'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +33,6 @@ import {
     Tag,
     RefreshCw,
     ArrowDownLeft,
-    ArrowLeft,
 } from 'lucide-react'
 
 export default function ItemsPage() {
@@ -115,22 +114,29 @@ export default function ItemsPage() {
     }
 
     const handleConfirmDelete = async () => {
-        if (selectedItem) {
-            try {
-                await deleteItem(selectedItem.id)
-            } catch (error) {
-                console.error('Error deleting item:', error)
-            }
+        if (!selectedItem) return
+        try {
+            await deleteItem(selectedItem.id)
+            toast.success('ลบรายการสำเร็จ')
+            setShowDeleteModal(false)
+            setSelectedItem(null)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถลบรายการได้')
         }
-        setShowDeleteModal(false)
-        setSelectedItem(null)
     }
 
     const handleSaveItem = async (data: CreateItemInput | UpdateItemInput, isNew: boolean) => {
-        if (isNew) {
-            await createItem(data as CreateItemInput)
-        } else if (selectedItem) {
-            await updateItem(selectedItem.id, data as UpdateItemInput)
+        try {
+            if (isNew) {
+                await createItem(data as CreateItemInput)
+                toast.success('เพิ่มรายการสำเร็จ')
+            } else if (selectedItem) {
+                await updateItem(selectedItem.id, data as UpdateItemInput)
+                toast.success('แก้ไขรายการสำเร็จ')
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกรายการได้')
+            throw error
         }
     }
 
@@ -141,15 +147,9 @@ export default function ItemsPage() {
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Link href="/">
-                                <Button variant="ghost" size="sm">
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    หน้าแรก
-                                </Button>
-                            </Link>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">จัดการรายการสินค้า</h1>
-                                <p className="text-gray-500">Master Data - วัตถุดิบ, สินค้าสำเร็จ, บรรจุภัณฑ์</p>
+                                <p className="text-sm text-gray-500">Master Data - วัตถุดิบ, สินค้าสำเร็จ, บรรจุภัณฑ์</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export default function ItemsPage() {
                         </div>
                         <Select
                             value={filters.type}
-                            onValueChange={(value) => setFilters({ type: value as any })}
+                            onValueChange={(value) => setFilters({ type: value as ItemType })}
                         >
                             <SelectTrigger className="w-full md:w-48">
                                 <SelectValue placeholder="ประเภท" />

@@ -75,6 +75,7 @@ export function RecipeTable({ recipes, onView, onEdit, onDuplicate }: RecipeTabl
                                             size="sm"
                                             onClick={() => onView(recipe)}
                                             title="ดูรายละเอียด"
+                                            aria-label="ดูรายละเอียด"
                                         >
                                             <Eye className="w-4 h-4 text-gray-500" />
                                         </Button>
@@ -84,6 +85,7 @@ export function RecipeTable({ recipes, onView, onEdit, onDuplicate }: RecipeTabl
                                                 size="sm"
                                                 onClick={() => onEdit(recipe)}
                                                 title="แก้ไข"
+                                                aria-label="แก้ไข"
                                             >
                                                 <Edit className="w-4 h-4 text-blue-600" />
                                             </Button>
@@ -94,6 +96,7 @@ export function RecipeTable({ recipes, onView, onEdit, onDuplicate }: RecipeTabl
                                                 size="sm"
                                                 onClick={() => onDuplicate(recipe)}
                                                 title="คัดลอก"
+                                                aria-label="คัดลอก"
                                             >
                                                 <Copy className="w-4 h-4 text-gray-500" />
                                             </Button>

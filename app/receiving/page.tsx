@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useReceivingStore } from '@/stores/receiving-store'
 import { useQualityStore } from '@/stores/quality-store'
 import {
@@ -50,7 +50,6 @@ import {
   AlertTriangle,
   Filter,
   CalendarDays,
-  ArrowLeft,
 } from 'lucide-react'
 
 export default function ReceivingPage() {
@@ -108,22 +107,29 @@ export default function ReceivingPage() {
   }
 
   const handleSaveReceipt = async (data: CreatePurchaseReceiptInput) => {
-    if (editingReceipt) {
-      // Update existing receipt
-      const updateData: UpdatePurchaseReceiptInput = {
-        supplierId: data.supplierId,
-        receiptDate: data.receiptDate,
-        poNumber: data.poNumber,
-        invoiceNumber: data.invoiceNumber,
-        items: data.items,
-        remarks: data.remarks,
+    try {
+      if (editingReceipt) {
+        // Update existing receipt
+        const updateData: UpdatePurchaseReceiptInput = {
+          supplierId: data.supplierId,
+          receiptDate: data.receiptDate,
+          poNumber: data.poNumber,
+          invoiceNumber: data.invoiceNumber,
+          items: data.items,
+          remarks: data.remarks,
+        }
+        await updateReceipt(editingReceipt.id, updateData)
+        toast.success('แก้ไขใบรับสำเร็จ')
+      } else {
+        // Create new receipt
+        await createReceipt(data)
+        toast.success('สร้างใบรับสำเร็จ')
       }
-      await updateReceipt(editingReceipt.id, updateData)
-    } else {
-      // Create new receipt
-      await createReceipt(data)
+      fetchReceipts()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกใบรับได้')
+      throw error
     }
-    fetchReceipts()
   }
 
   const handleSubmitReceipt = (receipt: PurchaseReceipt) => {
@@ -133,12 +139,17 @@ export default function ReceivingPage() {
 
   const confirmSubmitReceipt = async () => {
     if (!receiptToAction) return
-    await submitReceipt(receiptToAction.id)
-    fetchReceipts()
-    fetchInspections()
-    setShowSubmitConfirm(false)
-    setShowDetailModal(false)
-    setReceiptToAction(null)
+    try {
+      await submitReceipt(receiptToAction.id)
+      toast.success('ยืนยันใบรับสำเร็จ')
+      fetchReceipts()
+      fetchInspections()
+      setShowSubmitConfirm(false)
+      setShowDetailModal(false)
+      setReceiptToAction(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถยืนยันใบรับได้')
+    }
   }
 
   const handleCancelReceipt = (receipt: PurchaseReceipt) => {
@@ -149,11 +160,16 @@ export default function ReceivingPage() {
   const confirmCancelReceipt = async () => {
     if (!receiptToAction) return
     const { cancelReceipt } = useReceivingStore.getState()
-    await cancelReceipt(receiptToAction.id)
-    fetchReceipts()
-    setShowCancelConfirm(false)
-    setShowDetailModal(false)
-    setReceiptToAction(null)
+    try {
+      await cancelReceipt(receiptToAction.id)
+      toast.success('ยกเลิกใบรับสำเร็จ')
+      fetchReceipts()
+      setShowCancelConfirm(false)
+      setShowDetailModal(false)
+      setReceiptToAction(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถยกเลิกใบรับได้')
+    }
   }
 
   const handleFixQCStatus = (receipt: PurchaseReceipt) => {
@@ -164,17 +180,27 @@ export default function ReceivingPage() {
   const confirmFixQCStatus = async () => {
     if (!receiptToAction) return
     const { fixQCStatusForCancelledReceipt } = useReceivingStore.getState()
-    await fixQCStatusForCancelledReceipt(receiptToAction.id)
-    fetchReceipts()
-    setShowFixQCConfirm(false)
-    setShowDetailModal(false)
-    setReceiptToAction(null)
+    try {
+      await fixQCStatusForCancelledReceipt(receiptToAction.id)
+      toast.success('แก้ไขสถานะ QC สำเร็จ')
+      fetchReceipts()
+      setShowFixQCConfirm(false)
+      setShowDetailModal(false)
+      setReceiptToAction(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถแก้ไขสถานะ QC ได้')
+    }
   }
 
   const handleCompleteReceipt = async (receipt: PurchaseReceipt) => {
-    await completeReceipt(receipt.id)
-    fetchReceipts()
-    setShowDetailModal(false)
+    try {
+      await completeReceipt(receipt.id)
+      toast.success('บันทึกใบรับสำเร็จ')
+      fetchReceipts()
+      setShowDetailModal(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกใบรับให้เสร็จสิ้นได้')
+    }
   }
 
   const handleViewQC = (inspectionId: string) => {
@@ -243,12 +269,6 @@ export default function ReceivingPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  หน้าแรก
-                </Button>
-              </Link>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">รับวัตถุดิบ</h1>
                 <p className="text-sm text-gray-500">จัดการใบรับสินค้าจาก Supplier</p>

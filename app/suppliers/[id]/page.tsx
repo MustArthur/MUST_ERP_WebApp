@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useParams, useRouter } from 'next/navigation'
 import { Supplier, UpdateSupplierInput } from '@/types/supplier'
 import { getSupplierById, updateSupplier } from '@/lib/api/suppliers'
@@ -45,8 +46,10 @@ export default function SupplierDetailPage() {
             if (updated) {
                 setSupplier(updated)
             }
+            toast.success('แก้ไขข้อมูล Supplier สำเร็จ')
         } catch (error) {
-            console.error('Error updating supplier:', error)
+            toast.error(error instanceof Error ? error.message : 'ไม่สามารถแก้ไขข้อมูล Supplier ได้')
+            throw error
         }
     }
 

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import {
   PurchaseReceipt,
   CreatePurchaseReceiptInput,
@@ -12,7 +13,7 @@ import {
 import { UnitOfMeasure } from '@/types/inventory'
 import { useReceivingStore } from '@/stores/receiving-store'
 import { useInventoryStore } from '@/stores/inventory-store'
-import { getRawMaterials, getSupplierItems, Item } from '@/lib/api/items'
+import { getSupplierItems, Item } from '@/lib/api/items'
 import {
   Dialog,
   DialogContent,
@@ -198,7 +199,7 @@ export function ReceiptFormModal({
     const item = rawMaterials.find(i => i.id === itemId)
     if (item) {
       // Use stock_uom_code (หน่วยสต๊อก) as default for receiving
-      form.setValue(`items.${index}.uom`, (item as any).stock_uom_code || item.base_uom_code || 'KG')
+      form.setValue(`items.${index}.uom`, item.stock_uom_code || item.base_uom_code || 'KG')
       form.setValue(`items.${index}.unitPrice`, item.last_purchase_cost || 0)
 
       // Auto-select warehouse: ถ้ามีแค่ 1 ตัว เลือกเลย
@@ -221,21 +222,18 @@ export function ReceiptFormModal({
   }, 0)
 
   // Handle form validation errors
-  const onError = (errors: any) => {
+  const onError = (errors: FieldErrors<ReceiptFormValues>) => {
     console.error('Form validation errors:', errors)
-    // Show first error in alert for user visibility
-    const firstError = Object.values(errors)[0] as any
-    if (firstError?.message) {
-      alert(`Validation Error: ${firstError.message}`)
-    } else if (firstError?.root?.message) {
-      alert(`Validation Error: ${firstError.root.message}`)
+    const firstError = Object.values(errors)[0] as { message?: string; root?: { message?: string } } | undefined
+    const message = firstError?.message || firstError?.root?.message
+    if (message) {
+      toast.error(`กรุณาตรวจสอบข้อมูล: ${message}`)
     }
   }
 
   const onSubmit = async (data: ReceiptFormValues) => {
     try {
       setIsSubmitting(true)
-      console.log('Form submitted:', data)
       await onSave({
         supplierId: data.supplierId,
         receiptDate: data.receiptDate,
@@ -423,6 +421,8 @@ export function ReceiptFormModal({
                               variant="ghost"
                               size="sm"
                               onClick={() => remove(index)}
+                              aria-label={`ลบรายการ #${index + 1}`}
+                              title="ลบรายการนี้"
                             >
                               <Trash2 className="w-4 h-4 text-red-500" />
                             </Button>
@@ -675,7 +675,7 @@ export function ReceiptFormModal({
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={onClose}>
+                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                   ยกเลิก
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>

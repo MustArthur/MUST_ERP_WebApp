@@ -81,6 +81,7 @@ export function RecipeCard({ recipe, onView, onEdit, onDuplicate }: RecipeCardPr
                 className="h-8 w-8"
                 onClick={handleEdit}
                 title="แก้ไข"
+                aria-label="แก้ไข"
               >
                 <Edit className="w-4 h-4 text-gray-500" />
               </Button>
@@ -92,6 +93,7 @@ export function RecipeCard({ recipe, onView, onEdit, onDuplicate }: RecipeCardPr
                 className="h-8 w-8"
                 onClick={handleDuplicate}
                 title="คัดลอก"
+                aria-label="คัดลอก"
               >
                 <Copy className="w-4 h-4 text-gray-500" />
               </Button>

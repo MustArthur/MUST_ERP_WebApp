@@ -22,6 +22,7 @@ import {
   RefreshCw,
   CheckCircle,
   ArrowDownCircle,
+  LucideIcon,
 } from 'lucide-react'
 
 interface QuarantineResolveModalProps {
@@ -35,7 +36,7 @@ const actionOptions: {
   value: QuarantineAction
   label: string
   description: string
-  icon: any
+  icon: LucideIcon
   color: string
   bgColor: string
 }[] = [
@@ -351,7 +352,7 @@ export function QuarantineResolveModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             {isResolved ? 'ปิด' : 'ยกเลิก'}
           </Button>
           {!isResolved && (

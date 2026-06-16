@@ -392,7 +392,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                             <div className="flex items-center justify-center gap-1">
-                                                <Button variant="ghost" size="sm" onClick={() => handleEdit(supplier)}>
+                                                <Button variant="ghost" size="sm" onClick={() => handleEdit(supplier)} aria-label="แก้ไข" title="แก้ไข">
                                                     <Edit2 className="w-4 h-4" />
                                                 </Button>
                                                 <Button
@@ -400,6 +400,8 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                                     size="sm"
                                                     onClick={() => handleDeletePrompt(supplier)}
                                                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                    aria-label="ลบ"
+                                                    title="ลบ"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -707,13 +709,12 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                             />
 
                             <div className="flex justify-end gap-2 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setShowFormModal(false)}>
+                                <Button type="button" variant="outline" onClick={() => setShowFormModal(false)} disabled={isSubmitting}>
                                     ยกเลิก
                                 </Button>
                                 <Button type="submit" disabled={isSubmitting}>
-                                    {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                     <Save className="w-4 h-4 mr-2" />
-                                    บันทึก
+                                    {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
                                 </Button>
                             </div>
                         </form>

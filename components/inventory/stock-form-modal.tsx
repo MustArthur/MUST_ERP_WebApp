@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { StockItem, ItemType, UnitOfMeasure, CreateStockItemInput } from '@/types/inventory'
 import { useInventoryStore } from '@/stores/inventory-store'
 import {
@@ -137,13 +138,16 @@ export function StockFormModal({
       let savedItem: StockItem
       if (item) {
         savedItem = await updateStockItem(item.id, formData)
+        toast.success('แก้ไขสินค้าสำเร็จ')
       } else {
         savedItem = await createStockItem(formData)
+        toast.success('เพิ่มสินค้าสำเร็จ')
       }
       onSave(savedItem)
       onClose()
     } catch (error) {
       console.error('Failed to save stock item:', error)
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถบันทึกสินค้าได้')
     }
   }
 

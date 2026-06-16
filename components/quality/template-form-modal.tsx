@@ -343,6 +343,8 @@ export function TemplateFormModal({
                           size="sm"
                           className="text-red-600 hover:text-red-700"
                           onClick={() => remove(index)}
+                          aria-label={`ลบพารามิเตอร์ #${index + 1}`}
+                          title="ลบพารามิเตอร์นี้"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -500,7 +502,7 @@ export function TemplateFormModal({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               ยกเลิก
             </Button>
             <Button type="submit" disabled={isSubmitting}>
