@@ -28,6 +28,7 @@ interface RecipeFormModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (data: CreateRecipeInput, status: 'DRAFT' | 'ACTIVE') => Promise<void>
+  mode: 'create' | 'edit' | 'new-version'
 }
 
 interface IngredientRow extends CreateIngredientInput {
@@ -41,6 +42,7 @@ export function RecipeFormModal({
   isOpen,
   onClose,
   onSave,
+  mode,
 }: RecipeFormModalProps) {
   const [isLoading, setIsLoading] = useState(false)
 
@@ -296,7 +298,11 @@ export function RecipeFormModal({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            {recipe ? 'แก้ไขสูตร' : 'สร้างสูตรใหม่'}
+            {mode === 'new-version'
+              ? `สร้างเวอร์ชันใหม่ — ${recipe?.code} (v${(recipe?.version ?? 1) + 1})`
+              : recipe
+              ? 'แก้ไขสูตร'
+              : 'สร้างสูตรใหม่'}
           </DialogTitle>
         </DialogHeader>
 
@@ -310,7 +316,11 @@ export function RecipeFormModal({
                 value={code}
                 onChange={e => setCode(e.target.value)}
                 placeholder="RCP-XXX-001"
+                disabled={mode === 'new-version'}
               />
+              {mode === 'new-version' && (
+                <p className="text-xs text-muted-foreground">รหัสสูตรไม่สามารถเปลี่ยนแปลงได้เมื่อสร้างเวอร์ชันใหม่</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">ชื่อสูตร *</Label>
@@ -572,6 +582,11 @@ export function RecipeFormModal({
         </div>
 
         {/* Footer */}
+        {mode === 'new-version' && (
+          <div className="px-3 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md">
+            ⚠️ การบันทึกแบบ &quot;เปิดใช้งาน&quot; จะเปลี่ยนสูตรเวอร์ชันก่อนหน้า (v{recipe?.version}) เป็น &quot;ยกเลิก&quot; โดยอัตโนมัติ
+          </div>
+        )}
         {saveError && (
           <div className="px-1 py-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
             ⚠️ {saveError}

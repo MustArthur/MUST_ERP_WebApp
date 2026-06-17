@@ -387,6 +387,178 @@ export async function duplicateRecipe(id: string): Promise<Recipe> {
 }
 
 
+// ==========================================
+// Recipe Versioning
+// ==========================================
+
+/**
+ * Create a new version of an existing recipe.
+ * Inserts a new row with the same `code` (recipe family key) and
+ * version = source.version + 1. Never mutates the source row, so
+ * Work Orders referencing the old row's id keep resolving to the
+ * immutable historical snapshot forever.
+ */
+export async function createRecipeVersion(sourceId: string, input: CreateRecipeInput): Promise<Recipe> {
+    // Fetch only what we need from the source row
+    const { data: source, error: srcError } = await supabase
+        .from('recipes')
+        .select('code, version')
+        .eq('id', sourceId)
+        .single()
+
+    if (srcError || !source) throw new Error('ไม่พบสูตรต้นทางที่ต้องการสร้างเวอร์ชันใหม่')
+
+    // Validate UUIDs — same guards as createRecipe; don't skip even
+    // though values were pre-filled from an existing recipe
+    if (!input.outputItemId || !isUUID(input.outputItemId)) {
+        throw new Error('ไม่พบ ID ของสินค้าที่ผลิตได้ กรุณาเลือกสินค้าใหม่จาก dropdown')
+    }
+    if (!input.outputUomId || !isUUID(input.outputUomId)) {
+        throw new Error('ไม่พบ ID ของหน่วยผลผลิต กรุณาเลือกหน่วยใหม่')
+    }
+
+    const newStatus = (input.status || 'DRAFT').toUpperCase()
+    const newVersion = source.version + 1
+
+    // Insert the new version row — force code = source.code regardless of
+    // input.code to protect the family key from UI state drift
+    const { data: newRecipe, error: insertError } = await supabase
+        .from('recipes')
+        .insert({
+            code: source.code,
+            name: input.name,
+            description: null,
+            output_item_id: input.outputItemId,
+            output_qty: input.outputQty,
+            output_uom_id: input.outputUomId,
+            standard_batch_size: input.batchSize,
+            expected_yield_percent: input.expectedYield,
+            estimated_duration_minutes: input.estimatedTime,
+            instructions: input.instructions,
+            status: newStatus,
+            version: newVersion,
+            bottle_size: input.bottleSize || 490,
+        })
+        .select()
+        .single()
+
+    if (insertError) {
+        console.error('Error creating recipe version:', insertError)
+        throw insertError
+    }
+
+    // Insert ingredient lines (same mapping as createRecipe)
+    if (input.ingredients && input.ingredients.length > 0) {
+        const lines = input.ingredients.map((ing, index) => ({
+            recipe_id: newRecipe.id,
+            line_no: index + 1,
+            item_id: ing.itemId,
+            qty_per_batch: ing.qty,
+            uom_id: ing.uomId,
+            scrap_percent: ing.scrap,
+            is_critical: ing.isCritical,
+            is_optional: false,
+        }))
+
+        const { error: linesError } = await supabase
+            .from('recipe_lines')
+            .insert(lines)
+
+        if (linesError) {
+            // Best-effort rollback — same pattern as duplicateRecipe
+            await supabase.from('recipes').delete().eq('id', newRecipe.id)
+            console.error('Error creating recipe version lines, rolled back:', linesError)
+            throw linesError
+        }
+    }
+
+    // Demote-on-activate: when new version goes ACTIVE, mark all other
+    // ACTIVE rows in the same family as OBSOLETE in one bulk UPDATE.
+    // If this step fails, log it but keep the new version — don't roll back.
+    if (newStatus === 'ACTIVE') {
+        const { error: demoteError } = await supabase
+            .from('recipes')
+            .update({ status: 'OBSOLETE' })
+            .eq('code', source.code)
+            .eq('status', 'ACTIVE')
+            .neq('id', newRecipe.id)
+
+        if (demoteError) {
+            console.error('Error demoting previous recipe version — new version created but old version not demoted:', demoteError)
+        }
+    }
+
+    return getRecipeById(newRecipe.id) as Promise<Recipe>
+}
+
+/**
+ * Get all version-rows for a recipe family (same `code`), newest first.
+ * Used by the version-history strip in RecipeDetailModal.
+ */
+export async function getRecipeVersions(code: string): Promise<Recipe[]> {
+    const { data: recipes, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('code', code)
+        .order('version', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching recipe versions:', error)
+        throw error
+    }
+
+    if (!recipes || recipes.length === 0) return []
+
+    // Hydrate each version row the same way getRecipes does
+    const recipeIds = recipes.map(r => r.id)
+    const { data: lines } = await supabase
+        .from('recipe_lines')
+        .select('*')
+        .in('recipe_id', recipeIds)
+
+    const outputItemIds = recipes.map(r => r.output_item_id).filter(Boolean)
+    const lineItemIds = (lines || []).map(l => l.item_id).filter(Boolean)
+    const allItemIds = Array.from(new Set([...outputItemIds, ...lineItemIds]))
+
+    const { data: items } = await supabase
+        .from('items')
+        .select('id, code, name, last_purchase_cost')
+        .in('id', allItemIds)
+
+    const outputUomIds = recipes.map(r => r.output_uom_id).filter(Boolean)
+    const lineUomIds = (lines || []).map(l => l.uom_id).filter(Boolean)
+    const allUomIds = Array.from(new Set([...outputUomIds, ...lineUomIds]))
+
+    const { data: uoms } = await supabase
+        .from('units_of_measure')
+        .select('id, code, name')
+        .in('id', allUomIds)
+
+    const itemsMap = new Map((items || []).map(i => [i.id, i]))
+    const uomsMap = new Map((uoms || []).map(u => [u.id, u]))
+    const linesMap = new Map<string, any[]>()
+
+    for (const line of (lines || [])) {
+        const recipeLines = linesMap.get(line.recipe_id) || []
+        const item = itemsMap.get(line.item_id)
+        const uom = uomsMap.get(line.uom_id)
+        recipeLines.push({ ...line, item, uom_code: uom?.code || line.uom_id })
+        linesMap.set(line.recipe_id, recipeLines)
+    }
+
+    return recipes.map(recipe => {
+        const outputItem = itemsMap.get(recipe.output_item_id)
+        const outputUom = uomsMap.get(recipe.output_uom_id)
+        return transformRecipeFromDB({
+            ...recipe,
+            output_item: outputItem,
+            output_uom: outputUom,
+            recipe_lines: linesMap.get(recipe.id) || [],
+        })
+    })
+}
+
+
 /**
  * Delete recipe
  */

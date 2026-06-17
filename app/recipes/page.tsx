@@ -27,6 +27,9 @@ export default function RecipesPage() {
     updateRecipe,
     duplicateRecipe,
     deleteRecipe,
+    createRecipeVersion,
+    fetchRecipeVersions,
+    recipeVersions,
     isLoading,
     error: storeError,
     filters,
@@ -41,6 +44,8 @@ export default function RecipesPage() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFormModal, setShowFormModal] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
+  const [formMode, setFormMode] = useState<'create' | 'edit' | 'new-version'>('create')
+  const [versionSourceId, setVersionSourceId] = useState<string | null>(null)
 
   // Confirmation dialogs
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -51,6 +56,13 @@ export default function RecipesPage() {
   useEffect(() => {
     fetchRecipes()
   }, [fetchRecipes])
+
+  // Fetch version history whenever the viewed recipe's family changes
+  useEffect(() => {
+    if (selectedRecipe?.code) {
+      fetchRecipeVersions(selectedRecipe.code)
+    }
+  }, [selectedRecipe?.code, fetchRecipeVersions])
 
   // Handlers
   const handleViewDetail = (recipe: Recipe) => {
@@ -65,11 +77,21 @@ export default function RecipesPage() {
 
   const handleCreate = () => {
     setEditingRecipe(null)
+    setFormMode('create')
     setShowFormModal(true)
   }
 
   const handleEdit = (recipe: Recipe) => {
     setEditingRecipe(recipe)
+    setFormMode('edit')
+    setShowFormModal(true)
+    setShowDetailModal(false)
+  }
+
+  const handleCreateVersion = (recipe: Recipe) => {
+    setEditingRecipe(recipe)
+    setVersionSourceId(recipe.id)
+    setFormMode('new-version')
     setShowFormModal(true)
     setShowDetailModal(false)
   }
@@ -113,11 +135,16 @@ export default function RecipesPage() {
   const handleCloseForm = () => {
     setShowFormModal(false)
     setEditingRecipe(null)
+    setFormMode('create')
+    setVersionSourceId(null)
   }
 
   const handleSave = async (data: CreateRecipeInput, status: 'DRAFT' | 'ACTIVE') => {
     const input = { ...data, status }
-    if (editingRecipe) {
+    if (formMode === 'new-version' && versionSourceId) {
+      const created = await createRecipeVersion(versionSourceId, input)
+      toast.success(`สร้างเวอร์ชันใหม่สำเร็จ (v${created.version})`)
+    } else if (editingRecipe) {
       await updateRecipe(editingRecipe.id, input)
       toast.success('แก้ไขสูตรสำเร็จ')
     } else {
@@ -232,6 +259,7 @@ export default function RecipesPage() {
             onView={handleViewDetail}
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}
+            onCreateVersion={handleCreateVersion}
           />
         )}
 
@@ -261,6 +289,9 @@ export default function RecipesPage() {
         onEdit={handleEdit}
         onDuplicate={handleDuplicate}
         onDelete={handleDelete}
+        onCreateVersion={handleCreateVersion}
+        recipeVersions={recipeVersions}
+        onSelectVersion={(v) => setSelectedRecipe(v)}
       />
 
       {/* Form Modal */}
@@ -269,6 +300,7 @@ export default function RecipesPage() {
         isOpen={showFormModal}
         onClose={handleCloseForm}
         onSave={handleSave}
+        mode={formMode}
       />
 
       {/* Delete Confirmation Dialog */}

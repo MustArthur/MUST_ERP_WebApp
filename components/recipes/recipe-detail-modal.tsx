@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from './status-badge'
 import { IngredientTable } from './ingredient-table'
 import { BatchCalculator } from './batch-calculator'
-import { Beaker, FileText, Calculator, Copy, Edit, Trash2 } from 'lucide-react'
-import { formatDuration, formatDateTime } from '@/lib/utils'
+import { Beaker, FileText, Calculator, Copy, Edit, Trash2, GitBranch } from 'lucide-react'
+import { formatDuration, formatDateTime, cn } from '@/lib/utils'
 
 interface RecipeDetailModalProps {
   recipe: Recipe | null
@@ -23,6 +23,9 @@ interface RecipeDetailModalProps {
   onEdit?: (recipe: Recipe) => void
   onDuplicate?: (recipe: Recipe) => void
   onDelete?: (recipe: Recipe) => void
+  onCreateVersion?: (recipe: Recipe) => void
+  recipeVersions?: Recipe[]
+  onSelectVersion?: (recipe: Recipe) => void
 }
 
 export function RecipeDetailModal({
@@ -32,6 +35,9 @@ export function RecipeDetailModal({
   onEdit,
   onDuplicate,
   onDelete,
+  onCreateVersion,
+  recipeVersions = [],
+  onSelectVersion,
 }: RecipeDetailModalProps) {
   const [bottleSize, setBottleSize] = useState(recipe?.bottleSize || 490)
 
@@ -101,6 +107,28 @@ export function RecipeDetailModal({
             <p className="font-medium">{formatDateTime(recipe.updatedAt)}</p>
           </div>
         </div>
+
+        {/* Version History Strip — shown only when the family has more than one version */}
+        {recipeVersions.length > 1 && (
+          <div className="py-2 border-b flex items-center gap-2 overflow-x-auto">
+            <span className="text-xs text-muted-foreground shrink-0 font-medium">ประวัติเวอร์ชัน:</span>
+            {recipeVersions.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => onSelectVersion?.(v)}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border shrink-0 transition-colors',
+                  v.id === recipe.id
+                    ? 'bg-blue-600 text-white border-blue-600 font-semibold'
+                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                v{v.version}
+                <StatusBadge status={v.status} />
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="ingredients" className="flex-1 flex flex-col overflow-hidden">
@@ -186,7 +214,13 @@ export function RecipeDetailModal({
                 คัดลอกสูตร
               </Button>
             )}
-            {onEdit && (
+            {onCreateVersion && recipe.status !== 'OBSOLETE' && (
+              <Button variant="outline" onClick={() => onCreateVersion(recipe)}>
+                <GitBranch className="w-4 h-4 mr-2" />
+                สร้างเวอร์ชันใหม่
+              </Button>
+            )}
+            {onEdit && recipe.status !== 'OBSOLETE' && (
               <Button variant="outline" onClick={() => onEdit(recipe)}>
                 <Edit className="w-4 h-4 mr-2" />
                 แก้ไข

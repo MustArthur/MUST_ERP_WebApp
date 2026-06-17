@@ -2,7 +2,7 @@
 
 import { Recipe } from '@/types/recipe'
 import { StatusBadge } from './status-badge'
-import { Edit, Copy, Eye } from 'lucide-react'
+import { Edit, Copy, Eye, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/utils'
 
@@ -11,9 +11,10 @@ interface RecipeTableProps {
     onView: (recipe: Recipe) => void
     onEdit?: (recipe: Recipe) => void
     onDuplicate?: (recipe: Recipe) => void
+    onCreateVersion?: (recipe: Recipe) => void
 }
 
-export function RecipeTable({ recipes, onView, onEdit, onDuplicate }: RecipeTableProps) {
+export function RecipeTable({ recipes, onView, onEdit, onDuplicate, onCreateVersion }: RecipeTableProps) {
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <div className="overflow-auto max-h-[70vh] relative">
@@ -99,6 +100,17 @@ export function RecipeTable({ recipes, onView, onEdit, onDuplicate }: RecipeTabl
                                                 aria-label="คัดลอก"
                                             >
                                                 <Copy className="w-4 h-4 text-gray-500" />
+                                            </Button>
+                                        )}
+                                        {onCreateVersion && recipe.status !== 'OBSOLETE' && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => onCreateVersion(recipe)}
+                                                title="สร้างเวอร์ชันใหม่"
+                                                aria-label="สร้างเวอร์ชันใหม่"
+                                            >
+                                                <GitBranch className="w-4 h-4 text-violet-500" />
                                             </Button>
                                         )}
                                     </div>

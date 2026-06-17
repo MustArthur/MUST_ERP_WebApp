@@ -12,9 +12,11 @@ interface RecipeState {
   // Data
   recipes: Recipe[]
   selectedRecipe: Recipe | null
+  recipeVersions: Recipe[]
 
   // UI State
   isLoading: boolean
+  isLoadingVersions: boolean
   error: string | null
   filters: RecipeFilterState
 
@@ -25,6 +27,8 @@ interface RecipeState {
   updateRecipe: (id: string, input: UpdateRecipeInput) => Promise<Recipe>
   duplicateRecipe: (id: string) => Promise<Recipe>
   deleteRecipe: (id: string) => Promise<void>
+  createRecipeVersion: (sourceId: string, input: CreateRecipeInput) => Promise<Recipe>
+  fetchRecipeVersions: (code: string) => Promise<void>
 
   // Filter Actions
   setFilters: (filters: Partial<RecipeFilterState>) => void
@@ -47,7 +51,9 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
   // Initial State
   recipes: [],
   selectedRecipe: null,
+  recipeVersions: [],
   isLoading: false,
+  isLoadingVersions: false,
   error: null,
   filters: defaultFilters,
 
@@ -256,6 +262,41 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
       console.error('Delete recipe error:', err)
       set({ error: err?.message || 'ไม่สามารถยกเลิกสูตรได้', isLoading: false })
       throw new Error(err?.message || 'Failed to delete recipe')
+    }
+  },
+
+  // Create new version of a recipe — Supabase-only; no mock fallback
+  createRecipeVersion: async (sourceId: string, input: CreateRecipeInput) => {
+    set({ isLoading: true, error: null })
+    const isValidUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
+    try {
+      if (!USE_SUPABASE || !isValidUUID(sourceId)) {
+        throw new Error('ไม่สามารถสร้างเวอร์ชันสูตรได้ในโหมดข้อมูลทดสอบ')
+      }
+      const created = await recipeApi.createRecipeVersion(sourceId, input)
+      const recipes = await recipeApi.getRecipes()
+      set({ recipes, isLoading: false, selectedRecipe: created })
+      return created
+    } catch (err: any) {
+      console.error('Create recipe version error:', err)
+      set({ error: err?.message || 'ไม่สามารถสร้างเวอร์ชันใหม่ของสูตรได้', isLoading: false })
+      throw new Error(err?.message || 'Failed to create recipe version')
+    }
+  },
+
+  // Fetch all version-rows for a recipe family (same code)
+  fetchRecipeVersions: async (code: string) => {
+    set({ isLoadingVersions: true })
+    try {
+      if (!USE_SUPABASE) {
+        set({ recipeVersions: [], isLoadingVersions: false })
+        return
+      }
+      const versions = await recipeApi.getRecipeVersions(code)
+      set({ recipeVersions: versions, isLoadingVersions: false })
+    } catch (err: any) {
+      console.error('Fetch recipe versions error:', err)
+      set({ recipeVersions: [], isLoadingVersions: false })
     }
   },
 
