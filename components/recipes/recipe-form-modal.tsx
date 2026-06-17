@@ -19,9 +19,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, Check, Calculator } from 'lucide-react'
+import { Plus, Trash2, Check, Calculator, GripVertical } from 'lucide-react'
 import { getRecipeIngredients, getOutputProducts, getUnitsOfMeasure, Item } from '@/lib/api/items'
 import type { UnitOfMeasure as UOMType } from '@/types/item'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 interface RecipeFormModalProps {
   recipe?: Recipe | null
@@ -37,6 +54,165 @@ interface IngredientRow extends CreateIngredientInput {
 
 const UOM_OPTIONS: UnitOfMeasure[] = ['KG', 'G', 'L', 'ML', 'PC', 'BTL', 'PKG']
 
+// ─────────────────────────────────────────────
+// Sortable ingredient row (must be outside the
+// main component so useSortable hook is valid)
+// ─────────────────────────────────────────────
+interface SortableRowProps {
+  ing: IngredientRow
+  idx: number
+  ingredientItems: Item[]
+  itemsLoading: boolean
+  uomCodeToId: Map<string, string>
+  onUpdate: (tempId: string, field: keyof IngredientRow, value: unknown) => void
+  onMaterialSelect: (tempId: string, code: string) => void
+  onRemove: (tempId: string) => void
+  canRemove: boolean
+}
+
+function SortableIngredientRow({
+  ing,
+  idx,
+  ingredientItems,
+  itemsLoading,
+  uomCodeToId,
+  onUpdate,
+  onMaterialSelect,
+  onRemove,
+  canRemove,
+}: SortableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: ing.tempId })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <tr ref={setNodeRef} style={style} className="hover:bg-gray-50">
+      {/* Drag handle */}
+      <td
+        className="px-2 py-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
+        {...attributes}
+        {...listeners}
+        aria-label="ลากเพื่อเปลี่ยนลำดับ"
+      >
+        <GripVertical className="w-4 h-4" />
+      </td>
+
+      {/* Line number */}
+      <td className="px-2 py-2 text-gray-500 text-sm select-none">{idx + 1}</td>
+
+      {/* Material select */}
+      <td className="px-2 py-2">
+        <Select
+          value={ing.code}
+          onValueChange={(v) => onMaterialSelect(ing.tempId, v)}
+          disabled={itemsLoading}
+        >
+          <SelectTrigger className="text-sm w-full text-left">
+            <span className="truncate">
+              {itemsLoading
+                ? <span className="text-muted-foreground">กำลังโหลด...</span>
+                : ing.code
+                  ? ingredientItems.find(i => i.code === ing.code)
+                    ? `${ing.code} - ${ingredientItems.find(i => i.code === ing.code)?.name}`
+                    : ing.code
+                  : <span className="text-muted-foreground">-- เลือก --</span>
+              }
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            {ingredientItems.map(mat => (
+              <SelectItem key={mat.code} value={mat.code}>
+                {mat.code} - {mat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </td>
+
+      {/* Qty */}
+      <td className="px-2 py-2">
+        <Input
+          type="number"
+          value={ing.qty || ''}
+          onChange={e => onUpdate(ing.tempId, 'qty', Number(e.target.value))}
+          className="text-right h-9"
+        />
+      </td>
+
+      {/* UOM */}
+      <td className="px-2 py-2">
+        <Select
+          value={ing.uom}
+          onValueChange={(v) => {
+            onUpdate(ing.tempId, 'uom', v)
+            const resolvedId = uomCodeToId.get(v)
+            if (resolvedId) onUpdate(ing.tempId, 'uomId', resolvedId)
+          }}
+        >
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {UOM_OPTIONS.map(uom => (
+              <SelectItem key={uom} value={uom}>{uom}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </td>
+
+      {/* Scrap % */}
+      <td className="px-2 py-2">
+        <Input
+          type="number"
+          value={ing.scrap || ''}
+          onChange={e => onUpdate(ing.tempId, 'scrap', Number(e.target.value))}
+          className="text-center h-9"
+        />
+      </td>
+
+      {/* isCritical */}
+      <td className="px-2 py-2 text-center">
+        <input
+          type="checkbox"
+          checked={ing.isCritical}
+          onChange={e => onUpdate(ing.tempId, 'isCritical', e.target.checked)}
+          className="w-4 h-4"
+        />
+      </td>
+
+      {/* Delete */}
+      <td className="px-2 py-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-red-500 hover:bg-red-50"
+          onClick={() => onRemove(ing.tempId)}
+          disabled={!canRemove}
+          aria-label="ลบวัตถุดิบนี้"
+          title="ลบวัตถุดิบนี้"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </td>
+    </tr>
+  )
+}
+
+// ─────────────────────────────────────────────
+// Main form modal
+// ─────────────────────────────────────────────
 export function RecipeFormModal({
   recipe,
   isOpen,
@@ -64,68 +240,59 @@ export function RecipeFormModal({
   const [expectedYield, setExpectedYield] = useState(95)
   const [estimatedTime, setEstimatedTime] = useState(240)
   const [instructions, setInstructions] = useState('')
-
-  const [ingredients, setIngredients] = useState<IngredientRow[]>([
-    createEmptyIngredient(),
-  ])
-
-  // Bottle calculation
+  const [ingredients, setIngredients] = useState<IngredientRow[]>([createEmptyIngredient()])
   const [bottleSize, setBottleSize] = useState(490)
 
-  // Convert to milliliters for calculation
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setIngredients((prev) => {
+        const from = prev.findIndex(i => i.tempId === active.id)
+        const to   = prev.findIndex(i => i.tempId === over.id)
+        return arrayMove(prev, from, to)
+      })
+    }
+  }
+
+  // Bottle calculation helpers
   const toMilliliters = (qty: number, uom: string): number => {
     switch (uom) {
       case 'L': return qty * 1000
       case 'ML': return qty
-      case 'G': return qty  // 1g ≈ 1ml สำหรับของเหลว
-      default: return 0     // PC, BTL, PKG ไม่สามารถแปลงได้
+      case 'G': return qty
+      default: return 0
     }
   }
 
-  // Calculate total milliliters from ingredients
-  const calculateTotalML = (): number => {
-    return ingredients
+  const calculateTotalML = (): number =>
+    ingredients
       .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
       .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
-  }
 
-  // Calculate number of bottles
   const calculateBottles = (): number => {
     const totalML = calculateTotalML()
     return bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
   }
 
-  // Calculate total material cost
-  const calculateTotalCost = (): number => {
-    return ingredients.reduce((sum, ing) => {
+  const calculateTotalCost = (): number =>
+    ingredients.reduce((sum, ing) => {
       const qtyWithScrap = ing.qty * (1 + ing.scrap / 100)
-      return sum + (qtyWithScrap * ing.cost)
+      return sum + qtyWithScrap * ing.cost
     }, 0)
-  }
 
-  // Calculate cost per bottle
   const calculateCostPerBottle = (): number => {
     const bottles = calculateBottles()
     const totalCost = calculateTotalCost()
     return bottles > 0 ? totalCost / bottles : 0
   }
 
-  function createEmptyIngredient(): IngredientRow {
-    return {
-      tempId: `temp-${Date.now()}-${Math.random()}`,
-      itemId: '', // จะถูก set เมื่อเลือก material
-      item: '',
-      code: '',
-      qty: 0,
-      uom: 'G',
-      uomId: '',  // UUID ของ UOM จะถูก set เมื่อเลือก material
-      scrap: 0,
-      isCritical: true,
-      cost: 0,
-    }
-  }
-
-  // Load items and UOMs from Supabase on mount
+  // Load items from Supabase on mount
   useEffect(() => {
     async function loadItems() {
       setItemsLoading(true)
@@ -161,13 +328,9 @@ export function RecipeFormModal({
       setInstructions(recipe.instructions)
       setBottleSize(recipe.bottleSize || 490)
       setIngredients(
-        recipe.ingredients.map(ing => ({
-          ...ing,
-          tempId: ing.id,
-        }))
+        recipe.ingredients.map(ing => ({ ...ing, tempId: ing.id }))
       )
     } else {
-      // Reset to defaults
       setCode('')
       setName('')
       setOutputItemCode('')
@@ -182,10 +345,7 @@ export function RecipeFormModal({
     }
   }, [recipe, isOpen])
 
-
-  const addIngredient = () => {
-    setIngredients([...ingredients, createEmptyIngredient()])
-  }
+  const addIngredient = () => setIngredients(prev => [...prev, createEmptyIngredient()])
 
   const removeIngredient = (tempId: string) => {
     if (ingredients.length > 1) {
@@ -208,14 +368,14 @@ export function RecipeFormModal({
         ingredients.map(ing =>
           ing.tempId === tempId
             ? {
-              ...ing,
-              itemId: material.id, // UUID ของ item สำหรับบันทึก
-              code: material.code,
-              item: material.name,
-              uom: material.base_uom_code as UnitOfMeasure || 'G',
-              uomId: material.base_uom_id, // UUID ของ UOM สำหรับบันทึก
-              cost: material.last_purchase_cost,
-            }
+                ...ing,
+                itemId: material.id,
+                code: material.code,
+                item: material.name,
+                uom: material.base_uom_code as UnitOfMeasure || 'G',
+                uomId: material.base_uom_id,
+                cost: material.last_purchase_cost,
+              }
             : ing
         )
       )
@@ -233,7 +393,6 @@ export function RecipeFormModal({
   const handleSubmit = async (status: 'DRAFT' | 'ACTIVE') => {
     setSaveError(null)
 
-    // Validate required header fields
     if (!code.trim() || !name.trim()) {
       setSaveError('กรุณากรอกรหัสสูตรและชื่อสูตร')
       return
@@ -242,8 +401,6 @@ export function RecipeFormModal({
       setSaveError('กรุณาเลือกสินค้าที่ผลิตได้')
       return
     }
-
-    // Validate ingredients
     for (const ing of ingredients) {
       if (!ing.itemId) {
         setSaveError('กรุณาเลือกวัตถุดิบจาก dropdown สำหรับทุกรายการ')
@@ -255,7 +412,6 @@ export function RecipeFormModal({
       }
     }
 
-    // Resolve UUIDs for the output product and its UOM (needed for Supabase insert)
     const outputItemId = outputProducts.find(p => p.code === outputItemCode)?.id
     const outputUomId = uomCodeToId.get(outputUom)
 
@@ -464,7 +620,8 @@ export function RecipeFormModal({
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-2 py-2 text-left">#</th>
+                    <th className="px-2 py-2 w-8"></th>
+                    <th className="px-2 py-2 text-left w-8">#</th>
                     <th className="px-2 py-2 text-left">วัตถุดิบ (RM / SP)</th>
                     <th className="px-2 py-2 text-right w-24">ปริมาณ</th>
                     <th className="px-2 py-2 text-center w-20">หน่วย</th>
@@ -473,97 +630,33 @@ export function RecipeFormModal({
                     <th className="px-2 py-2 w-10"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {ingredients.map((ing, idx) => (
-                    <tr key={ing.tempId}>
-                      <td className="px-2 py-2 text-gray-500">{idx + 1}</td>
-                      <td className="px-2 py-2">
-                        <Select
-                          value={ing.code}
-                          onValueChange={(v) => handleMaterialSelect(ing.tempId, v)}
-                          disabled={itemsLoading}
-                        >
-                          <SelectTrigger className="text-sm w-full text-left">
-                            <span className="truncate">
-                              {itemsLoading
-                                ? <span className="text-muted-foreground">กำลังโหลด...</span>
-                                : ing.code
-                                  ? ingredientItems.find(i => i.code === ing.code)
-                                    ? `${ing.code} - ${ingredientItems.find(i => i.code === ing.code)?.name}`
-                                    : ing.code
-                                  : <span className="text-muted-foreground">-- เลือก --</span>
-                              }
-                            </span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ingredientItems.map(mat => (
-                              <SelectItem key={mat.code} value={mat.code}>
-                                {mat.code} - {mat.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-2 py-2">
-                        <Input
-                          type="number"
-                          value={ing.qty || ''}
-                          onChange={e => updateIngredient(ing.tempId, 'qty', Number(e.target.value))}
-                          className="text-right h-9"
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={ingredients.map(i => i.tempId)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <tbody className="divide-y">
+                      {ingredients.map((ing, idx) => (
+                        <SortableIngredientRow
+                          key={ing.tempId}
+                          ing={ing}
+                          idx={idx}
+                          ingredientItems={ingredientItems}
+                          itemsLoading={itemsLoading}
+                          uomCodeToId={uomCodeToId}
+                          onUpdate={updateIngredient}
+                          onMaterialSelect={handleMaterialSelect}
+                          onRemove={removeIngredient}
+                          canRemove={ingredients.length > 1}
                         />
-                      </td>
-                      <td className="px-2 py-2">
-                        <Select
-                          value={ing.uom}
-                          onValueChange={(v) => {
-                            updateIngredient(ing.tempId, 'uom', v)
-                            const resolvedId = uomCodeToId.get(v)
-                            if (resolvedId) updateIngredient(ing.tempId, 'uomId', resolvedId)
-                          }}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {UOM_OPTIONS.map(uom => (
-                              <SelectItem key={uom} value={uom}>{uom}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-2 py-2">
-                        <Input
-                          type="number"
-                          value={ing.scrap || ''}
-                          onChange={e => updateIngredient(ing.tempId, 'scrap', Number(e.target.value))}
-                          className="text-center h-9"
-                        />
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={ing.isCritical}
-                          onChange={e => updateIngredient(ing.tempId, 'isCritical', e.target.checked)}
-                          className="w-4 h-4"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:bg-red-50"
-                          onClick={() => removeIngredient(ing.tempId)}
-                          disabled={ingredients.length <= 1}
-                          aria-label="ลบวัตถุดิบนี้"
-                          title="ลบวัตถุดิบนี้"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                      ))}
+                    </tbody>
+                  </SortableContext>
+                </DndContext>
               </table>
             </div>
           </div>
@@ -616,4 +709,19 @@ export function RecipeFormModal({
       </DialogContent>
     </Dialog>
   )
+}
+
+function createEmptyIngredient(): IngredientRow {
+  return {
+    tempId: `temp-${Date.now()}-${Math.random()}`,
+    itemId: '',
+    item: '',
+    code: '',
+    qty: 0,
+    uom: 'G',
+    uomId: '',
+    scrap: 0,
+    isCritical: true,
+    cost: 0,
+  }
 }
