@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, Check, Calculator, GripVertical } from 'lucide-react'
+import { Plus, Trash2, Check, Calculator, GripVertical, Eye, EyeOff } from 'lucide-react'
 import { getRecipeIngredients, getOutputProducts, getUnitsOfMeasure, Item } from '@/lib/api/items'
 import type { UnitOfMeasure as UOMType } from '@/types/item'
 import {
@@ -50,13 +50,13 @@ interface RecipeFormModalProps {
 
 interface IngredientRow extends CreateIngredientInput {
   tempId: string
+  isExcluded?: boolean
 }
 
 const UOM_OPTIONS: UnitOfMeasure[] = ['KG', 'G', 'L', 'ML', 'PC', 'BTL', 'PKG']
 
 // ─────────────────────────────────────────────
-// Sortable ingredient row (must be outside the
-// main component so useSortable hook is valid)
+// Sortable ingredient row
 // ─────────────────────────────────────────────
 interface SortableRowProps {
   ing: IngredientRow
@@ -67,6 +67,7 @@ interface SortableRowProps {
   onUpdate: (tempId: string, field: keyof IngredientRow, value: unknown) => void
   onMaterialSelect: (tempId: string, code: string) => void
   onRemove: (tempId: string) => void
+  onToggleExclude: (tempId: string) => void
   canRemove: boolean
 }
 
@@ -79,6 +80,7 @@ function SortableIngredientRow({
   onUpdate,
   onMaterialSelect,
   onRemove,
+  onToggleExclude,
   canRemove,
 }: SortableRowProps) {
   const {
@@ -90,14 +92,20 @@ function SortableIngredientRow({
     isDragging,
   } = useSortable({ id: ing.tempId })
 
+  const excluded = !!ing.isExcluded
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.4 : excluded ? 0.45 : 1,
   }
 
   return (
-    <tr ref={setNodeRef} style={style} className="hover:bg-gray-50">
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={excluded ? 'bg-gray-50' : 'hover:bg-gray-50'}
+    >
       {/* Drag handle */}
       <td
         className="px-2 py-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
@@ -116,9 +124,9 @@ function SortableIngredientRow({
         <Select
           value={ing.code}
           onValueChange={(v) => onMaterialSelect(ing.tempId, v)}
-          disabled={itemsLoading}
+          disabled={itemsLoading || excluded}
         >
-          <SelectTrigger className="text-sm w-full text-left">
+          <SelectTrigger className={`text-sm w-full text-left ${excluded ? 'line-through text-gray-400' : ''}`}>
             <span className="truncate">
               {itemsLoading
                 ? <span className="text-muted-foreground">กำลังโหลด...</span>
@@ -146,7 +154,8 @@ function SortableIngredientRow({
           type="number"
           value={ing.qty || ''}
           onChange={e => onUpdate(ing.tempId, 'qty', Number(e.target.value))}
-          className="text-right h-9 w-full min-w-[7rem]"
+          className={`text-right h-9 w-full min-w-[7rem] ${excluded ? 'line-through text-gray-400' : ''}`}
+          disabled={excluded}
         />
       </td>
 
@@ -154,6 +163,7 @@ function SortableIngredientRow({
       <td className="px-2 py-2">
         <Select
           value={ing.uom}
+          disabled={excluded}
           onValueChange={(v) => {
             onUpdate(ing.tempId, 'uom', v)
             const resolvedId = uomCodeToId.get(v)
@@ -178,6 +188,7 @@ function SortableIngredientRow({
           value={ing.scrap || ''}
           onChange={e => onUpdate(ing.tempId, 'scrap', Number(e.target.value))}
           className="text-center h-9"
+          disabled={excluded}
         />
       </td>
 
@@ -188,11 +199,27 @@ function SortableIngredientRow({
           checked={ing.isCritical}
           onChange={e => onUpdate(ing.tempId, 'isCritical', e.target.checked)}
           className="w-4 h-4"
+          disabled={excluded}
         />
       </td>
 
+      {/* Toggle exclude */}
+      <td className="px-1 py-2 text-center">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={`h-8 w-8 ${excluded ? 'text-amber-500 hover:bg-amber-50' : 'text-gray-400 hover:bg-gray-100'}`}
+          onClick={() => onToggleExclude(ing.tempId)}
+          aria-label={excluded ? 'นำกลับเข้าสูตร' : 'ตัดออกจากสูตร'}
+          title={excluded ? 'นำกลับเข้าสูตร' : 'ตัดออกจากสูตร'}
+        >
+          {excluded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </Button>
+      </td>
+
       {/* Delete */}
-      <td className="px-2 py-2">
+      <td className="px-1 py-2">
         <Button
           type="button"
           variant="ghost"
@@ -222,14 +249,12 @@ export function RecipeFormModal({
 }: RecipeFormModalProps) {
   const [isLoading, setIsLoading] = useState(false)
 
-  // Items from Supabase
   const [itemsLoading, setItemsLoading] = useState(true)
   const [ingredientItems, setIngredientItems] = useState<Item[]>([])
   const [outputProducts, setOutputProducts] = useState<Item[]>([])
   const [uomCodeToId, setUomCodeToId] = useState<Map<string, string>>(new Map())
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Form state
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
   const [outputItemCode, setOutputItemCode] = useState('')
@@ -243,7 +268,6 @@ export function RecipeFormModal({
   const [ingredients, setIngredients] = useState<IngredientRow[]>([createEmptyIngredient()])
   const [bottleSize, setBottleSize] = useState(490)
 
-  // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -260,7 +284,6 @@ export function RecipeFormModal({
     }
   }
 
-  // Bottle calculation helpers
   const toMilliliters = (qty: number, uom: string): number => {
     switch (uom) {
       case 'L': return qty * 1000
@@ -270,8 +293,11 @@ export function RecipeFormModal({
     }
   }
 
+  // Only count non-excluded ingredients in calculations
+  const activeIngredients = ingredients.filter(i => !i.isExcluded)
+
   const calculateTotalML = (): number =>
-    ingredients
+    activeIngredients
       .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
       .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
 
@@ -281,7 +307,7 @@ export function RecipeFormModal({
   }
 
   const calculateTotalCost = (): number =>
-    ingredients.reduce((sum, ing) => {
+    activeIngredients.reduce((sum, ing) => {
       const qtyWithScrap = ing.qty * (1 + ing.scrap / 100)
       return sum + qtyWithScrap * ing.cost
     }, 0)
@@ -292,7 +318,6 @@ export function RecipeFormModal({
     return bottles > 0 ? totalCost / bottles : 0
   }
 
-  // Load items from Supabase on mount
   useEffect(() => {
     async function loadItems() {
       setItemsLoading(true)
@@ -312,7 +337,6 @@ export function RecipeFormModal({
     loadItems()
   }, [])
 
-  // Reset form when recipe changes
   useEffect(() => {
     setSaveError(null)
     if (recipe) {
@@ -328,7 +352,7 @@ export function RecipeFormModal({
       setInstructions(recipe.instructions)
       setBottleSize(recipe.bottleSize || 490)
       setIngredients(
-        recipe.ingredients.map(ing => ({ ...ing, tempId: ing.id }))
+        recipe.ingredients.map(ing => ({ ...ing, tempId: ing.id, isExcluded: false }))
       )
     } else {
       setCode('')
@@ -357,6 +381,14 @@ export function RecipeFormModal({
     setIngredients(
       ingredients.map(ing =>
         ing.tempId === tempId ? { ...ing, [field]: value } : ing
+      )
+    )
+  }
+
+  const handleToggleExclude = (tempId: string) => {
+    setIngredients(
+      ingredients.map(ing =>
+        ing.tempId === tempId ? { ...ing, isExcluded: !ing.isExcluded } : ing
       )
     )
   }
@@ -401,7 +433,9 @@ export function RecipeFormModal({
       setSaveError('กรุณาเลือกสินค้าที่ผลิตได้')
       return
     }
-    for (const ing of ingredients) {
+
+    // Only validate non-excluded ingredients
+    for (const ing of activeIngredients) {
       if (!ing.itemId) {
         setSaveError('กรุณาเลือกวัตถุดิบจาก dropdown สำหรับทุกรายการ')
         return
@@ -435,7 +469,8 @@ export function RecipeFormModal({
         expectedYield,
         estimatedTime,
         instructions,
-        ingredients: ingredients.map(({ tempId, ...ing }) => ing),
+        // Only save non-excluded rows; strip form-only fields
+        ingredients: activeIngredients.map(({ tempId, isExcluded, ...ing }) => ing),
         status,
         bottleSize,
       }
@@ -449,9 +484,11 @@ export function RecipeFormModal({
     }
   }
 
+  const excludedCount = ingredients.filter(i => i.isExcluded).length
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {mode === 'new-version'
@@ -595,7 +632,7 @@ export function RecipeFormModal({
                 </div>
               </div>
             </div>
-            {ingredients.some(ing => !['L', 'ML', 'G'].includes(ing.uom) && ing.qty > 0) && (
+            {activeIngredients.some(ing => !['L', 'ML', 'G'].includes(ing.uom) && ing.qty > 0) && (
               <p className="text-xs text-amber-600 mt-2">
                 * มีวัตถุดิบที่ไม่ใช่หน่วย G/ML/L จึงไม่ถูกนำมาคำนวณปริมาณ
               </p>
@@ -605,7 +642,14 @@ export function RecipeFormModal({
           {/* Ingredients */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <Label>ส่วนประกอบ *</Label>
+              <div className="flex items-center gap-2">
+                <Label>ส่วนประกอบ *</Label>
+                {excludedCount > 0 && (
+                  <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                    ตัดออก {excludedCount} รายการ
+                  </span>
+                )}
+              </div>
               <Button
                 type="button"
                 variant="ghost"
@@ -627,7 +671,8 @@ export function RecipeFormModal({
                     <th className="px-2 py-2 text-center w-20">หน่วย</th>
                     <th className="px-2 py-2 text-center w-20">% เสีย</th>
                     <th className="px-2 py-2 text-center w-16">หลัก</th>
-                    <th className="px-2 py-2 w-10"></th>
+                    <th className="px-2 py-2 w-8" title="ตัดออก/รวม"></th>
+                    <th className="px-2 py-2 w-8"></th>
                   </tr>
                 </thead>
                 <DndContext
@@ -651,6 +696,7 @@ export function RecipeFormModal({
                           onUpdate={updateIngredient}
                           onMaterialSelect={handleMaterialSelect}
                           onRemove={removeIngredient}
+                          onToggleExclude={handleToggleExclude}
                           canRemove={ingredients.length > 1}
                         />
                       ))}
@@ -723,5 +769,6 @@ function createEmptyIngredient(): IngredientRow {
     scrap: 0,
     isCritical: true,
     cost: 0,
+    isExcluded: false,
   }
 }
