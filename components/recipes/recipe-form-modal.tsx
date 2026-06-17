@@ -146,7 +146,7 @@ function SortableIngredientRow({
           type="number"
           value={ing.qty || ''}
           onChange={e => onUpdate(ing.tempId, 'qty', Number(e.target.value))}
-          className="text-right h-9"
+          className="text-right h-9 w-full min-w-[7rem]"
         />
       </td>
 
@@ -623,7 +623,7 @@ export function RecipeFormModal({
                     <th className="px-2 py-2 w-8"></th>
                     <th className="px-2 py-2 text-left w-8">#</th>
                     <th className="px-2 py-2 text-left">วัตถุดิบ (RM / SP)</th>
-                    <th className="px-2 py-2 text-right w-24">ปริมาณ</th>
+                    <th className="px-2 py-2 text-right w-36">ปริมาณ</th>
                     <th className="px-2 py-2 text-center w-20">หน่วย</th>
                     <th className="px-2 py-2 text-center w-20">% เสีย</th>
                     <th className="px-2 py-2 text-center w-16">หลัก</th>
