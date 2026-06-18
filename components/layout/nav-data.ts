@@ -10,6 +10,7 @@ import {
     ArrowLeftRight,
     Package2,
     Send,
+    CalendarDays,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -54,6 +55,7 @@ export const navGroups: NavGroup[] = [
         id: 'production',
         label: 'การผลิต',
         items: [
+            { name: 'วางแผนการผลิต', href: '/production-planning', icon: CalendarDays },
             { name: 'การผลิต', href: '/production', icon: Factory },
             { name: 'คลังสินค้า', href: '/inventory', icon: Warehouse },
             { name: 'รายการเคลื่อนไหว', href: '/transactions', icon: ArrowLeftRight },

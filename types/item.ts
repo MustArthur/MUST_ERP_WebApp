@@ -24,6 +24,7 @@ export interface Item {
     lastPurchaseCost: number
     isActive: boolean
     requiresQC: boolean       // ต้องตรวจ QC ก่อนนำไปใช้งาน
+    leadTimeWeeks: number     // สัปดาห์ที่ใช้ในการสั่งซื้อ (used for Safety Stock calculation)
     createdAt: string
     updatedAt: string
     // Stock fields
@@ -55,6 +56,7 @@ export interface CreateItemInput {
     lastPurchaseCost?: number
     safetyStock?: number
     requiresQC?: boolean
+    leadTimeWeeks?: number
 }
 
 export interface UpdateItemInput {
@@ -68,6 +70,7 @@ export interface UpdateItemInput {
     safetyStock?: number
     isActive?: boolean
     requiresQC?: boolean
+    leadTimeWeeks?: number
 }
 
 export type ItemType = 'RAW_MATERIAL' | 'FINISHED_GOOD' | 'PACKAGING' | 'ALL'

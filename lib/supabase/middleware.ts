@@ -48,6 +48,7 @@ export async function updateSession(request: NextRequest) {
         '/transactions',
         '/finished-goods',
         '/delivery',
+        '/production-planning',
     ]
 
     const isProtectedPath = protectedPaths.some(path =>

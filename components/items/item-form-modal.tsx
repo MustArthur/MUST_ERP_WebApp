@@ -43,6 +43,7 @@ const itemFormSchema = z.object({
     stockUomId: z.string().min(1, 'กรุณาเลือกหน่วยสต๊อก'),
     lastPurchaseCost: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
     safetyStock: z.number().min(0, 'Safety Stock ต้องไม่ติดลบ'),
+    leadTimeWeeks: z.number().int().min(0, 'Lead Time ต้องไม่ติดลบ'),
     isActive: z.boolean(),
     requiresQC: z.boolean(),
 })
@@ -81,6 +82,7 @@ export function ItemFormModal({
             stockUomId: '',
             lastPurchaseCost: 0,
             safetyStock: 0,
+            leadTimeWeeks: 1,
             isActive: true,
             requiresQC: false,
         },
@@ -98,6 +100,7 @@ export function ItemFormModal({
                 stockUomId: item.stockUomId || item.baseUomId,
                 lastPurchaseCost: item.lastPurchaseCost,
                 safetyStock: item.safetyStock || 0,
+                leadTimeWeeks: item.leadTimeWeeks ?? 1,
                 isActive: item.isActive,
                 requiresQC: item.requiresQC || false,
             })
@@ -111,6 +114,7 @@ export function ItemFormModal({
                 stockUomId: '',
                 lastPurchaseCost: 0,
                 safetyStock: 0,
+                leadTimeWeeks: 1,
                 isActive: true,
                 requiresQC: false,
             })
@@ -130,6 +134,7 @@ export function ItemFormModal({
                     stockUomId: data.stockUomId,
                     lastPurchaseCost: data.lastPurchaseCost,
                     safetyStock: data.safetyStock,
+                    leadTimeWeeks: data.leadTimeWeeks,
                     isActive: data.isActive,
                     requiresQC: data.requiresQC,
                 }, false)
@@ -143,6 +148,7 @@ export function ItemFormModal({
                     stockUomId: data.stockUomId,
                     lastPurchaseCost: data.lastPurchaseCost,
                     safetyStock: data.safetyStock,
+                    leadTimeWeeks: data.leadTimeWeeks,
                     requiresQC: data.requiresQC,
                 }, true)
             }
@@ -334,6 +340,27 @@ export function ItemFormModal({
                                                 placeholder="0"
                                                 {...field}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="leadTimeWeeks"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Lead Time (สัปดาห์)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                step="1"
+                                                min="0"
+                                                placeholder="1"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                             />
                                         </FormControl>
                                         <FormMessage />
