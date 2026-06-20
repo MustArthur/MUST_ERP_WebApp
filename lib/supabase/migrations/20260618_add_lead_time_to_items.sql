@@ -8,7 +8,7 @@
 -- Safe to re-run: ADD COLUMN IF NOT EXISTS is idempotent.
 -- ==========================================
 
-ALTER TABLE public.items
+ALTER TABLE items
   ADD COLUMN IF NOT EXISTS lead_time_weeks integer NOT NULL DEFAULT 1;
 
 -- Verification (run manually after applying):

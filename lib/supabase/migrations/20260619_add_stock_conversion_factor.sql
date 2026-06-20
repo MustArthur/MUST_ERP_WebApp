@@ -12,7 +12,7 @@
 -- Safe to re-run: ADD COLUMN IF NOT EXISTS is idempotent.
 -- ==========================================
 
-ALTER TABLE public.items
+ALTER TABLE items
   ADD COLUMN IF NOT EXISTS stock_conversion_factor decimal(18,6) NOT NULL DEFAULT 1;
 
 -- Verification:
