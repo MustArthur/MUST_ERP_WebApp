@@ -44,6 +44,7 @@ const itemFormSchema = z.object({
     lastPurchaseCost: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
     safetyStock: z.number().min(0, 'Safety Stock ต้องไม่ติดลบ'),
     leadTimeWeeks: z.number().int().min(0, 'Lead Time ต้องไม่ติดลบ'),
+    stockConversionFactor: z.number().min(0.000001, 'ต้องมากกว่า 0'),
     isActive: z.boolean(),
     requiresQC: z.boolean(),
 })
@@ -83,10 +84,15 @@ export function ItemFormModal({
             lastPurchaseCost: 0,
             safetyStock: 0,
             leadTimeWeeks: 1,
+            stockConversionFactor: 1,
             isActive: true,
             requiresQC: false,
         },
     })
+
+    // For dynamic conversion factor label
+    const watchedBaseUomId = form.watch('baseUomId')
+    const watchedStockUomId = form.watch('stockUomId')
 
     // Populate form when editing
     useEffect(() => {
@@ -101,6 +107,7 @@ export function ItemFormModal({
                 lastPurchaseCost: item.lastPurchaseCost,
                 safetyStock: item.safetyStock || 0,
                 leadTimeWeeks: item.leadTimeWeeks ?? 1,
+                stockConversionFactor: item.stockConversionFactor ?? 1,
                 isActive: item.isActive,
                 requiresQC: item.requiresQC || false,
             })
@@ -115,6 +122,7 @@ export function ItemFormModal({
                 lastPurchaseCost: 0,
                 safetyStock: 0,
                 leadTimeWeeks: 1,
+                stockConversionFactor: 1,
                 isActive: true,
                 requiresQC: false,
             })
@@ -135,6 +143,7 @@ export function ItemFormModal({
                     lastPurchaseCost: data.lastPurchaseCost,
                     safetyStock: data.safetyStock,
                     leadTimeWeeks: data.leadTimeWeeks,
+                    stockConversionFactor: data.stockConversionFactor,
                     isActive: data.isActive,
                     requiresQC: data.requiresQC,
                 }, false)
@@ -149,6 +158,7 @@ export function ItemFormModal({
                     lastPurchaseCost: data.lastPurchaseCost,
                     safetyStock: data.safetyStock,
                     leadTimeWeeks: data.leadTimeWeeks,
+                    stockConversionFactor: data.stockConversionFactor,
                     requiresQC: data.requiresQC,
                 }, true)
             }
@@ -391,6 +401,41 @@ export function ItemFormModal({
                                         <FormMessage />
                                     </FormItem>
                                 )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="stockConversionFactor"
+                                render={({ field }) => {
+                                    const baseCode = uoms.find(u => u.id === watchedBaseUomId)?.code ?? 'หน่วยผลิต'
+                                    const stockCode = uoms.find(u => u.id === watchedStockUomId)?.code ?? 'หน่วยสต๊อก'
+                                    const sameUnit = watchedBaseUomId && watchedBaseUomId === watchedStockUomId
+                                    return (
+                                        <FormItem className="col-span-2">
+                                            <FormLabel>{baseCode} ต่อ 1 {stockCode}</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    step="0.001"
+                                                    min="0.001"
+                                                    placeholder="1"
+                                                    disabled={!!sameUnit}
+                                                    {...field}
+                                                    value={sameUnit ? 1 : field.value}
+                                                    onChange={(e) => {
+                                                        if (!sameUnit) field.onChange(parseFloat(e.target.value) || 1)
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <p className="text-xs text-muted-foreground">
+                                                {sameUnit
+                                                    ? 'หน่วยผลิตและหน่วยสต๊อกเหมือนกัน ไม่ต้องแปลง'
+                                                    : `เช่น ถ้า 1 ${stockCode} = 5000 ${baseCode} ให้ใส่ 5000`}
+                                            </p>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )
+                                }}
                             />
                         </div>
 

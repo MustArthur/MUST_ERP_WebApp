@@ -15,6 +15,18 @@ interface ProductionPlanningState {
   reset: () => void
 }
 
+// Intermediate accumulation entry (base units)
+interface MapEntry {
+  itemId: string
+  itemCode: string
+  itemName: string
+  totalQtyBase: number   // accumulated in base/production units (ML, G, etc.)
+  convFactor: number     // 1 stock unit = N base units (from item.stockConversionFactor)
+  stockUom: string       // display unit (Bag, KG, Bottle, etc.)
+  currentStock: number   // already in stock units (from items.stockQty)
+  leadTimeWeeks: number
+}
+
 function periodMultiplier(period: PlanningPeriod): number {
   if (period === 'daily') return 1 / 7
   if (period === 'monthly') return 4
@@ -55,7 +67,7 @@ export const useProductionPlanningStore = create<ProductionPlanningState>((set, 
   calculate: (recipes: Recipe[], items: Item[]) => {
     const { batchPlan, period } = get()
     const mult = periodMultiplier(period)
-    const map = new Map<string, AggregatedMaterial>()
+    const map = new Map<string, MapEntry>()
 
     for (const planItem of batchPlan) {
       if (planItem.batchCount === 0) continue
@@ -64,45 +76,56 @@ export const useProductionPlanningStore = create<ProductionPlanningState>((set, 
 
       for (const ing of recipe.ingredients) {
         if (!ing.itemId) continue
+
         const qtyWithScrap = ing.qty * (1 + ing.scrap / 100)
-        const totalForPeriod = qtyWithScrap * planItem.batchCount * mult
+        const totalForPeriodBase = qtyWithScrap * planItem.batchCount * mult
 
         if (!map.has(ing.itemId)) {
           const itemData = items.find(i => i.id === ing.itemId)
+          const convFactor = Math.max(0.000001, itemData?.stockConversionFactor ?? 1)
+          // Use stock UOM code for display; fall back to recipe ingredient UOM if not set
+          const stockUom = (itemData?.stockUomCode && itemData.stockUomCode !== itemData.baseUomCode)
+            ? itemData.stockUomCode
+            : (itemData?.stockUomCode ?? ing.uom)
           map.set(ing.itemId, {
             itemId: ing.itemId,
             itemCode: ing.code,
             itemName: ing.item,
-            totalQty: 0,
-            uom: ing.uom,
+            totalQtyBase: 0,
+            convFactor,
+            stockUom,
             currentStock: itemData?.stockQty ?? 0,
             leadTimeWeeks: itemData?.leadTimeWeeks ?? 1,
-            safetyStockNeeded: 0,
-            coverageBatches: 0,
-            status: 'OK',
           })
         }
 
-        const entry = map.get(ing.itemId)!
-        entry.totalQty += totalForPeriod
+        map.get(ing.itemId)!.totalQtyBase += totalForPeriodBase
       }
     }
 
     const totalBatchesAll = batchPlan.reduce((sum, p) => sum + p.batchCount, 0)
 
-    const aggregated: AggregatedMaterial[] = Array.from(map.values()).map(m => {
-      const weeklyUsage = m.totalQty / mult
-      const safetyStockNeeded = weeklyUsage * m.leadTimeWeeks
-      const usagePerBatch = totalBatchesAll > 0 ? weeklyUsage / totalBatchesAll : 0
-      const coverageBatches = usagePerBatch > 0 ? Math.floor(m.currentStock / usagePerBatch) : 999
+    const aggregated: AggregatedMaterial[] = Array.from(map.values()).map(entry => {
+      // Convert from base units → stock units for all comparisons
+      const totalQtyStock = entry.totalQtyBase / entry.convFactor
+      const weeklyUsageStock = totalQtyStock / mult
+      const safetyStockNeeded = weeklyUsageStock * entry.leadTimeWeeks
+      const usagePerBatch = totalBatchesAll > 0 ? weeklyUsageStock / totalBatchesAll : 0
+      const coverageBatches = usagePerBatch > 0 ? Math.floor(entry.currentStock / usagePerBatch) : 999
 
       let status: 'OK' | 'LOW' | 'CRITICAL' = 'OK'
-      if (m.currentStock < safetyStockNeeded) status = 'CRITICAL'
-      else if (m.currentStock < weeklyUsage) status = 'LOW'
+      if (entry.currentStock < safetyStockNeeded) status = 'CRITICAL'
+      else if (entry.currentStock < weeklyUsageStock) status = 'LOW'
 
       return {
-        ...m,
-        safetyStockNeeded,
+        itemId: entry.itemId,
+        itemCode: entry.itemCode,
+        itemName: entry.itemName,
+        totalQty: totalQtyStock,           // in stock units
+        uom: entry.stockUom,               // stock unit label
+        currentStock: entry.currentStock,  // already in stock units
+        leadTimeWeeks: entry.leadTimeWeeks,
+        safetyStockNeeded,                 // in stock units
         coverageBatches,
         status,
       }

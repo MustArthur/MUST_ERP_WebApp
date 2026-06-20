@@ -24,7 +24,8 @@ export interface Item {
     lastPurchaseCost: number
     isActive: boolean
     requiresQC: boolean       // ต้องตรวจ QC ก่อนนำไปใช้งาน
-    leadTimeWeeks: number     // สัปดาห์ที่ใช้ในการสั่งซื้อ (used for Safety Stock calculation)
+    leadTimeWeeks: number          // สัปดาห์ที่ใช้ในการสั่งซื้อ (used for Safety Stock calculation)
+    stockConversionFactor: number  // 1 stock unit = N base units (e.g. 1 Bag = 5000 ML → 5000)
     createdAt: string
     updatedAt: string
     // Stock fields
@@ -57,6 +58,7 @@ export interface CreateItemInput {
     safetyStock?: number
     requiresQC?: boolean
     leadTimeWeeks?: number
+    stockConversionFactor?: number
 }
 
 export interface UpdateItemInput {
@@ -71,6 +73,7 @@ export interface UpdateItemInput {
     isActive?: boolean
     requiresQC?: boolean
     leadTimeWeeks?: number
+    stockConversionFactor?: number
 }
 
 export type ItemType = 'RAW_MATERIAL' | 'FINISHED_GOOD' | 'PACKAGING' | 'ALL'

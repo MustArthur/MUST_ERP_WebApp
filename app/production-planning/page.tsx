@@ -221,8 +221,8 @@ export default function ProductionPlanningPage() {
                       <th className="px-4 py-2.5 text-left text-sm font-medium text-gray-600">รหัส</th>
                       <th className="px-4 py-2.5 text-left text-sm font-medium text-gray-600">ชื่อวัตถุดิบ</th>
                       <th className="px-4 py-2.5 text-center text-sm font-medium text-gray-600">หน่วย</th>
-                      <th className="px-4 py-2.5 text-right text-sm font-medium text-gray-600">ต้องใช้ 1 รอบ</th>
-                      <th className="px-4 py-2.5 text-right text-sm font-medium text-gray-600">Stock ปัจจุบัน</th>
+                      <th className="px-4 py-2.5 text-right text-sm font-medium text-gray-600">ต้องใช้ 1 รอบ<br /><span className="font-normal text-xs">(หน่วยสต๊อก)</span></th>
+                      <th className="px-4 py-2.5 text-right text-sm font-medium text-gray-600">Stock ปัจจุบัน<br /><span className="font-normal text-xs">(หน่วยสต๊อก)</span></th>
                       <th className="px-4 py-2.5 text-right text-sm font-medium text-gray-600">Safety Stock<br /><span className="font-normal text-xs">(Lead Time × รายสัปดาห์)</span></th>
                       <th className="px-4 py-2.5 text-center text-sm font-medium text-gray-600">Lead Time<br />(สัปดาห์)</th>
                       <th className="px-4 py-2.5 text-center text-sm font-medium text-gray-600">พอกี่ Batch</th>

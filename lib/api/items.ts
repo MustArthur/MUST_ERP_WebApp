@@ -40,6 +40,7 @@ export async function getAllItems(): Promise<ItemType[]> {
           is_active,
           requires_qc,
           lead_time_weeks,
+          stock_conversion_factor,
           created_at,
           updated_at,
           base_uom_id,
@@ -117,6 +118,7 @@ export async function getAllItems(): Promise<ItemType[]> {
             isActive: i.is_active ?? true,
             requiresQC: (i as any).requires_qc ?? false,
             leadTimeWeeks: (i as any).lead_time_weeks ?? 1,
+            stockConversionFactor: (i as any).stock_conversion_factor ?? 1,
             createdAt: i.created_at,
             updatedAt: i.updated_at,
             stockQty,
@@ -146,6 +148,7 @@ export async function createItem(input: CreateItemInput): Promise<ItemType | nul
             is_active: true,
             requires_qc: input.requiresQC ?? false,
             lead_time_weeks: input.leadTimeWeeks ?? 1,
+            stock_conversion_factor: input.stockConversionFactor ?? 1,
         })
         .select()
         .single()
@@ -176,6 +179,7 @@ export async function updateItem(id: string, input: UpdateItemInput): Promise<It
     if (input.isActive !== undefined) updateData.is_active = input.isActive
     if (input.requiresQC !== undefined) updateData.requires_qc = input.requiresQC
     if (input.leadTimeWeeks !== undefined) updateData.lead_time_weeks = input.leadTimeWeeks
+    if (input.stockConversionFactor !== undefined) updateData.stock_conversion_factor = input.stockConversionFactor
 
     const { error } = await supabase
         .from('items')
