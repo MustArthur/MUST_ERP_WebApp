@@ -417,7 +417,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
 
             {/* Form Modal */}
             <Dialog open={showFormModal} onOpenChange={setShowFormModal}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>
                             {selectedSupplier ? 'แก้ไขข้อมูล Supplier' : 'เพิ่ม Supplier'}
@@ -425,7 +425,8 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                     </DialogHeader>
 
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col min-h-0 flex-1">
+                            <div className="overflow-y-auto flex-1 space-y-4 py-4 pr-1">
                             <FormField
                                 control={form.control}
                                 name="supplierId"
@@ -708,7 +709,8 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                 )}
                             />
 
-                            <div className="flex justify-end gap-2 pt-4">
+                            </div>
+                            <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button type="button" variant="outline" onClick={() => setShowFormModal(false)} disabled={isSubmitting}>
                                     ยกเลิก
                                 </Button>

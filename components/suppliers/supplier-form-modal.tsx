@@ -158,7 +158,7 @@ export function SupplierFormModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-blue-100">
@@ -176,7 +176,8 @@ export function SupplierFormModal({
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col min-h-0 flex-1">
+                        <div className="overflow-y-auto flex-1 space-y-4 py-4 pr-1">
                         <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
@@ -341,7 +342,8 @@ export function SupplierFormModal({
                             />
                         )}
 
-                        <div className="flex justify-end gap-2 pt-4">
+                        </div>
+                        <div className="flex justify-end gap-2 pt-4 border-t">
                             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                                 ยกเลิก
                             </Button>
