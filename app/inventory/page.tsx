@@ -6,21 +6,20 @@ import {
   useStockItemsWithBalance,
   useWarehousesWithStock,
 } from '@/stores/inventory-store'
-import { Warehouse, StockItem, StockItemWithBalance, ItemType } from '@/types/inventory'
+import { Warehouse, StockItemWithBalance, ItemType } from '@/types/inventory'
+import { Item, Category, UnitOfMeasure, CreateItemInput, UpdateItemInput } from '@/types/item'
 import {
   WarehouseCard,
-  StockItemCard,
   InventoryDetailModal,
-  StockFormModal,
   InventoryTable,
   WarehouseDetailModal,
 } from '@/components/inventory'
+import { ItemFormModal } from '@/components/items'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatNumber } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import {
   Search,
   Warehouse as WarehouseIcon,
@@ -29,6 +28,7 @@ import {
   AlertTriangle,
   Clock,
 } from 'lucide-react'
+import { getAllItems, getCategories, getUnitsOfMeasure, createItem, updateItem } from '@/lib/api/items'
 
 export default function InventoryPage() {
   const {
@@ -43,19 +43,32 @@ export default function InventoryPage() {
   const warehouses = useWarehousesWithStock()
   const stockItems = useStockItemsWithBalance()
 
+  // Item master data for ItemFormModal
+  const [allItems, setAllItems] = useState<Item[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [uoms, setUoms] = useState<UnitOfMeasure[]>([])
+
   // Modal state
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null)
   const [selectedItem, setSelectedItem] = useState<StockItemWithBalance | null>(null)
   const [showWarehouseModal, setShowWarehouseModal] = useState(false)
   const [showItemModal, setShowItemModal] = useState(false)
   const [showFormModal, setShowFormModal] = useState(false)
-  const [editingItem, setEditingItem] = useState<StockItem | null>(null)
+  const [editingItem, setEditingItem] = useState<Item | null>(null)
 
   // Load data on mount
   useEffect(() => {
     fetchWarehouses()
     fetchStockItems()
     fetchStockBalances()
+    // Load item master data for the form
+    Promise.all([getAllItems(), getCategories(), getUnitsOfMeasure()]).then(
+      ([items, cats, units]) => {
+        setAllItems(items)
+        setCategories(cats)
+        setUoms(units)
+      }
+    )
   }, [fetchWarehouses, fetchStockItems, fetchStockBalances])
 
   // Handlers
@@ -69,8 +82,10 @@ export default function InventoryPage() {
     setShowItemModal(true)
   }
 
-  const handleEditItem = (item: StockItem) => {
-    setEditingItem(item)
+  const handleEditItem = (item: { id: string }) => {
+    // Find the full Item object by ID for ItemFormModal
+    const fullItem = allItems.find(i => i.id === item.id) || null
+    setEditingItem(fullItem)
     setShowItemModal(false)
     setShowFormModal(true)
   }
@@ -80,10 +95,17 @@ export default function InventoryPage() {
     setShowFormModal(true)
   }
 
-  const handleSaveItem = (item: StockItem) => {
-    // Refresh data after save
+  const handleSaveItem = async (data: CreateItemInput | UpdateItemInput, isNew: boolean) => {
+    if (isNew) {
+      await createItem(data as CreateItemInput)
+    } else if (editingItem) {
+      await updateItem(editingItem.id, data as UpdateItemInput)
+    }
+    // Refresh inventory data and item master
     fetchStockItems()
     fetchStockBalances()
+    const items = await getAllItems()
+    setAllItems(items)
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -379,7 +401,7 @@ export default function InventoryPage() {
         onClose={() => setShowWarehouseModal(false)}
       />
 
-      {/* Item Detail Modal - NEW */}
+      {/* Item Detail Modal */}
       <InventoryDetailModal
         item={selectedItem}
         isOpen={showItemModal}
@@ -387,9 +409,11 @@ export default function InventoryPage() {
         onEdit={handleEditItem}
       />
 
-      {/* Stock Form Modal - NEW */}
-      <StockFormModal
+      {/* Item Form Modal (unified with /items page) */}
+      <ItemFormModal
         item={editingItem}
+        categories={categories}
+        uoms={uoms}
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
         onSave={handleSaveItem}

@@ -191,6 +191,7 @@ export async function getStockItems(): Promise<StockItem[]> {
         .select(`
             *,
             category:category_id (id, name, type),
+            stock_uom:stock_uom_id (id, code),
             uom:base_uom_id (id, code)
         `)
         .order('name')
@@ -205,7 +206,7 @@ export async function getStockItems(): Promise<StockItem[]> {
         code: item.code,
         name: item.name,
         type: item.category?.type || 'RAW_MATERIAL',
-        uom: item.uom?.code || 'PC',
+        uom: item.stock_uom?.code || item.uom?.code || 'PC',
         defaultWarehouseId: '', // Need to find logic for this
         hasBatch: item.track_lot,
         hasExpiry: item.track_expiry,

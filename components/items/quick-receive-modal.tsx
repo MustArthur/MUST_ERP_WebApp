@@ -101,7 +101,7 @@ export function QuickReceiveModal({ item, items, uoms, isOpen, onClose, onSucces
             if (item) {
                 form.setValue('itemId', item.id)
                 form.setValue('unitCost', item.lastPurchaseCost || 0)
-                form.setValue('uomId', item.baseUomId)
+                form.setValue('uomId', item.stockUomId || item.baseUomId)
             } else {
                 form.reset()
             }
@@ -115,7 +115,7 @@ export function QuickReceiveModal({ item, items, uoms, isOpen, onClose, onSucces
         const selectedItem = items.find(i => i.id === selectedItemId)
         if (selectedItem) {
             form.setValue('unitCost', selectedItem.lastPurchaseCost || 0)
-            form.setValue('uomId', selectedItem.baseUomId)
+            form.setValue('uomId', selectedItem.stockUomId || selectedItem.baseUomId)
         }
     }, [selectedItemId, items, form])
 
