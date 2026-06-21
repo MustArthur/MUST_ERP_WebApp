@@ -60,7 +60,7 @@ export default function ProductionPlanningPage() {
   }
 
   const activeRecipes = recipes.filter(r => r.status === 'ACTIVE')
-  const totalBatches = batchPlan.reduce((s, p) => s + (p.batchCounts[period] ?? 0), 0)
+  const totalBatches = batchPlan.reduce((s, p) => s + (p.batchCounts?.[period] ?? 0), 0)
 
   const criticalCount = aggregated.filter(m => m.status === 'CRITICAL').length
   const lowCount = aggregated.filter(m => m.status === 'LOW').length
@@ -164,15 +164,15 @@ export default function ProductionPlanningPage() {
                             type="number"
                             min="0"
                             step="1"
-                            value={plan.batchCounts[period] || ''}
+                            value={plan.batchCounts?.[period] || ''}
                             placeholder="0"
                             className="text-center h-8 w-full"
                             onChange={e => setBatchCount(plan.recipeId, period, parseInt(e.target.value) || 0)}
                           />
                         </td>
                         <td className="px-4 py-2.5 text-right text-sm text-gray-700">
-                          {(plan.batchCounts[period] ?? 0) > 0
-                            ? `${(plan.outputQtyPerBatch * (plan.batchCounts[period] ?? 0)).toLocaleString('th-TH', { maximumFractionDigits: 2 })} ${plan.outputUom}`
+                          {(plan.batchCounts?.[period] ?? 0) > 0
+                            ? `${(plan.outputQtyPerBatch * (plan.batchCounts?.[period] ?? 0)).toLocaleString('th-TH', { maximumFractionDigits: 2 })} ${plan.outputUom}`
                             : '—'}
                         </td>
                       </tr>
