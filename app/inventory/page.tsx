@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/utils'
 import {
   Search,
   Warehouse as WarehouseIcon,
@@ -159,10 +158,6 @@ export default function InventoryPage() {
   // Summary stats
   const lowStockCount = stockItems.filter(i => i.isLowStock).length
   const expiringCount = stockItems.filter(i => i.isExpiringSoon).length
-  const totalValue = stockItems.reduce(
-    (sum, item) => sum + item.totalQty * item.costPerUnit,
-    0
-  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -205,18 +200,6 @@ export default function InventoryPage() {
               <div>
                 <p className="text-sm text-gray-500">รายการสินค้า</p>
                 <p className="text-xl font-semibold">{stockItems.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <WarehouseIcon className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">มูลค่ารวม</p>
-                <p className="text-xl font-semibold">{formatCurrency(totalValue)}</p>
               </div>
             </div>
           </div>

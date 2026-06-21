@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Warehouse, WarehouseStockItem } from '@/types/inventory'
 import { getWarehouseStock } from '@/lib/api/inventory'
-import { formatCurrency, formatNumber, formatDate } from '@/lib/utils'
+import { formatNumber, formatDate } from '@/lib/utils'
 import {
     Dialog,
     DialogContent,
@@ -24,7 +24,6 @@ import {
 import {
     Warehouse as WarehouseIcon,
     Package,
-    DollarSign,
     AlertTriangle,
     Clock,
     Thermometer,
@@ -77,8 +76,6 @@ export function WarehouseDetailModal({
 
     if (!warehouse) return null
 
-    // Calculate summary
-    const totalValue = stockItems.reduce((sum, item) => sum + item.totalValue, 0)
     const totalItems = stockItems.length
 
     // Count expiring items (within 7 days)
@@ -104,8 +101,6 @@ export function WarehouseDetailModal({
         lotNumber: string | null
         qty: number
         uomCode: string
-        unitCost: number
-        totalValue: number
         expDate: string | null
         status: string
         isExpiring: boolean
@@ -121,8 +116,6 @@ export function WarehouseDetailModal({
                 lotNumber: lot.lotNumber,
                 qty: lot.qty,
                 uomCode: item.uomCode,
-                unitCost: item.unitCost,
-                totalValue: lot.qty * item.unitCost,
                 expDate: lot.expDate,
                 status: lot.status,
                 isExpiring,
@@ -178,22 +171,13 @@ export function WarehouseDetailModal({
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                     <div className="bg-blue-50 rounded-lg p-3">
                         <div className="flex items-center gap-2 text-blue-600 mb-1">
                             <Package className="w-4 h-4" />
                             <span className="text-xs">รายการสินค้า</span>
                         </div>
                         <p className="text-xl font-semibold text-gray-900">{totalItems}</p>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-3">
-                        <div className="flex items-center gap-2 text-green-600 mb-1">
-                            <DollarSign className="w-4 h-4" />
-                            <span className="text-xs">มูลค่ารวม</span>
-                        </div>
-                        <p className="text-xl font-semibold text-gray-900">
-                            {formatCurrency(totalValue)}
-                        </p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center gap-2 text-gray-600 mb-1">
@@ -237,8 +221,6 @@ export function WarehouseDetailModal({
                                     <TableHead className="w-28">Lot/Batch</TableHead>
                                     <TableHead className="w-24 text-right">จำนวน</TableHead>
                                     <TableHead className="w-16 text-center">หน่วย</TableHead>
-                                    <TableHead className="w-24 text-right">ราคา/หน่วยสต๊อก</TableHead>
-                                    <TableHead className="w-28 text-right">มูลค่า</TableHead>
                                     <TableHead className="w-28 text-center">หมดอายุ</TableHead>
                                     <TableHead className="w-24 text-center">สถานะ</TableHead>
                                 </TableRow>
@@ -263,12 +245,6 @@ export function WarehouseDetailModal({
                                             <Badge variant="outline" className="font-mono">
                                                 {row.uomCode}
                                             </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {formatCurrency(row.unitCost)}
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium">
-                                            {formatCurrency(row.totalValue)}
                                         </TableCell>
                                         <TableCell className="text-center">
                                             {row.expDate ? (

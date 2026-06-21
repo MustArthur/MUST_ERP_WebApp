@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatNumber } from '@/lib/utils'
+import { formatNumber } from '@/lib/utils'
 import { Eye, Clock, AlertTriangle } from 'lucide-react'
 
 interface InventoryTableProps {
@@ -61,7 +61,6 @@ export function InventoryTable({ items, onView }: InventoryTableProps) {
                         <TableHead>ชื่อสินค้า</TableHead>
                         <TableHead>ประเภท</TableHead>
                         <TableHead className="text-right">คงเหลือ</TableHead>
-                        <TableHead className="text-right">มูลค่ารวม</TableHead>
                         <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -93,9 +92,6 @@ export function InventoryTable({ items, onView }: InventoryTableProps) {
                                     {formatNumber(item.totalQty)} {item.uom}
                                 </div>
                                 {item.isLowStock && <div className="text-xs text-red-500">ต่ำกว่า {item.minStock}</div>}
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                                {formatCurrency(item.totalQty * item.costPerUnit)}
                             </TableCell>
                             <TableCell>
                                 <Button

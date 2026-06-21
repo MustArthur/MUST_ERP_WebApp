@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatNumber } from '@/lib/utils'
+import { formatNumber } from '@/lib/utils'
 import {
   Warehouse as WarehouseIcon,
   Thermometer,
@@ -102,17 +102,11 @@ export function WarehouseCard({ warehouse, onView, onEdit }: WarehouseCardProps)
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="mb-3">
           <div className="bg-gray-50 rounded-lg p-2">
             <p className="text-xs text-gray-500">รายการสินค้า</p>
             <p className="text-lg font-semibold text-gray-900">
               {formatNumber(warehouse.stockCount)}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-2">
-            <p className="text-xs text-gray-500">มูลค่ารวม</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {formatCurrency(warehouse.totalValue)}
             </p>
           </div>
         </div>

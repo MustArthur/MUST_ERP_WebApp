@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { cn, formatDate, formatCurrency } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import {
   Package,
   Warehouse as WarehouseIcon,
@@ -53,8 +53,6 @@ export function InventoryDetailModal({
   const totalQty = itemBalances
     .filter(b => b.status === 'AVAILABLE')
     .reduce((sum, b) => sum + b.qty, 0)
-  const totalValue = totalQty * item.costPerUnit
-
   // Check stock level
   const isLowStock = item.minStock !== undefined && totalQty < item.minStock
   const stockPercentage = item.maxStock
@@ -132,7 +130,7 @@ export function InventoryDetailModal({
         </DialogHeader>
 
         {/* Info Bar */}
-        <div className="py-3 border-y grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+        <div className="py-3 border-y grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground text-xs">คงเหลือ</p>
             <p className={cn(
@@ -149,10 +147,6 @@ export function InventoryDetailModal({
           <div>
             <p className="text-muted-foreground text-xs">ขั้นสูง</p>
             <p className="font-medium">{item.maxStock?.toLocaleString() || '-'} {item.uom}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-xs">มูลค่ารวม</p>
-            <p className="font-medium">{formatCurrency(totalValue)}</p>
           </div>
           <div>
             <p className="text-muted-foreground text-xs">หมดอายุใกล้</p>
@@ -204,10 +198,6 @@ export function InventoryDetailModal({
                     <div className="flex justify-between">
                       <span className="text-gray-500">หน่วยนับ</span>
                       <span className="font-medium">{item.uom}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">ราคาต่อหน่วย</span>
-                      <span className="font-medium">{formatCurrency(item.costPerUnit)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">อายุสินค้า</span>
