@@ -10,7 +10,7 @@ interface ProductionPlanningState {
   period: PlanningPeriod
 
   initPlan: (recipes: Recipe[]) => void
-  setBatchCount: (recipeId: string, count: number) => void
+  setBatchCount: (recipeId: string, period: PlanningPeriod, count: number) => void
   calculate: (recipes: Recipe[], items: Item[]) => void
   setPeriod: (period: PlanningPeriod) => void
   reset: () => void
@@ -34,6 +34,8 @@ function periodMultiplier(period: PlanningPeriod): number {
   return 1
 }
 
+const EMPTY_BATCH_COUNTS: Record<PlanningPeriod, number> = { daily: 0, weekly: 0, monthly: 0 }
+
 export const useProductionPlanningStore = create<ProductionPlanningState>()(
   persist(
     (set, get) => ({
@@ -53,16 +55,18 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
             outputItem: r.outputItem,
             outputUom: r.outputUom,
             outputQtyPerBatch: r.outputQty,
-            batchCount: existing?.batchCount ?? 0,
+            batchCounts: existing?.batchCounts ?? { ...EMPTY_BATCH_COUNTS },
           }
         })
         set({ batchPlan: updated })
       },
 
-      setBatchCount: (recipeId: string, count: number) => {
+      setBatchCount: (recipeId: string, period: PlanningPeriod, count: number) => {
         set(state => ({
           batchPlan: state.batchPlan.map(p =>
-            p.recipeId === recipeId ? { ...p, batchCount: Math.max(0, count) } : p
+            p.recipeId === recipeId
+              ? { ...p, batchCounts: { ...p.batchCounts, [period]: Math.max(0, count) } }
+              : p
           ),
         }))
       },
@@ -73,7 +77,8 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
         const map = new Map<string, MapEntry>()
 
         for (const planItem of batchPlan) {
-          if (planItem.batchCount === 0) continue
+          const batchCount = planItem.batchCounts[period] ?? 0
+          if (batchCount === 0) continue
           const recipe = recipes.find(r => r.id === planItem.recipeId)
           if (!recipe) continue
 
@@ -81,7 +86,7 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
             if (!ing.itemId) continue
 
             const qtyWithScrap = ing.qty * (1 + ing.scrap / 100)
-            const totalForPeriodBase = qtyWithScrap * planItem.batchCount * mult
+            const totalForPeriodBase = qtyWithScrap * batchCount * mult
 
             if (!map.has(ing.itemId)) {
               const itemData = items.find(i => i.id === ing.itemId)
@@ -105,7 +110,7 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
           }
         }
 
-        const totalBatchesAll = batchPlan.reduce((sum, p) => sum + p.batchCount, 0)
+        const totalBatchesAll = batchPlan.reduce((sum, p) => sum + (p.batchCounts[period] ?? 0), 0)
 
         const aggregated: AggregatedMaterial[] = Array.from(map.values()).map(entry => {
           const totalQtyStock = entry.totalQtyBase / entry.convFactor
@@ -143,7 +148,10 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
       setPeriod: (period: PlanningPeriod) => set({ period }),
 
       reset: () => set(state => ({
-        batchPlan: state.batchPlan.map(p => ({ ...p, batchCount: 0 })),
+        batchPlan: state.batchPlan.map(p => ({
+          ...p,
+          batchCounts: { ...EMPTY_BATCH_COUNTS },
+        })),
         aggregated: [],
       })),
     }),

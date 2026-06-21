@@ -7,7 +7,7 @@ export interface BatchPlanItem {
   outputItem: string
   outputUom: string
   outputQtyPerBatch: number
-  batchCount: number
+  batchCounts: Record<PlanningPeriod, number>
 }
 
 export interface AggregatedMaterial {
