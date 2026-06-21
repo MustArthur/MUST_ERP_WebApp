@@ -93,7 +93,7 @@ export function ItemFormModal({
     // For dynamic labels based on selected UOMs
     const watchedBaseUomId = form.watch('baseUomId')
     const watchedStockUomId = form.watch('stockUomId')
-    const stockUomCode = uoms.find(u => u.id === watchedStockUomId)?.code || 'หน่วยสต๊อก'
+    const baseUomCode = uoms.find(u => u.id === watchedBaseUomId)?.code || 'หน่วยฐาน'
 
     // Populate form when editing
     useEffect(() => {
@@ -324,7 +324,7 @@ export function ItemFormModal({
                                 name="lastPurchaseCost"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>ราคา/{stockUomCode} (บาท)</FormLabel>
+                                        <FormLabel>ราคา/{baseUomCode} (บาท)</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"

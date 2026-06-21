@@ -137,9 +137,9 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
         throw error
     }
 
-    // Group by item and aggregate
-    // qty_on_hand is stored as-is (in the unit used during receiving, typically stock unit).
-    // We display it directly with the item's stock UOM label, consistent with the inventory list view.
+    // Group by item and aggregate.
+    // qty_on_hand may be stored in base unit (G) or stock unit (BAG) depending on when it was received.
+    // last_purchase_cost is always per base unit (confirmed by user) — multiply by convFactor for per-stock-unit price.
     const itemMap = new Map<string, WarehouseStockItem>()
 
     for (const row of data || []) {
@@ -149,14 +149,25 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
 
         if (!item) continue
 
-        const qty = row.qty_on_hand || 0
-        const stockUomCode = item.stock_uom?.code || item.base_uom?.code || uom?.code || 'PC'
-        const unitCost = item.last_purchase_cost || 0
+        const lotUomCode = uom?.code || ''
+        const baseUomCode = item.base_uom?.code || ''
+        const stockUomCode = item.stock_uom?.code || baseUomCode
+        const convFactor = Math.max(0.000001, item.stock_conversion_factor || 1)
+
+        // Convert qty to stock units only when the lot was received in base units
+        const lotIsInBaseUnit = convFactor > 1.0001
+            && baseUomCode
+            && stockUomCode !== baseUomCode
+            && lotUomCode === baseUomCode
+        const displayQty = lotIsInBaseUnit ? (row.qty_on_hand || 0) / convFactor : (row.qty_on_hand || 0)
+
+        // Price: last_purchase_cost is always per base unit → convert to per stock unit
+        const displayUnitCost = (item.last_purchase_cost || 0) * convFactor
 
         const lotData: WarehouseStockLot = {
             id: row.id,
             lotNumber: lot?.lot_number || null,
-            qty,
+            qty: displayQty,
             expDate: lot?.expiry_date || null,
             status: lot?.status || 'AVAILABLE'
         }
@@ -164,17 +175,17 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
         if (itemMap.has(item.id)) {
             const existing = itemMap.get(item.id)!
             existing.lots.push(lotData)
-            existing.totalQty += qty
+            existing.totalQty += displayQty
             existing.totalValue = existing.totalQty * existing.unitCost
         } else {
             itemMap.set(item.id, {
                 itemId: item.id,
                 itemCode: item.code,
                 itemName: item.name,
-                totalQty: qty,
-                uomCode: stockUomCode,
-                unitCost,
-                totalValue: qty * unitCost,
+                totalQty: displayQty,
+                uomCode: stockUomCode || lotUomCode || 'PC',
+                unitCost: displayUnitCost,
+                totalValue: displayQty * displayUnitCost,
                 lots: [lotData]
             })
         }
