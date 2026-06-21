@@ -237,7 +237,7 @@ export function WarehouseDetailModal({
                                     <TableHead className="w-28">Lot/Batch</TableHead>
                                     <TableHead className="w-24 text-right">จำนวน</TableHead>
                                     <TableHead className="w-16 text-center">หน่วย</TableHead>
-                                    <TableHead className="w-24 text-right">ราคา/หน่วย</TableHead>
+                                    <TableHead className="w-24 text-right">ราคา/หน่วยสต๊อก</TableHead>
                                     <TableHead className="w-28 text-right">มูลค่า</TableHead>
                                     <TableHead className="w-28 text-center">หมดอายุ</TableHead>
                                     <TableHead className="w-24 text-center">สถานะ</TableHead>
