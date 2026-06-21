@@ -125,7 +125,7 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
             item_id,
             qty_on_hand,
             lot_id,
-            items:item_id (id, code, name, last_purchase_cost),
+            items:item_id (id, code, name, last_purchase_cost, stock_conversion_factor, stock_uom:stock_uom_id(code), base_uom:base_uom_id(code)),
             lots:lot_id (id, lot_number, expiry_date, status),
             units_of_measure:uom_id (id, code, name)
         `)
@@ -155,22 +155,29 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
             status: lot?.status || 'AVAILABLE'       // From lots table
         }
 
+        // Convert qty and price to stock units
+        // qty_on_hand is in base unit → divide by convFactor for stock unit qty
+        // last_purchase_cost is per base unit → multiply by convFactor for per stock unit price
+        const convFactor = Math.max(0.000001, item.stock_conversion_factor || 1)
+        const qtyInStockUnit = (row.qty_on_hand || 0) / convFactor
+        const lotDataInStockUnit: WarehouseStockLot = { ...lotData, qty: qtyInStockUnit }
+
         if (itemMap.has(item.id)) {
             const existing = itemMap.get(item.id)!
-            existing.lots.push(lotData)
-            existing.totalQty += lotData.qty
+            existing.lots.push(lotDataInStockUnit)
+            existing.totalQty += qtyInStockUnit
             existing.totalValue = existing.totalQty * existing.unitCost
         } else {
-            const unitCost = item.last_purchase_cost || 0
+            const unitCostPerStock = (item.last_purchase_cost || 0) * convFactor
             itemMap.set(item.id, {
                 itemId: item.id,
                 itemCode: item.code,
                 itemName: item.name,
-                totalQty: lotData.qty,
-                uomCode: uom?.code || 'PC',
-                unitCost,
-                totalValue: lotData.qty * unitCost,
-                lots: [lotData]
+                totalQty: qtyInStockUnit,
+                uomCode: item.stock_uom?.code || item.base_uom?.code || uom?.code || 'PC',
+                unitCost: unitCostPerStock,
+                totalValue: qtyInStockUnit * unitCostPerStock,
+                lots: [lotDataInStockUnit]
             })
         }
     }

@@ -15,6 +15,8 @@ import {
   WarehouseDetailModal,
 } from '@/components/inventory'
 import { ItemFormModal } from '@/components/items'
+import { TransactionFormModal } from '@/components/transactions'
+import { TransactionType } from '@/types/inventory-transaction'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,6 +29,8 @@ import {
   Plus,
   AlertTriangle,
   Clock,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react'
 import { getAllItems, getCategories, getUnitsOfMeasure, createItem, updateItem } from '@/lib/api/items'
 
@@ -55,6 +59,8 @@ export default function InventoryPage() {
   const [showItemModal, setShowItemModal] = useState(false)
   const [showFormModal, setShowFormModal] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
+  const [showAdjustModal, setShowAdjustModal] = useState(false)
+  const [adjustType, setAdjustType] = useState<TransactionType>('ADJUST_IN')
 
   // Load data on mount
   useEffect(() => {
@@ -93,6 +99,17 @@ export default function InventoryPage() {
   const handleAddItem = () => {
     setEditingItem(null)
     setShowFormModal(true)
+  }
+
+  const handleAdjust = (type: TransactionType) => {
+    setAdjustType(type)
+    setShowAdjustModal(true)
+  }
+
+  const handleAdjustClose = () => {
+    setShowAdjustModal(false)
+    fetchStockItems()
+    fetchStockBalances()
   }
 
   const handleSaveItem = async (data: CreateItemInput | UpdateItemInput, isNew: boolean) => {
@@ -159,10 +176,20 @@ export default function InventoryPage() {
                 <p className="text-sm text-gray-500">จัดการวัตถุดิบและสินค้าสำเร็จรูป</p>
               </div>
             </div>
-            <Button onClick={handleAddItem}>
-              <Plus className="w-5 h-5 mr-2" />
-              เพิ่มสินค้าใหม่
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => handleAdjust('ADJUST_IN')}>
+                <TrendingUp className="w-4 h-4 mr-2 text-emerald-600" />
+                ปรับเพิ่ม
+              </Button>
+              <Button variant="outline" onClick={() => handleAdjust('ADJUST_OUT')}>
+                <TrendingDown className="w-4 h-4 mr-2 text-orange-500" />
+                ปรับลด
+              </Button>
+              <Button onClick={handleAddItem}>
+                <Plus className="w-5 h-5 mr-2" />
+                เพิ่มสินค้าใหม่
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -407,6 +434,13 @@ export default function InventoryPage() {
         isOpen={showItemModal}
         onClose={() => setShowItemModal(false)}
         onEdit={handleEditItem}
+      />
+
+      {/* Stock Adjustment Modal */}
+      <TransactionFormModal
+        isOpen={showAdjustModal}
+        onClose={handleAdjustClose}
+        defaultType={adjustType}
       />
 
       {/* Item Form Modal (unified with /items page) */}
