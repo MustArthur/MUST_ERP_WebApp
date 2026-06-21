@@ -138,46 +138,44 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
     }
 
     // Group by item and aggregate
+    // qty_on_hand is stored as-is (in the unit used during receiving, typically stock unit).
+    // We display it directly with the item's stock UOM label, consistent with the inventory list view.
     const itemMap = new Map<string, WarehouseStockItem>()
 
     for (const row of data || []) {
         const item = row.items as any
-        const lot = row.lots as any  // Get lot data from joined lots table
+        const lot = row.lots as any
         const uom = row.units_of_measure as any
 
         if (!item) continue
 
+        const qty = row.qty_on_hand || 0
+        const stockUomCode = item.stock_uom?.code || item.base_uom?.code || uom?.code || 'PC'
+        const unitCost = item.last_purchase_cost || 0
+
         const lotData: WarehouseStockLot = {
             id: row.id,
-            lotNumber: lot?.lot_number || null,      // From lots table
-            qty: row.qty_on_hand || 0,
-            expDate: lot?.expiry_date || null,       // From lots table (expiry_date not exp_date)
-            status: lot?.status || 'AVAILABLE'       // From lots table
+            lotNumber: lot?.lot_number || null,
+            qty,
+            expDate: lot?.expiry_date || null,
+            status: lot?.status || 'AVAILABLE'
         }
-
-        // Convert qty and price to stock units
-        // qty_on_hand is in base unit → divide by convFactor for stock unit qty
-        // last_purchase_cost is per base unit → multiply by convFactor for per stock unit price
-        const convFactor = Math.max(0.000001, item.stock_conversion_factor || 1)
-        const qtyInStockUnit = (row.qty_on_hand || 0) / convFactor
-        const lotDataInStockUnit: WarehouseStockLot = { ...lotData, qty: qtyInStockUnit }
 
         if (itemMap.has(item.id)) {
             const existing = itemMap.get(item.id)!
-            existing.lots.push(lotDataInStockUnit)
-            existing.totalQty += qtyInStockUnit
+            existing.lots.push(lotData)
+            existing.totalQty += qty
             existing.totalValue = existing.totalQty * existing.unitCost
         } else {
-            const unitCostPerStock = (item.last_purchase_cost || 0) * convFactor
             itemMap.set(item.id, {
                 itemId: item.id,
                 itemCode: item.code,
                 itemName: item.name,
-                totalQty: qtyInStockUnit,
-                uomCode: item.stock_uom?.code || item.base_uom?.code || uom?.code || 'PC',
-                unitCost: unitCostPerStock,
-                totalValue: qtyInStockUnit * unitCostPerStock,
-                lots: [lotDataInStockUnit]
+                totalQty: qty,
+                uomCode: stockUomCode,
+                unitCost,
+                totalValue: qty * unitCost,
+                lots: [lotData]
             })
         }
     }
