@@ -87,7 +87,7 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
             if (!ing.itemId) continue
 
             const qtyWithScrap = ing.qty * (1 + ing.scrap / 100)
-            const totalForPeriodBase = qtyWithScrap * batchCount * mult
+            const totalForPeriodBase = qtyWithScrap * batchCount
 
             if (!map.has(ing.itemId)) {
               const itemData = items.find(i => i.id === ing.itemId)
