@@ -117,7 +117,7 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
         const aggregated: AggregatedMaterial[] = Array.from(map.values()).map(entry => {
           const totalQtyStock = entry.totalQtyBase / entry.convFactor
           const weeklyUsageStock = totalQtyStock / mult
-          const safetyStockNeeded = weeklyUsageStock * entry.leadTimeWeeks
+          const safetyStockNeeded = Math.ceil(weeklyUsageStock * entry.leadTimeWeeks)
           // Use only batches from recipes that actually use this item (not all planned batches)
           const usagePerBatch = entry.totalBatchCount > 0 ? totalQtyStock / entry.totalBatchCount : 0
           const coverageBatches = usagePerBatch > 0 ? Math.floor(entry.currentStock / usagePerBatch) : 999999

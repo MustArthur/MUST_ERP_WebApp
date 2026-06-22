@@ -1,15 +1,20 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useRecipeStore } from '@/stores/recipe-store'
 import { useItemsStore } from '@/stores/items-store'
 import { useProductionPlanningStore } from '@/stores/production-planning-store'
 import { StockCheckSheet } from '@/components/production-planning/stock-check-sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { CalendarDays, Printer, RotateCcw, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { CalendarDays, Printer, RotateCcw, AlertTriangle, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
 import { PlanningPeriod } from '@/types/production-planning'
 import { cn } from '@/lib/utils'
+import { updateItem } from '@/lib/api/items'
 
 const PERIODS: { value: PlanningPeriod; label: string }[] = [
   { value: 'daily', label: 'รายวัน' },
@@ -39,6 +44,10 @@ export default function ProductionPlanningPage() {
 
   const isLoading = recipesLoading || itemsLoading
 
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [showSyncDialog, setShowSyncDialog] = useState(false)
+  const [syncResult, setSyncResult] = useState<{ success: number; error: number } | null>(null)
+
   useEffect(() => {
     fetchRecipes()
     fetchItems()
@@ -53,6 +62,22 @@ export default function ProductionPlanningPage() {
   const handleCalculate = useCallback(() => {
     calculate(recipes, items)
   }, [calculate, recipes, items])
+
+  const handleSyncSafetyStock = async () => {
+    setIsSyncing(true)
+    let success = 0, error = 0
+    for (const m of aggregated) {
+      try {
+        await updateItem(m.itemId, { safetyStock: m.safetyStockNeeded })
+        success++
+      } catch {
+        error++
+      }
+    }
+    setIsSyncing(false)
+    setShowSyncDialog(false)
+    setSyncResult({ success, error })
+  }
 
   const handlePrint = () => {
     window.print()
@@ -90,6 +115,12 @@ export default function ProductionPlanningPage() {
                   คำนวณวัตถุดิบ
                 </Button>
                 {aggregated.length > 0 && (
+                  <Button variant="outline" onClick={() => setShowSyncDialog(true)}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    บันทึก Safety Stock
+                  </Button>
+                )}
+                {aggregated.length > 0 && (
                   <Button variant="outline" onClick={handlePrint}>
                     <Printer className="w-4 h-4 mr-2" />
                     พิมพ์ใบเช็ค Stock
@@ -99,6 +130,16 @@ export default function ProductionPlanningPage() {
             </div>
           </div>
         </header>
+
+        {syncResult && (
+          <div className="bg-green-50 border-b border-green-200 px-4 py-2 text-sm text-green-700 flex items-center justify-between">
+            <span>
+              บันทึก Safety Stock สำเร็จ {syncResult.success} รายการ
+              {syncResult.error > 0 && ` (ล้มเหลว ${syncResult.error} รายการ)`}
+            </span>
+            <button onClick={() => setSyncResult(null)} className="text-green-500 hover:text-green-700 ml-4">✕</button>
+          </div>
+        )}
 
         <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
           {/* Period selector */}
@@ -295,6 +336,48 @@ export default function ProductionPlanningPage() {
 
       {/* Print-only stock check sheet */}
       <StockCheckSheet materials={aggregated} period={period} />
+
+      <AlertDialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>บันทึก Safety Stock ลงระบบ</AlertDialogTitle>
+            <AlertDialogDescription>
+              ระบบจะอัปเดต Safety Stock ของ {aggregated.length} รายการ
+              ตามค่าที่คำนวณจากรอบ{PERIODS.find(p => p.value === period)?.label}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-60 overflow-auto border rounded text-sm">
+            <table className="w-full">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600">รหัส</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600">ชื่อวัตถุดิบ</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-600">Safety Stock ใหม่</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-600">หน่วย</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {aggregated.map(m => (
+                  <tr key={m.itemId}>
+                    <td className="px-3 py-1.5 font-mono text-blue-600">{m.itemCode}</td>
+                    <td className="px-3 py-1.5 text-gray-800">{m.itemName}</td>
+                    <td className="px-3 py-1.5 text-right font-medium text-gray-900">
+                      {m.safetyStockNeeded.toLocaleString('th-TH', { maximumFractionDigits: 3 })}
+                    </td>
+                    <td className="px-3 py-1.5 text-center text-gray-500">{m.uom}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSyncSafetyStock} disabled={isSyncing}>
+              {isSyncing ? 'กำลังบันทึก...' : `ยืนยัน (${aggregated.length} รายการ)`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
