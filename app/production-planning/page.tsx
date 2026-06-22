@@ -7,7 +7,6 @@ import { useProductionPlanningStore } from '@/stores/production-planning-store'
 import { StockCheckSheet } from '@/components/production-planning/stock-check-sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { CalendarDays, Printer, RotateCcw, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react'
 import { PlanningPeriod } from '@/types/production-planning'
 import { cn } from '@/lib/utils'
@@ -254,8 +253,21 @@ export default function ProductionPlanningPage() {
                             {m.safetyStockNeeded.toLocaleString('th-TH', { maximumFractionDigits: 2 })}
                           </td>
                           <td className="px-4 py-2.5 text-sm text-center text-gray-600">{m.leadTimeWeeks}</td>
-                          <td className="px-4 py-2.5 text-sm text-center font-medium text-gray-800">
-                            {m.coverageBatches >= 999 ? '∞' : m.coverageBatches}
+                          <td className="px-4 py-2.5 text-center">
+                            <span className={cn(
+                              'inline-block text-sm font-semibold px-2 py-0.5 rounded',
+                              m.coverageBatches === 0
+                                ? 'text-red-700 bg-red-100'
+                                : totalBatches > 0 && m.coverageBatches < totalBatches
+                                ? 'text-yellow-700 bg-yellow-100'
+                                : totalBatches > 0 && m.coverageBatches >= totalBatches
+                                ? 'text-green-700 bg-green-100'
+                                : 'text-gray-700 bg-gray-100'
+                            )}>
+                              {m.coverageBatches >= 999999
+                                ? '∞'
+                                : m.coverageBatches.toLocaleString('th-TH')}
+                            </span>
                           </td>
                           <td className="px-4 py-2.5 text-center">
                             <span className={cn('inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full', cfg.className)}>

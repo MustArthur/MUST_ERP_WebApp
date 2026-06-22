@@ -22,6 +22,7 @@ interface MapEntry {
   itemCode: string
   itemName: string
   totalQtyBase: number
+  totalBatchCount: number   // batches from recipes that actually use this item
   convFactor: number
   stockUom: string
   currentStock: number
@@ -99,6 +100,7 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
                 itemCode: ing.code,
                 itemName: ing.item,
                 totalQtyBase: 0,
+                totalBatchCount: 0,
                 convFactor,
                 stockUom,
                 currentStock: itemData?.stockQty ?? 0,
@@ -106,18 +108,19 @@ export const useProductionPlanningStore = create<ProductionPlanningState>()(
               })
             }
 
-            map.get(ing.itemId)!.totalQtyBase += totalForPeriodBase
+            const entry = map.get(ing.itemId)!
+            entry.totalQtyBase += totalForPeriodBase
+            entry.totalBatchCount += batchCount
           }
         }
-
-        const totalBatchesAll = batchPlan.reduce((sum, p) => sum + (p.batchCounts[period] ?? 0), 0)
 
         const aggregated: AggregatedMaterial[] = Array.from(map.values()).map(entry => {
           const totalQtyStock = entry.totalQtyBase / entry.convFactor
           const weeklyUsageStock = totalQtyStock / mult
           const safetyStockNeeded = weeklyUsageStock * entry.leadTimeWeeks
-          const usagePerBatch = totalBatchesAll > 0 ? weeklyUsageStock / totalBatchesAll : 0
-          const coverageBatches = usagePerBatch > 0 ? Math.floor(entry.currentStock / usagePerBatch) : 999
+          // Use only batches from recipes that actually use this item (not all planned batches)
+          const usagePerBatch = entry.totalBatchCount > 0 ? totalQtyStock / entry.totalBatchCount : 0
+          const coverageBatches = usagePerBatch > 0 ? Math.floor(entry.currentStock / usagePerBatch) : 999999
 
           let status: 'OK' | 'LOW' | 'CRITICAL' = 'OK'
           if (entry.currentStock < safetyStockNeeded) status = 'CRITICAL'
