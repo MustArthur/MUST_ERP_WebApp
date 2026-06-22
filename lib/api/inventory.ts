@@ -152,17 +152,10 @@ export async function getWarehouseStock(warehouseId: string): Promise<WarehouseS
         const lotUomCode = uom?.code || ''
         const baseUomCode = item.base_uom?.code || ''
         const stockUomCode = item.stock_uom?.code || baseUomCode
-        const convFactor = Math.max(0.000001, item.stock_conversion_factor || 1)
 
-        // Convert qty to stock units only when the lot was received in base units
-        const lotIsInBaseUnit = convFactor > 1.0001
-            && baseUomCode
-            && stockUomCode !== baseUomCode
-            && lotUomCode === baseUomCode
-        const displayQty = lotIsInBaseUnit ? (row.qty_on_hand || 0) / convFactor : (row.qty_on_hand || 0)
-
-        // Price: last_purchase_cost is always per base unit → convert to per stock unit
-        const displayUnitCost = (item.last_purchase_cost || 0) * convFactor
+        // Use raw qty_on_hand as-is (same as getAllItems) to stay consistent across pages
+        const displayQty = row.qty_on_hand || 0
+        const displayUnitCost = item.last_purchase_cost || 0
 
         const lotData: WarehouseStockLot = {
             id: row.id,
