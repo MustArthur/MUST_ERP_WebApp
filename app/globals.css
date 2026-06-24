@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@media print {
+  @page { margin: 15mm; size: A4; }
+}
+
 @layer base {
   :root {
     /* MUST ERP brand: deep terracotta/rust — oklch(0.46 0.14 33) ≈ hsl(17,58%,35%) */

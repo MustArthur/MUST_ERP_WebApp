@@ -21,14 +21,6 @@ export function StockCheckSheet({ materials, period, printDate }: StockCheckShee
 
   return (
     <div className="print-sheet hidden print:block font-sans text-sm text-gray-900">
-      <style>{`
-        @media print {
-          .print-sheet { display: block !important; }
-          body > *:not(.print-sheet) { display: none !important; }
-          @page { margin: 15mm; size: A4; }
-        }
-      `}</style>
-
       {/* Header */}
       <div className="mb-4 text-center">
         <h1 className="text-xl font-bold">ใบตรวจเช็ค Stock วัตถุดิบ</h1>
