@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Item as ItemType, UnitOfMeasure, Category, UpdateItemInput } from '@/types/item'
 import { getAllItems, updateItem, getCategories, getUnitsOfMeasure } from '@/lib/api/items'
-import { ItemFormModal, ItemSupplierSection } from '@/components/items'
+import { ItemFormModal, ItemSupplierSection, ItemUsedInRecipesSection } from '@/components/items'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
@@ -161,6 +161,9 @@ export default function ItemDetailPage() {
 
                 {/* Supplier Section */}
                 <ItemSupplierSection item={item} />
+
+                {/* Used In Recipes Section */}
+                <ItemUsedInRecipesSection item={item} />
             </main>
 
             {/* Edit Modal */}

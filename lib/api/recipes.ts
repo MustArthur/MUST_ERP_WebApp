@@ -576,6 +576,72 @@ export async function deleteRecipe(id: string): Promise<void> {
 }
 
 // ==========================================
+// Item Usage Lookup
+// ==========================================
+
+export interface RecipeUsage {
+    recipeId: string
+    recipeCode: string
+    recipeName: string
+    qtyPerBatch: number   // base UOM ของวัตถุดิบ
+    uom: string             // UOM code ของ ingredient line
+    scrapPercent: number
+}
+
+/**
+ * Get ACTIVE recipes that use a given item as an ingredient,
+ * with the per-batch quantity used in that recipe.
+ */
+export async function getActiveRecipeUsagesByItemId(itemId: string): Promise<RecipeUsage[]> {
+    const { data: lines, error: linesError } = await supabase
+        .from('recipe_lines')
+        .select('recipe_id, qty_per_batch, uom_id, scrap_percent')
+        .eq('item_id', itemId)
+
+    if (linesError) {
+        console.error('Error fetching recipe lines for item:', linesError)
+        throw linesError
+    }
+    if (!lines || lines.length === 0) return []
+
+    const recipeIds = Array.from(new Set(lines.map(l => l.recipe_id)))
+    const { data: recipes, error: recipesError } = await supabase
+        .from('recipes')
+        .select('id, code, name')
+        .in('id', recipeIds)
+        .eq('status', 'ACTIVE')
+
+    if (recipesError) {
+        console.error('Error fetching recipes for item usage:', recipesError)
+        throw recipesError
+    }
+    if (!recipes || recipes.length === 0) return []
+
+    const uomIds = Array.from(new Set(lines.map(l => l.uom_id).filter(Boolean)))
+    const { data: uoms } = await supabase
+        .from('units_of_measure')
+        .select('id, code')
+        .in('id', uomIds)
+
+    const uomMap = new Map((uoms || []).map(u => [u.id, u.code]))
+    const recipeMap = new Map(recipes.map(r => [r.id, r]))
+
+    return lines
+        .filter(l => recipeMap.has(l.recipe_id))
+        .map(l => {
+            const r = recipeMap.get(l.recipe_id)!
+            return {
+                recipeId: r.id,
+                recipeCode: r.code,
+                recipeName: r.name,
+                qtyPerBatch: l.qty_per_batch || 0,
+                uom: uomMap.get(l.uom_id) || '',
+                scrapPercent: l.scrap_percent || 0,
+            }
+        })
+}
+
+// ==========================================
 // Helper Functions
 // ==========================================
 
