@@ -152,6 +152,22 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
       const newReceipt = await ReceivingService.createReceipt(input)
       const { receipts } = get()
       set({ receipts: [newReceipt, ...receipts], isLoading: false })
+
+      // No items require QC → auto-submit so it lands as COMPLETED immediately,
+      // skipping DRAFT + manual "ส่งตรวจ QC". Items requiring QC keep the
+      // existing DRAFT → submit → PENDING_QC → COMPLETED flow untouched.
+      if (newReceipt.qcStatus === 'NOT_REQUIRED') {
+        try {
+          return await get().submitReceipt(newReceipt.id)
+        } catch (submitError) {
+          // Receipt row already exists (still DRAFT) — don't surface this as a
+          // "create failed" error, or the form stays open and the user could
+          // create a duplicate receipt by retrying.
+          console.error('Auto-submit after create failed, receipt left as DRAFT for retry:', submitError)
+          return newReceipt
+        }
+      }
+
       return newReceipt
     } catch (error) {
       console.error('Failed to create receipt:', error)
@@ -221,10 +237,9 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
         // Refresh quality store so quality page shows new inspections
         useQualityStore.getState().fetchInspections()
       } else {
-        // No items requiring QC → set status to COMPLETED and update stock
-        await ReceivingService.updateStatus(id, 'COMPLETED', 'NOT_REQUIRED')
-
-        // Update stock for all items (no QC required means all items go to stock)
+        // No items requiring QC → update stock first, then mark COMPLETED.
+        // Stock is received before the status flips so a failure here leaves
+        // the receipt retryable as DRAFT instead of a broken COMPLETED record.
         await receiveStock({
           receiptId: receipt.id,
           receiptCode: receipt.code,
@@ -239,6 +254,8 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
             uomId: item.uomId
           }))
         })
+
+        await ReceivingService.updateStatus(id, 'COMPLETED', 'NOT_REQUIRED')
       }
 
       // Fetch updated receipt
