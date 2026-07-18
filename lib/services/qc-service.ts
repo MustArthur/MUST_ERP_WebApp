@@ -318,6 +318,29 @@ export class QCService {
         }
     }
 
+    /**
+     * Cancel ALL inspections associated with a source document, regardless of status.
+     * Used when the source document itself is being deleted (not just cancelled),
+     * so no inspection is left pointing at a document that no longer exists.
+     */
+    static async cancelAllInspectionsBySource(sourceDocType: string, sourceDocId: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('qc_inspections')
+            .update({
+                status: 'CANCELLED',
+                result_remarks: 'ยกเลิกเนื่องจากใบรับวัตถุดิบถูกลบออกจากระบบ',
+                updated_at: new Date().toISOString()
+            })
+            .eq('source_doc_type', sourceDocType)
+            .eq('source_doc_id', sourceDocId)
+            .neq('status', 'CANCELLED')
+
+        if (error) {
+            console.error('Failed to cancel all inspections:', error)
+            throw error
+        }
+    }
+
     static async createInspection(input: CreateQCInspectionInput): Promise<QCInspection> {
         const template = input.templateId ? await this.getTemplateById(input.templateId) : null
 

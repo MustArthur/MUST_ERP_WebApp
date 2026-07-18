@@ -50,6 +50,7 @@ import {
   AlertTriangle,
   Filter,
   CalendarDays,
+  Trash2,
 } from 'lucide-react'
 
 export default function ReceivingPage() {
@@ -64,6 +65,7 @@ export default function ReceivingPage() {
     updateReceipt,
     submitReceipt,
     completeReceipt,
+    bulkDeleteReceipts,
     setReceiptFilters,
   } = useReceivingStore()
 
@@ -82,6 +84,11 @@ export default function ReceivingPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showFixQCConfirm, setShowFixQCConfirm] = useState(false)
   const [receiptToAction, setReceiptToAction] = useState<PurchaseReceipt | null>(null)
+
+  // Bulk selection / delete
+  const [selectedReceiptIds, setSelectedReceiptIds] = useState<Set<string>>(new Set())
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   // Load data on mount
   useEffect(() => {
@@ -211,18 +218,65 @@ export default function ReceivingPage() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReceiptFilters({ search: e.target.value })
+    setSelectedReceiptIds(new Set())
   }
 
   const handleStatusFilter = (status: ReceiptStatus | 'all') => {
     setReceiptFilters({ status })
+    setSelectedReceiptIds(new Set())
   }
 
   const handleQCStatusFilter = (qcStatus: QCStatusSummary | 'all') => {
     setReceiptFilters({ qcStatus })
+    setSelectedReceiptIds(new Set())
   }
 
   const handleSupplierFilter = (supplierId: string | 'all') => {
     setReceiptFilters({ supplierId })
+    setSelectedReceiptIds(new Set())
+  }
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedReceiptIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const handleToggleSelectAll = () => {
+    setSelectedReceiptIds(prev => {
+      const allSelected = filteredReceipts.length > 0 && filteredReceipts.every(r => prev.has(r.id))
+      if (allSelected) return new Set()
+      return new Set(filteredReceipts.map(r => r.id))
+    })
+  }
+
+  const handleBulkDelete = () => {
+    setShowBulkDeleteConfirm(true)
+  }
+
+  const confirmBulkDelete = async () => {
+    setIsBulkDeleting(true)
+    try {
+      const { succeeded, failed } = await bulkDeleteReceipts(Array.from(selectedReceiptIds))
+      if (succeeded.length > 0) {
+        toast.success(`ลบใบรับสำเร็จ ${succeeded.length} รายการ`)
+      }
+      if (failed.length > 0) {
+        toast.error(`ลบไม่สำเร็จ ${failed.length} รายการ`)
+      }
+      setSelectedReceiptIds(new Set())
+      setShowBulkDeleteConfirm(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถลบใบรับได้')
+    } finally {
+      setIsBulkDeleting(false)
+    }
   }
 
   // Filter receipts
@@ -449,6 +503,28 @@ export default function ReceivingPage() {
           </Badge>
         </div>
 
+        {/* Bulk Action Toolbar */}
+        {selectedReceiptIds.size > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+            <span className="text-sm text-blue-800 font-medium">
+              เลือกแล้ว {selectedReceiptIds.size} รายการ
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedReceiptIds(new Set())}>
+                ยกเลิกการเลือก
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                ลบที่เลือก ({selectedReceiptIds.size})
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Receipt Table */}
         {isLoading ? (
           <div className="bg-white rounded-xl shadow-sm border p-8">
@@ -478,6 +554,9 @@ export default function ReceivingPage() {
             receipts={filteredReceipts}
             suppliers={suppliers}
             onView={handleViewReceipt}
+            selectedIds={selectedReceiptIds}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
           />
         )}
       </main>
@@ -587,6 +666,33 @@ export default function ReceivingPage() {
               className="bg-orange-600 hover:bg-orange-700"
             >
               ยืนยันแก้ไข
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบใบรับ</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการลบใบรับที่เลือกไว้ <strong>{selectedReceiptIds.size}</strong> รายการหรือไม่?
+              <br /><br />
+              <span className="text-red-600">
+                การลบไม่สามารถย้อนกลับได้ หากใบรับใดเสร็จสิ้นและเพิ่มสต็อกไปแล้ว
+                ระบบจะหักคืนสต็อกให้อัตโนมัติ และใบตรวจ QC ที่เกี่ยวข้องจะถูกยกเลิกไปด้วย
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isBulkDeleting ? 'กำลังลบ...' : 'ยืนยันลบ'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

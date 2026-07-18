@@ -382,6 +382,29 @@ export async function getStockBalance(itemId: string, warehouseId: string, locat
 }
 
 /**
+ * Get transactions still affecting stock for a given source document
+ * (excludes ones already voided via `is_posted = false`).
+ */
+export async function getActiveTransactionsByReference(
+    referenceType: string,
+    referenceId: string
+): Promise<{ id: string; is_posted: boolean | null }[]> {
+    const { data, error } = await supabase
+        .from('inventory_transactions')
+        .select('id, is_posted')
+        .eq('reference_type', referenceType)
+        .eq('reference_id', referenceId)
+
+    if (error) {
+        console.error('Error fetching transactions by reference:', error)
+        return []
+    }
+
+    // is_posted defaults to true; only reverse ones not already voided
+    return (data || []).filter(t => t.is_posted !== false)
+}
+
+/**
  * Void a transaction and create reverse transaction to revert stock
  */
 export async function voidTransaction(transactionId: string): Promise<InventoryTransaction | null> {

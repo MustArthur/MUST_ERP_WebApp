@@ -3,6 +3,7 @@
 import { PurchaseReceipt, ReceiptStatus, QCStatusSummary } from '@/types/receiving'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import {
     Eye,
@@ -17,6 +18,9 @@ interface ReceiptTableProps {
     receipts: PurchaseReceipt[]
     suppliers: { id: string; name: string }[]
     onView: (receipt: PurchaseReceipt) => void
+    selectedIds: Set<string>
+    onToggleSelect: (id: string) => void
+    onToggleSelectAll: () => void
 }
 
 const getStatusBadge = (status: ReceiptStatus) => {
@@ -51,10 +55,12 @@ const getQCStatusBadge = (qcStatus: QCStatusSummary) => {
     }
 }
 
-export function ReceiptTable({ receipts, suppliers, onView }: ReceiptTableProps) {
+export function ReceiptTable({ receipts, suppliers, onView, selectedIds, onToggleSelect, onToggleSelectAll }: ReceiptTableProps) {
     const getSupplierName = (supplierId: string) => {
         return suppliers.find(s => s.id === supplierId)?.name || supplierId
     }
+
+    const allSelected = receipts.length > 0 && receipts.every(r => selectedIds.has(r.id))
 
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -62,6 +68,13 @@ export function ReceiptTable({ receipts, suppliers, onView }: ReceiptTableProps)
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b">
                         <tr>
+                            <th className="px-4 py-3 text-center w-10">
+                                <Checkbox
+                                    checked={allSelected}
+                                    onCheckedChange={() => onToggleSelectAll()}
+                                    aria-label="เลือกทั้งหมด"
+                                />
+                            </th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">เลขที่ใบรับ</th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">วันที่</th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Supplier</th>
@@ -80,6 +93,13 @@ export function ReceiptTable({ receipts, suppliers, onView }: ReceiptTableProps)
                                 className="hover:bg-gray-50 transition-colors cursor-pointer"
                                 onClick={() => onView(receipt)}
                             >
+                                <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox
+                                        checked={selectedIds.has(receipt.id)}
+                                        onCheckedChange={() => onToggleSelect(receipt.id)}
+                                        aria-label={`เลือก ${receipt.code}`}
+                                    />
+                                </td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-2">
                                         <FileText className="w-4 h-4 text-blue-500" />

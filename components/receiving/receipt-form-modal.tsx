@@ -266,9 +266,10 @@ export function ReceiptFormModal({
     return item?.name || itemId
   }
 
-  // Check if item requires QC (all raw materials require QC by default)
+  // Check if item actually requires QC per its item-master flag
   const itemRequiresQC = (itemId: string): boolean => {
-    return rawMaterials.some(i => i.id === itemId)
+    const item = rawMaterials.find(i => i.id === itemId)
+    return item?.requires_qc ?? false
   }
 
   return (

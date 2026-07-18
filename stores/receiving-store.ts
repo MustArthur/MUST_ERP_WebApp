@@ -21,6 +21,7 @@ import { ReceivingService } from '@/lib/services/receiving-service'
 import { QCService } from '@/lib/services/qc-service'
 import { createClient } from '@/lib/supabase/client'
 import { receiveStock } from '@/lib/api/inventory'
+import { voidTransaction, getActiveTransactionsByReference } from '@/lib/api/inventory-transactions'
 
 const supabase = createClient()
 
@@ -53,6 +54,7 @@ interface ReceivingState {
   completeReceipt: (id: string) => Promise<PurchaseReceipt>
   cancelReceipt: (id: string) => Promise<void>
   fixQCStatusForCancelledReceipt: (id: string) => Promise<void>
+  bulkDeleteReceipts: (ids: string[]) => Promise<{ succeeded: string[]; failed: string[] }>
 
   // QC Integration
   updateItemQCStatus: (receiptId: string, itemId: string, status: 'PASSED' | 'FAILED', qcInspectionId?: string) => Promise<void>
@@ -384,6 +386,45 @@ export const useReceivingStore = create<ReceivingState>((set, get) => ({
       set({ error: 'ไม่สามารถแก้ไขสถานะ QC ได้', isLoading: false })
       throw error
     }
+  },
+
+  bulkDeleteReceipts: async (ids: string[]) => {
+    set({ isLoading: true, error: null })
+    const succeeded: string[] = []
+    const failed: string[] = []
+
+    for (const id of ids) {
+      try {
+        // 1. Reverse any stock this receipt added (skip transactions already voided)
+        const transactions = await getActiveTransactionsByReference('PURCHASE_RECEIPT', id)
+        for (const tx of transactions) {
+          await voidTransaction(tx.id)
+        }
+
+        // 2. Cancel any linked QC inspections regardless of status
+        await QCService.cancelAllInspectionsBySource('PURCHASE_RECEIPT', id)
+
+        // 3. Delete the receipt itself (cascades to purchase_receipt_items)
+        await ReceivingService.deleteReceipt(id)
+
+        succeeded.push(id)
+      } catch (err) {
+        console.error(`Failed to delete receipt ${id}:`, err)
+        failed.push(id)
+      }
+    }
+
+    const { receipts } = get()
+    set({
+      receipts: receipts.filter(r => !succeeded.includes(r.id)),
+      isLoading: false,
+      error: failed.length > 0 ? `ลบไม่สำเร็จ ${failed.length} รายการ` : null
+    })
+
+    // Refresh Quality Store to reflect cancelled inspections
+    useQualityStore.getState().fetchInspections()
+
+    return { succeeded, failed }
   },
 
   // ==========================================

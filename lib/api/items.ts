@@ -16,6 +16,7 @@ export interface Item {
     code: string
     name: string
     last_purchase_cost: number
+    requires_qc?: boolean
     base_uom_id?: string      // UUID ของ UOM
     base_uom_code?: string
     stock_uom_id?: string
@@ -346,6 +347,7 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
                 code,
                 name,
                 last_purchase_cost,
+                requires_qc,
                 base_uom_id,
                 stock_uom_id,
                 category_id
@@ -387,6 +389,7 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
             code: item.code,
             name: item.name,
             last_purchase_cost: row.purchase_price || item.last_purchase_cost || 0,
+            requires_qc: item.requires_qc ?? false,
             base_uom_id: item.base_uom_id,
             base_uom_code: uomMap.get(item.base_uom_id) || 'G',
             stock_uom_id: stockUomId,
