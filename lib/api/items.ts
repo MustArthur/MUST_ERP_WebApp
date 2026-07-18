@@ -490,6 +490,49 @@ export async function getOutputProducts(): Promise<Item[]> {
 // ITEM SUPPLIERS
 // ============================================
 
+export interface LatestReceiptPrice {
+    unitPrice: number
+    receiptDate: string
+}
+
+/**
+ * Latest actual unit price paid per supplier for an item, derived from real
+ * purchase receipts (excludes CANCELLED), keyed by supplier_id.
+ */
+export async function getLatestReceiptPricesForItem(itemId: string): Promise<Map<string, LatestReceiptPrice>> {
+    const { data, error } = await supabase
+        .from('purchase_receipt_items')
+        .select(`
+            unit_price,
+            purchase_receipts!inner (
+                receipt_date,
+                supplier_id,
+                status
+            )
+        `)
+        .eq('item_id', itemId)
+        .neq('purchase_receipts.status', 'CANCELLED')
+
+    if (error) {
+        console.error('Error fetching latest receipt prices:', error)
+        return new Map()
+    }
+
+    const latest = new Map<string, LatestReceiptPrice>()
+    for (const row of data || []) {
+        const receipt = row.purchase_receipts as any
+        const supplierId = receipt?.supplier_id
+        const receiptDate = receipt?.receipt_date
+        if (!supplierId || !receiptDate) continue
+
+        const existing = latest.get(supplierId)
+        if (!existing || receiptDate > existing.receiptDate) {
+            latest.set(supplierId, { unitPrice: row.unit_price || 0, receiptDate })
+        }
+    }
+    return latest
+}
+
 /**
  * Get all suppliers for an item
  */

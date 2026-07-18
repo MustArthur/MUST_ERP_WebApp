@@ -391,13 +391,24 @@ export class ReceivingService {
 
     private static async generateReceiptCode(): Promise<string> {
         const year = new Date().getFullYear()
-        const { count, error } = await this.supabase
+        const prefix = `PR-${year}-`
+
+        // Derive the next number from the highest existing code for this year,
+        // not a row count — a row count breaks (produces a colliding, already-used
+        // code) as soon as any receipt is deleted, since remaining codes are no
+        // longer contiguous with the total row count.
+        const { data, error } = await this.supabase
             .from('purchase_receipts')
-            .select('*', { count: 'exact', head: true })
+            .select('code')
+            .like('code', `${prefix}%`)
+            .order('code', { ascending: false })
+            .limit(1)
 
         if (error) throw error
 
-        const nextNum = (count || 0) + 1
-        return `PR-${year}-${nextNum.toString().padStart(4, '0')}`
+        const lastCode = data?.[0]?.code as string | undefined
+        const lastNum = lastCode ? parseInt(lastCode.slice(prefix.length), 10) || 0 : 0
+        const nextNum = lastNum + 1
+        return `${prefix}${nextNum.toString().padStart(4, '0')}`
     }
 }

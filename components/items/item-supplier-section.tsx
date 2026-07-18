@@ -13,6 +13,8 @@ import {
     getSuppliers,
     getUnitsOfMeasure,
     updateItem,
+    getLatestReceiptPricesForItem,
+    LatestReceiptPrice,
 } from '@/lib/api/items'
 import { formatCurrency } from '@/lib/utils'
 import {
@@ -102,6 +104,7 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
     const [itemSuppliers, setItemSuppliers] = useState<ItemSupplier[]>([])
     const [suppliers, setSuppliers] = useState<Supplier[]>([])
     const [uoms, setUoms] = useState<UnitOfMeasure[]>([])
+    const [latestPrices, setLatestPrices] = useState<Map<string, LatestReceiptPrice>>(new Map())
     const [isLoading, setIsLoading] = useState(true)
     const [showFormModal, setShowFormModal] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -148,12 +151,14 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
     useEffect(() => {
         async function loadData() {
             setIsLoading(true)
-            const [suppliersData, uomsData] = await Promise.all([
+            const [suppliersData, uomsData, latestPricesData] = await Promise.all([
                 getSuppliers(),
                 getUnitsOfMeasure(),
+                getLatestReceiptPricesForItem(item.id),
             ])
             setSuppliers(suppliersData)
             setUoms(uomsData)
+            setLatestPrices(latestPricesData)
             await loadItemSuppliers()
             setIsLoading(false)
         }
@@ -385,7 +390,17 @@ export function ItemSupplierSection({ item, onItemUpdate }: ItemSupplierSectionP
                                             {supplier.leadTimeDays} วัน
                                         </td>
                                         <td className="px-3 py-2 text-center text-sm">
-                                            {supplier.priceUpdatedAt ? format(new Date(supplier.priceUpdatedAt), 'dd/MM/yyyy') : '-'}
+                                            {(() => {
+                                                const latest = latestPrices.get(supplier.supplierId)
+                                                return latest ? (
+                                                    <div>
+                                                        <p className="font-medium text-green-600">{formatCurrency(latest.unitPrice)}</p>
+                                                        <p className="text-xs text-gray-500">{format(new Date(latest.receiptDate), 'dd/MM/yyyy')}</p>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400">-</span>
+                                                )
+                                            })()}
                                         </td>
                                         <td className="px-3 py-2 text-center text-sm">
                                             {supplier.minOrderQty}
