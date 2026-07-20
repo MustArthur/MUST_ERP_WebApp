@@ -19,7 +19,7 @@ function generateTransactionNo(type: TransactionType): string {
 
     const date = new Date()
     const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+    const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
 
     return `${prefix}-${dateStr}-${random}`
 }
@@ -103,31 +103,41 @@ export async function getAllTransactions(): Promise<InventoryTransaction[]> {
  * Create a new inventory transaction
  */
 export async function createTransaction(input: CreateTransactionInput): Promise<InventoryTransaction | null> {
-    const transactionNo = generateTransactionNo(input.transactionType)
     const totalCost = (input.qty || 0) * (input.unitCost || 0)
 
-    const { data, error } = await supabase
-        .from('inventory_transactions')
-        .insert({
-            transaction_no: transactionNo,
-            transaction_type: input.transactionType,
-            transaction_date: new Date().toISOString(),
-            item_id: input.itemId,
-            lot_id: input.lotId || null,
-            from_warehouse_id: input.fromWarehouseId || null,
-            from_location_id: input.fromLocationId || null,
-            to_warehouse_id: input.toWarehouseId || null,
-            to_location_id: input.toLocationId || null,
-            qty: input.qty,
-            uom_id: input.uomId || null,
-            unit_cost: input.unitCost || 0,
-            total_cost: totalCost,
-            reference_type: input.referenceType || null,
-            reference_id: input.referenceId || null,
-            notes: input.notes || null,
-        })
-        .select()
-        .single()
+    // Retry on transaction_no collision (unique violation, Postgres code 23505) —
+    // the number is randomly generated, so a rare collision under concurrent/rapid
+    // inserts must not be allowed to abort the whole receiving flow.
+    let data: any = null
+    let error: any = null
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const result = await supabase
+            .from('inventory_transactions')
+            .insert({
+                transaction_no: generateTransactionNo(input.transactionType),
+                transaction_type: input.transactionType,
+                transaction_date: new Date().toISOString(),
+                item_id: input.itemId,
+                lot_id: input.lotId || null,
+                from_warehouse_id: input.fromWarehouseId || null,
+                from_location_id: input.fromLocationId || null,
+                to_warehouse_id: input.toWarehouseId || null,
+                to_location_id: input.toLocationId || null,
+                qty: input.qty,
+                uom_id: input.uomId || null,
+                unit_cost: input.unitCost || 0,
+                total_cost: totalCost,
+                reference_type: input.referenceType || null,
+                reference_id: input.referenceId || null,
+                notes: input.notes || null,
+            })
+            .select()
+            .single()
+
+        data = result.data
+        error = result.error
+        if (!error || error.code !== '23505') break
+    }
 
     if (error) {
         console.error('Error creating transaction:', error)
