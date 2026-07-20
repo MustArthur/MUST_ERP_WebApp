@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { useItemsStore } from '@/stores/items-store'
 import { Item, ItemType, CreateItemInput, UpdateItemInput } from '@/types/item'
+import { getItemSuppliers, addItemSupplier } from '@/lib/api/items'
 import { ItemTable, ItemFormModal, QuickReceiveModal } from '@/components/items'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,6 +57,7 @@ export default function ItemsPage() {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [showReceiveModal, setShowReceiveModal] = useState(false)
     const [selectedItem, setSelectedItem] = useState<Item | null>(null)
+    const [duplicateSource, setDuplicateSource] = useState<Item | null>(null)
 
     // Load data on mount
     useEffect(() => {
@@ -100,11 +102,19 @@ export default function ItemsPage() {
     // Handlers
     const handleCreateItem = () => {
         setSelectedItem(null)
+        setDuplicateSource(null)
         setShowFormModal(true)
     }
 
     const handleEditItem = (item: Item) => {
         setSelectedItem(item)
+        setDuplicateSource(null)
+        setShowFormModal(true)
+    }
+
+    const handleDuplicateItem = (item: Item) => {
+        setSelectedItem(null)
+        setDuplicateSource(item)
         setShowFormModal(true)
     }
 
@@ -128,8 +138,32 @@ export default function ItemsPage() {
     const handleSaveItem = async (data: CreateItemInput | UpdateItemInput, isNew: boolean) => {
         try {
             if (isNew) {
-                await createItem(data as CreateItemInput)
+                const newItem = await createItem(data as CreateItemInput)
                 toast.success('เพิ่มรายการสำเร็จ')
+
+                if (newItem && duplicateSource) {
+                    try {
+                        const sourceSuppliers = await getItemSuppliers(duplicateSource.id)
+                        for (const s of sourceSuppliers) {
+                            await addItemSupplier({
+                                itemId: newItem.id,
+                                supplierId: s.supplierId,
+                                supplierPartNumber: s.supplierPartNumber || undefined,
+                                purchasePrice: s.purchasePrice,
+                                packagingSize: s.packagingSize,
+                                purchaseUomId: s.purchaseUomId || undefined,
+                                leadTimeDays: s.leadTimeDays,
+                                minOrderQty: s.minOrderQty,
+                                isPreferred: s.isPreferred,
+                                supplierProductName: s.supplierProductName,
+                                unitPrice: s.unitPrice,
+                            })
+                        }
+                    } catch (supplierError) {
+                        console.error('Failed to copy supplier links:', supplierError)
+                        toast.error('เพิ่มรายการสำเร็จ แต่คัดลอกข้อมูล Supplier ไม่สำเร็จ กรุณาเพิ่มเอง')
+                    }
+                }
             } else if (selectedItem) {
                 await updateItem(selectedItem.id, data as UpdateItemInput)
                 toast.success('แก้ไขรายการสำเร็จ')
@@ -293,6 +327,7 @@ export default function ItemsPage() {
                         items={filteredItems}
                         onEdit={handleEditItem}
                         onDelete={handleDeletePrompt}
+                        onDuplicate={handleDuplicateItem}
                     />
                 )}
             </main>
@@ -300,12 +335,14 @@ export default function ItemsPage() {
             {/* Form Modal */}
             <ItemFormModal
                 item={selectedItem}
+                duplicateFrom={duplicateSource}
                 categories={categories}
                 uoms={uoms}
                 isOpen={showFormModal}
                 onClose={() => {
                     setShowFormModal(false)
                     setSelectedItem(null)
+                    setDuplicateSource(null)
                 }}
                 onSave={handleSaveItem}
             />

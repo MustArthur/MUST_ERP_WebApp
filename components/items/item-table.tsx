@@ -19,6 +19,7 @@ import {
     Tag,
     Eye,
     Warehouse,
+    Copy,
 } from 'lucide-react'
 
 interface ItemTableProps {
@@ -26,6 +27,7 @@ interface ItemTableProps {
     onEdit: (item: Item) => void
     onDelete: (item: Item) => void
     onView?: (item: Item) => void
+    onDuplicate: (item: Item) => void
 }
 
 const getItemTypeBadge = (item: Item) => {
@@ -44,7 +46,7 @@ const getItemTypeBadge = (item: Item) => {
     return <Badge variant="outline">อื่นๆ</Badge>
 }
 
-export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
+export function ItemTable({ items, onEdit, onDelete, onView, onDuplicate }: ItemTableProps) {
     const router = useRouter()
 
     const handleRowClick = (item: Item) => {
@@ -160,6 +162,15 @@ export function ItemTable({ items, onEdit, onDelete, onView }: ItemTableProps) {
                                             aria-label="แก้ไข"
                                         >
                                             <Edit2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onDuplicate(item)}
+                                            title="คัดลอก"
+                                            aria-label="คัดลอก"
+                                        >
+                                            <Copy className="w-4 h-4" />
                                         </Button>
                                         <Button
                                             variant="ghost"

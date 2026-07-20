@@ -53,6 +53,7 @@ type ItemFormValues = z.infer<typeof itemFormSchema>
 
 interface ItemFormModalProps {
     item?: Item | null
+    duplicateFrom?: Item | null
     categories: Category[]
     uoms: UnitOfMeasure[]
     isOpen: boolean
@@ -62,6 +63,7 @@ interface ItemFormModalProps {
 
 export function ItemFormModal({
     item,
+    duplicateFrom,
     categories,
     uoms,
     isOpen,
@@ -112,6 +114,21 @@ export function ItemFormModal({
                 isActive: item.isActive,
                 requiresQC: item.requiresQC || false,
             })
+        } else if (duplicateFrom) {
+            form.reset({
+                code: '', // stays blank — code is UNIQUE, user must type a fresh one
+                name: duplicateFrom.name,
+                notes: duplicateFrom.notes || '',
+                categoryId: duplicateFrom.categoryId,
+                baseUomId: duplicateFrom.baseUomId,
+                stockUomId: duplicateFrom.stockUomId || duplicateFrom.baseUomId,
+                lastPurchaseCost: duplicateFrom.lastPurchaseCost,
+                safetyStock: duplicateFrom.safetyStock || 0,
+                leadTimeWeeks: duplicateFrom.leadTimeWeeks ?? 1,
+                stockConversionFactor: duplicateFrom.stockConversionFactor ?? 1,
+                isActive: true,
+                requiresQC: duplicateFrom.requiresQC || false,
+            })
         } else {
             form.reset({
                 code: '',
@@ -128,7 +145,7 @@ export function ItemFormModal({
                 requiresQC: false,
             })
         }
-    }, [item, form])
+    }, [item, duplicateFrom, form])
 
     const onSubmit = async (data: ItemFormValues) => {
         try {
