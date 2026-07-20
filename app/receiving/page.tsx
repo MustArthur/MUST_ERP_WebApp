@@ -32,6 +32,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -86,6 +93,10 @@ export default function ReceivingPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showFixQCConfirm, setShowFixQCConfirm] = useState(false)
   const [receiptToAction, setReceiptToAction] = useState<PurchaseReceipt | null>(null)
+
+  // Edit date dialog
+  const [showEditDateDialog, setShowEditDateDialog] = useState(false)
+  const [editDateValue, setEditDateValue] = useState('')
 
   // Bulk selection / delete
   const [selectedReceiptIds, setSelectedReceiptIds] = useState<Set<string>>(new Set())
@@ -201,6 +212,25 @@ export default function ReceivingPage() {
       setReceiptToAction(null)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'ไม่สามารถแก้ไขสถานะ QC ได้')
+    }
+  }
+
+  const handleEditDate = (receipt: PurchaseReceipt) => {
+    setReceiptToAction(receipt)
+    setEditDateValue(receipt.receiptDate)
+    setShowEditDateDialog(true)
+  }
+
+  const confirmEditDate = async () => {
+    if (!receiptToAction || !editDateValue) return
+    try {
+      const updated = await updateReceipt(receiptToAction.id, { receiptDate: editDateValue })
+      setSelectedReceipt(updated)
+      toast.success('แก้ไขวันที่สำเร็จ')
+      setShowEditDateDialog(false)
+      setReceiptToAction(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถแก้ไขวันที่ได้')
     }
   }
 
@@ -590,6 +620,7 @@ export default function ReceivingPage() {
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
         onEdit={handleEditReceipt}
+        onEditDate={handleEditDate}
         onSubmit={handleSubmitReceipt}
         onComplete={handleCompleteReceipt}
         onCancel={handleCancelReceipt}
@@ -693,6 +724,32 @@ export default function ReceivingPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Date Dialog */}
+      <Dialog open={showEditDateDialog} onOpenChange={setShowEditDateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>แก้ไขวันที่รับ</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="text-sm text-gray-600">
+              วันที่รับ — {receiptToAction?.code}
+            </label>
+            <Input
+              type="date"
+              value={editDateValue}
+              onChange={(e) => setEditDateValue(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDateDialog(false)}>
+              ยกเลิก
+            </Button>
+            <Button onClick={confirmEditDate}>บันทึก</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Delete Confirmation Dialog */}
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>

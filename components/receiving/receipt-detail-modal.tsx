@@ -28,6 +28,7 @@ import {
   Printer,
   ExternalLink,
   Edit2,
+  Calendar,
 } from 'lucide-react'
 
 interface ReceiptDetailModalProps {
@@ -35,6 +36,7 @@ interface ReceiptDetailModalProps {
   isOpen: boolean
   onClose: () => void
   onEdit?: (receipt: PurchaseReceipt) => void
+  onEditDate?: (receipt: PurchaseReceipt) => void
   onSubmit?: (receipt: PurchaseReceipt) => void
   onComplete?: (receipt: PurchaseReceipt) => void
   onCancel?: (receipt: PurchaseReceipt) => void
@@ -48,6 +50,7 @@ export function ReceiptDetailModal({
   isOpen,
   onClose,
   onEdit,
+  onEditDate,
   onSubmit,
   onComplete,
   onCancel,
@@ -567,6 +570,12 @@ export function ReceiptDetailModal({
               >
                 <Edit2 className="w-4 h-4 mr-2" />
                 แก้ไข
+              </Button>
+            )}
+            {onEditDate && (receipt.status === 'PENDING_QC' || receipt.status === 'COMPLETED') && (
+              <Button variant="outline" onClick={() => onEditDate(receipt)}>
+                <Calendar className="w-4 h-4 mr-2" />
+                แก้ไขวันที่
               </Button>
             )}
             {onCancel && (receipt.status === 'DRAFT' || receipt.status === 'PENDING_QC') && (
