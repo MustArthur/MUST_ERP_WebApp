@@ -53,6 +53,8 @@ import {
   Trash2,
 } from 'lucide-react'
 
+const PAGE_SIZE = 10
+
 export default function ReceivingPage() {
   const {
     receipts,
@@ -89,6 +91,9 @@ export default function ReceivingPage() {
   const [selectedReceiptIds, setSelectedReceiptIds] = useState<Set<string>>(new Set())
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Load data on mount
   useEffect(() => {
@@ -219,21 +224,25 @@ export default function ReceivingPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReceiptFilters({ search: e.target.value })
     setSelectedReceiptIds(new Set())
+    setCurrentPage(1)
   }
 
   const handleStatusFilter = (status: ReceiptStatus | 'all') => {
     setReceiptFilters({ status })
     setSelectedReceiptIds(new Set())
+    setCurrentPage(1)
   }
 
   const handleQCStatusFilter = (qcStatus: QCStatusSummary | 'all') => {
     setReceiptFilters({ qcStatus })
     setSelectedReceiptIds(new Set())
+    setCurrentPage(1)
   }
 
   const handleSupplierFilter = (supplierId: string | 'all') => {
     setReceiptFilters({ supplierId })
     setSelectedReceiptIds(new Set())
+    setCurrentPage(1)
   }
 
   const handleToggleSelect = (id: string) => {
@@ -250,9 +259,9 @@ export default function ReceivingPage() {
 
   const handleToggleSelectAll = () => {
     setSelectedReceiptIds(prev => {
-      const allSelected = filteredReceipts.length > 0 && filteredReceipts.every(r => prev.has(r.id))
+      const allSelected = paginatedReceipts.length > 0 && paginatedReceipts.every(r => prev.has(r.id))
       if (allSelected) return new Set()
-      return new Set(filteredReceipts.map(r => r.id))
+      return new Set(paginatedReceipts.map(r => r.id))
     })
   }
 
@@ -303,6 +312,15 @@ export default function ReceivingPage() {
     }
     return true
   })
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredReceipts.length / PAGE_SIZE))
+  const paginatedReceipts = filteredReceipts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(filteredReceipts.length / PAGE_SIZE))
+    if (currentPage > maxPage) setCurrentPage(maxPage)
+  }, [filteredReceipts.length, currentPage])
 
   // Summary stats
   const todayReceipts = receipts.filter(r => r.receiptDate === new Date().toISOString().split('T')[0])
@@ -551,12 +569,17 @@ export default function ReceivingPage() {
           </div>
         ) : (
           <ReceiptTable
-            receipts={filteredReceipts}
+            receipts={paginatedReceipts}
             suppliers={suppliers}
             onView={handleViewReceipt}
             selectedIds={selectedReceiptIds}
             onToggleSelect={handleToggleSelect}
             onToggleSelectAll={handleToggleSelectAll}
+            totalCount={filteredReceipts.length}
+            totalValue={filteredReceipts.reduce((sum, r) => sum + r.totalAmount, 0)}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
           />
         )}
       </main>

@@ -12,6 +12,8 @@ import {
     XCircle,
     AlertTriangle,
     FileText,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react'
 
 interface ReceiptTableProps {
@@ -21,6 +23,11 @@ interface ReceiptTableProps {
     selectedIds: Set<string>
     onToggleSelect: (id: string) => void
     onToggleSelectAll: () => void
+    totalCount: number
+    totalValue: number
+    currentPage: number
+    totalPages: number
+    onPageChange: (page: number) => void
 }
 
 const getStatusBadge = (status: ReceiptStatus) => {
@@ -55,7 +62,19 @@ const getQCStatusBadge = (qcStatus: QCStatusSummary) => {
     }
 }
 
-export function ReceiptTable({ receipts, suppliers, onView, selectedIds, onToggleSelect, onToggleSelectAll }: ReceiptTableProps) {
+export function ReceiptTable({
+    receipts,
+    suppliers,
+    onView,
+    selectedIds,
+    onToggleSelect,
+    onToggleSelectAll,
+    totalCount,
+    totalValue,
+    currentPage,
+    totalPages,
+    onPageChange,
+}: ReceiptTableProps) {
     const getSupplierName = (supplierId: string) => {
         return suppliers.find(s => s.id === supplierId)?.name || supplierId
     }
@@ -149,12 +168,31 @@ export function ReceiptTable({ receipts, suppliers, onView, selectedIds, onToggl
             </div>
 
             {/* Footer Summary */}
-            <div className="bg-gray-50 px-4 py-3 border-t flex justify-between items-center">
+            <div className="bg-gray-50 px-4 py-3 border-t flex flex-col sm:flex-row justify-between items-center gap-3">
                 <span className="text-sm text-gray-500">
-                    แสดง {receipts.length} รายการ
+                    แสดง {receipts.length} จาก {totalCount} รายการ
                 </span>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage <= 1}
+                        onClick={() => onPageChange(currentPage - 1)}
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-gray-600">หน้า {currentPage} / {totalPages}</span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => onPageChange(currentPage + 1)}
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </Button>
+                </div>
                 <span className="font-medium text-gray-900">
-                    รวม: {formatCurrency(receipts.reduce((sum, r) => sum + r.totalAmount, 0))}
+                    รวม: {formatCurrency(totalValue)}
                 </span>
             </div>
         </div>
