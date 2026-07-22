@@ -324,7 +324,7 @@ export function ExpenseFormModal({
                                                 <FormLabel>รถขนส่ง *</FormLabel>
                                                 <FormControl>
                                                     <SearchableSelect
-                                                        options={vehicles.map(v => ({ value: v.id, label: v.name }))}
+                                                        options={vehicles.map(v => ({ value: v.id, label: v.plateNumber ? `${v.name} (${v.plateNumber})` : v.name }))}
                                                         value={field.value}
                                                         onValueChange={field.onChange}
                                                         placeholder="เลือกรถขนส่ง"
@@ -402,7 +402,7 @@ export function ExpenseFormModal({
                                             <FormLabel>รถขนส่ง</FormLabel>
                                             <FormControl>
                                                 <SearchableSelect
-                                                    options={vehicles.map(v => ({ value: v.id, label: v.name }))}
+                                                    options={vehicles.map(v => ({ value: v.id, label: v.plateNumber ? `${v.name} (${v.plateNumber})` : v.name }))}
                                                     value={field.value}
                                                     onValueChange={field.onChange}
                                                     placeholder="เลือกรถขนส่ง (ถ้ามี)"

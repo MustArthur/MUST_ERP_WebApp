@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase'
 export interface ExpenseVehicleOption {
     id: string
     name: string
+    plateNumber: string | null
 }
 
 export interface ExpenseMachineOption {
@@ -70,7 +71,7 @@ export const useFactoryExpensesStore = create<FactoryExpensesState>((set, get) =
     fetchVehicles: async () => {
         const { data, error } = await supabase
             .from('vehicles')
-            .select('id, name')
+            .select('id, name, plate_number')
             .eq('is_active', true)
             .order('name')
 
@@ -78,7 +79,13 @@ export const useFactoryExpensesStore = create<FactoryExpensesState>((set, get) =
             console.error('Error fetching vehicles:', error)
             return
         }
-        set({ vehicles: data || [] })
+        set({
+            vehicles: (data || []).map(v => ({
+                id: v.id,
+                name: v.name,
+                plateNumber: v.plate_number,
+            }))
+        })
     },
 
     // Fetch active machines for the create-form dropdown
