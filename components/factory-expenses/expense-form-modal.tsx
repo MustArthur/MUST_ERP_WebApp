@@ -89,11 +89,11 @@ const emptyDefaults: ExpenseFormValues = {
     amount: 0,
     description: '',
     vehicleId: '',
-    fuelType: '',
+    fuelType: 'ดีเซล',
     fuelQuantityLiters: 0,
     fuelPricePerLiter: 0,
     machineId: '',
-    recordedBy: '',
+    recordedBy: 'กิตติชัย (ตั้ม)',
 }
 
 interface ExpenseFormModalProps {
