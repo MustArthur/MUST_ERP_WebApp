@@ -11,6 +11,8 @@ import {
     Package2,
     Send,
     CalendarDays,
+    Receipt,
+    Wrench,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -67,6 +69,15 @@ export const navGroups: NavGroup[] = [
         items: [
             { name: 'สินค้าสำเร็จรูป', href: '/finished-goods', icon: Package2 },
             { name: 'จัดส่งสินค้า', href: '/delivery', icon: Send },
+        ],
+    },
+    {
+        id: 'factory-expenses',
+        label: 'ค่าใช้จ่ายโรงงาน',
+        items: [
+            { name: 'ค่าใช้จ่าย', href: '/factory-expenses', icon: Receipt },
+            { name: 'รถขนส่ง', href: '/vehicles', icon: Truck },
+            { name: 'เครื่องจักร', href: '/machines', icon: Wrench },
         ],
     },
 ]
