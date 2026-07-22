@@ -46,6 +46,11 @@ const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
     { value: 'FACTORY_SUPPLIES', label: 'Factory Supplies (วัสดุสิ้นเปลือง)' },
 ]
 
+const FUEL_TYPE_OPTIONS = [
+    'ดีเซล (DIESEL)',
+    'แก๊สโซฮอล์ 95 (Gasohol 95)',
+]
+
 const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; label: string }[]> = {
     LOGISTICS: [
         { value: 'FUEL', label: 'ค่าน้ำมันรถขนส่ง' },
@@ -89,7 +94,7 @@ const emptyDefaults: ExpenseFormValues = {
     amount: 0,
     description: '',
     vehicleId: '',
-    fuelType: 'ดีเซล',
+    fuelType: FUEL_TYPE_OPTIONS[0],
     fuelQuantityLiters: 0,
     fuelPricePerLiter: 0,
     machineId: '',
@@ -129,7 +134,7 @@ export function ExpenseFormModal({
     // Auto-calculate amount for fuel expenses (liters × price/L)
     useEffect(() => {
         if (watchedSubcategory === 'FUEL') {
-            const calculated = (watchedLiters || 0) * (watchedPricePerLiter || 0)
+            const calculated = Math.round((watchedLiters || 0) * (watchedPricePerLiter || 0) * 100) / 100
             form.setValue('amount', calculated)
         }
     }, [watchedSubcategory, watchedLiters, watchedPricePerLiter, form])
@@ -343,9 +348,18 @@ export function ExpenseFormModal({
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>รายการน้ำมัน</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="เช่น ดีเซล, เบนซิน 95" {...field} />
-                                                </FormControl>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="เลือกรายการน้ำมัน" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {FUEL_TYPE_OPTIONS.map((opt) => (
+                                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
