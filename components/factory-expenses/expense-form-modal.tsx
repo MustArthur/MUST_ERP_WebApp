@@ -368,10 +368,10 @@ export function ExpenseFormModal({
                                     <div className="grid grid-cols-2 gap-4">
                                         <FormField
                                             control={form.control}
-                                            name="fuelQuantityLiters"
+                                            name="fuelPricePerLiter"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>ปริมาณ (L.)</FormLabel>
+                                                    <FormLabel>ราคาต่อ L.</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"
@@ -387,10 +387,10 @@ export function ExpenseFormModal({
 
                                         <FormField
                                             control={form.control}
-                                            name="fuelPricePerLiter"
+                                            name="fuelQuantityLiters"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>ราคาต่อ L.</FormLabel>
+                                                    <FormLabel>ปริมาณ (L.)</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"
