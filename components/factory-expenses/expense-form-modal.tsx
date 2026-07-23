@@ -134,7 +134,7 @@ export function ExpenseFormModal({
     // Auto-calculate amount for fuel expenses (liters × price/L)
     useEffect(() => {
         if (watchedSubcategory === 'FUEL') {
-            const calculated = Math.round((watchedLiters || 0) * (watchedPricePerLiter || 0) * 100) / 100
+            const calculated = Math.round((watchedLiters || 0) * (watchedPricePerLiter || 0))
             form.setValue('amount', calculated)
         }
     }, [watchedSubcategory, watchedLiters, watchedPricePerLiter, form])
