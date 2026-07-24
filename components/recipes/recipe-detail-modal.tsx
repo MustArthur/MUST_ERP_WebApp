@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { Recipe, Ingredient } from '@/types/recipe'
 import {
   Dialog,
@@ -13,7 +14,9 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from './status-badge'
 import { IngredientTable } from './ingredient-table'
 import { BatchCalculator } from './batch-calculator'
-import { Beaker, FileText, Calculator, Copy, Edit, Trash2, GitBranch } from 'lucide-react'
+import { RecipeExportLayout } from './recipe-export-layout'
+import { exportRecipeAsImage, exportRecipeAsPdf } from '@/lib/recipe-export'
+import { Beaker, FileText, Calculator, Copy, Edit, Trash2, GitBranch, ImageDown, FileDown, Loader2 } from 'lucide-react'
 import { formatDuration, formatDateTime, cn } from '@/lib/utils'
 
 interface RecipeDetailModalProps {
@@ -40,6 +43,8 @@ export function RecipeDetailModal({
   onSelectVersion,
 }: RecipeDetailModalProps) {
   const [bottleSize, setBottleSize] = useState(recipe?.bottleSize || 490)
+  const [isExporting, setIsExporting] = useState<'image' | 'pdf' | null>(null)
+  const exportRef = useRef<HTMLDivElement>(null)
 
   // Update bottleSize when recipe changes
   useEffect(() => {
@@ -69,8 +74,40 @@ export function RecipeDetailModal({
 
   const bottleCount = calculateBottleCount(recipe.ingredients)
 
+  const handleExportImage = async () => {
+    if (!exportRef.current) return
+    setIsExporting('image')
+    try {
+      await exportRecipeAsImage(exportRef.current, recipe.code)
+    } catch (error) {
+      console.error('Error exporting recipe as image:', error)
+      toast.error('ไม่สามารถส่งออกรูปภาพได้')
+    } finally {
+      setIsExporting(null)
+    }
+  }
+
+  const handleExportPdf = async () => {
+    if (!exportRef.current) return
+    setIsExporting('pdf')
+    try {
+      await exportRecipeAsPdf(exportRef.current, recipe.code)
+    } catch (error) {
+      console.error('Error exporting recipe as PDF:', error)
+      toast.error('ไม่สามารถส่งออก PDF ได้')
+    } finally {
+      setIsExporting(null)
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      {/* Hidden, non-tabbed layout used only as a capture target for image/PDF export */}
+      <div style={{ position: 'absolute', left: -9999, top: 0 }} aria-hidden="true">
+        <RecipeExportLayout ref={exportRef} recipe={recipe} bottleCount={bottleCount} />
+      </div>
+
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <DialogHeader className="pb-2">
@@ -198,6 +235,30 @@ export function RecipeDetailModal({
             สร้าง: {formatDateTime(recipe.createdAt)}
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportImage}
+              disabled={isExporting !== null}
+            >
+              {isExporting === 'image' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <ImageDown className="w-4 h-4 mr-2" />
+              )}
+              ส่งออกรูปภาพ
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExportPdf}
+              disabled={isExporting !== null}
+            >
+              {isExporting === 'pdf' ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              ส่งออก PDF
+            </Button>
             {onDelete && recipe.status !== 'OBSOLETE' && (
               <Button
                 variant="outline"
@@ -230,6 +291,7 @@ export function RecipeDetailModal({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   )
 }
