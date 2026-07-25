@@ -78,6 +78,98 @@ export async function getFreshChickenDailyTrend(days = 30): Promise<DailyPricePo
     return getDailyReceivingTrend('RM-CHICKEN', days)
 }
 
+export interface SupplierPriceSeries {
+    supplierId: string
+    supplierName: string
+    key: string
+}
+
+export interface SupplierPriceTrend {
+    data: Array<Record<string, string | number | undefined>>
+    series: SupplierPriceSeries[]
+}
+
+const SERIES_COLORS = ['#f97316', '#0ea5e9', '#22c55e', '#a855f7', '#ec4899']
+
+/**
+ * Daily quantity-weighted average price (baht/kg) for Fresh Chicken, broken down per supplier
+ * so prices can be compared side by side (a day with no delivery from a supplier is left as a
+ * gap, not interpolated).
+ */
+export async function getFreshChickenDailyTrendBySupplier(days = 30): Promise<SupplierPriceTrend> {
+    const { data, error } = await supabase
+        .from('purchase_receipt_items')
+        .select(`
+            qty_received,
+            unit_price,
+            purchase_receipts!inner (
+                receipt_date,
+                status,
+                supplier_id,
+                suppliers:supplier_id (id, name)
+            ),
+            items!inner (
+                code
+            )
+        `)
+        .eq('items.code', 'RM-CHICKEN')
+        .neq('purchase_receipts.status', 'CANCELLED')
+        .gte('purchase_receipts.receipt_date', cutoffDate(days))
+
+    if (error) {
+        console.error('Error fetching Fresh Chicken trend by supplier:', error)
+        return { data: [], series: [] }
+    }
+
+    const byDateSupplier = new Map<string, Map<string, { qty: number; weightedSum: number }>>()
+    const supplierNames = new Map<string, string>()
+
+    for (const row of data || []) {
+        const receipt = row.purchase_receipts as any
+        const date = receipt?.receipt_date
+        const supplierId = receipt?.supplier_id
+        const supplierName = receipt?.suppliers?.name
+        if (!date || !supplierId) continue
+
+        supplierNames.set(supplierId, supplierName || supplierId)
+
+        const qty = row.qty_received || 0
+        const price = row.unit_price || 0
+
+        const supplierMap = byDateSupplier.get(date) || new Map()
+        const existing = supplierMap.get(supplierId) || { qty: 0, weightedSum: 0 }
+        existing.qty += qty
+        existing.weightedSum += qty * price
+        supplierMap.set(supplierId, existing)
+        byDateSupplier.set(date, supplierMap)
+    }
+
+    const series: SupplierPriceSeries[] = Array.from(supplierNames.entries())
+        .sort(([, a], [, b]) => a.localeCompare(b))
+        .map(([supplierId, supplierName], index) => ({
+            supplierId,
+            supplierName,
+            key: `price_${index}`,
+        }))
+
+    const dates = Array.from(byDateSupplier.keys()).sort()
+    const chartData = dates.map(date => {
+        const row: Record<string, string | number | undefined> = { date, name: formatLabel(date) }
+        const supplierMap = byDateSupplier.get(date)!
+        for (const s of series) {
+            const point = supplierMap.get(s.supplierId)
+            row[s.key] = point && point.qty > 0 ? Math.round((point.weightedSum / point.qty) * 100) / 100 : undefined
+        }
+        return row
+    })
+
+    return { data: chartData, series }
+}
+
+export function getSupplierSeriesColor(index: number): string {
+    return SERIES_COLORS[index % SERIES_COLORS.length]
+}
+
 /**
  * Daily received quantity (bags) and quantity-weighted average price (baht/bag) for ice bags.
  */

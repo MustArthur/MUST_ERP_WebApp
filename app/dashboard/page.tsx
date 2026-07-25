@@ -5,12 +5,16 @@ import { Beef, Snowflake, Fuel, Package, Wallet } from 'lucide-react'
 import { StatsCard, StatsGrid } from '@/components/dashboard/stats-card'
 import { SimpleAreaChart } from '@/components/dashboard/area-chart'
 import { SimpleBarChart } from '@/components/dashboard/bar-chart'
+import { MultiLineChart } from '@/components/dashboard/line-chart'
 import {
     getFreshChickenDailyTrend,
+    getFreshChickenDailyTrendBySupplier,
     getIceBagsDailyTrend,
     getLogisticsFuelDailyTrend,
+    getSupplierSeriesColor,
     DailyPricePoint,
     DailyFuelCost,
+    SupplierPriceTrend,
 } from '@/lib/api/dashboard'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 
@@ -47,18 +51,21 @@ function LoadingSkeleton() {
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true)
     const [chicken, setChicken] = useState<DailyPricePoint[]>([])
+    const [chickenBySupplier, setChickenBySupplier] = useState<SupplierPriceTrend>({ data: [], series: [] })
     const [ice, setIce] = useState<DailyPricePoint[]>([])
     const [fuel, setFuel] = useState<DailyFuelCost[]>([])
 
     useEffect(() => {
         async function load() {
             setLoading(true)
-            const [chickenData, iceData, fuelData] = await Promise.all([
+            const [chickenData, chickenBySupplierData, iceData, fuelData] = await Promise.all([
                 getFreshChickenDailyTrend(30),
+                getFreshChickenDailyTrendBySupplier(30),
                 getIceBagsDailyTrend(30),
                 getLogisticsFuelDailyTrend(30),
             ])
             setChicken(chickenData)
+            setChickenBySupplier(chickenBySupplierData)
             setIce(iceData)
             setFuel(fuelData)
             setLoading(false)
@@ -127,10 +134,14 @@ export default function DashboardPage() {
                                 </StatsGrid>
                                 {chicken.length > 0 ? (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        <SimpleAreaChart
-                                            title="แนวโน้มราคา Fresh Chicken (บาท/กก.)"
-                                            data={chicken.map(d => ({ name: d.label, value: Math.round(d.avgPrice * 100) / 100 }))}
-                                            color="#f97316"
+                                        <MultiLineChart
+                                            title="แนวโน้มราคา Fresh Chicken แยกตาม Supplier (บาท/กก.)"
+                                            data={chickenBySupplier.data}
+                                            series={chickenBySupplier.series.map((s, i) => ({
+                                                key: s.key,
+                                                name: s.supplierName,
+                                                color: getSupplierSeriesColor(i),
+                                            }))}
                                             yDomain={[60, 80]}
                                         />
                                         <SimpleBarChart
