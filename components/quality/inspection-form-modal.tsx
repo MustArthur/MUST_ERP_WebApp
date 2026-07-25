@@ -115,7 +115,7 @@ export function InspectionFormModal({
       return minOk && maxOk ? 'PASS' : 'FAIL'
     } else if (param.type === 'ACCEPTANCE') {
       if (!reading.acceptanceValue) return 'PENDING'
-      return param.acceptableValues?.includes(reading.acceptanceValue) ? 'PASS' : 'FAIL'
+      return (param.passValues ?? param.acceptableValues)?.includes(reading.acceptanceValue) ? 'PASS' : 'FAIL'
     }
 
     return 'PENDING'

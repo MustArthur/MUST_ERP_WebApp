@@ -42,6 +42,7 @@ const parameterSchema = z.object({
   maxValue: z.number().optional(),
   uom: z.string().optional(),
   acceptableValues: z.array(z.string()).optional(),
+  passValues: z.array(z.string()).optional(),
   isCritical: z.boolean(),
   description: z.string().optional(),
 })
@@ -141,6 +142,7 @@ export function TemplateFormModal({
           maxValue: p.maxValue,
           uom: p.uom,
           acceptableValues: p.acceptableValues,
+          passValues: p.passValues,
           isCritical: p.isCritical,
           description: p.description,
         })),
@@ -189,9 +191,29 @@ export function TemplateFormModal({
 
   const removeAcceptableValue = (paramIndex: number, valueIndex: number) => {
     const current = watch(`parameters.${paramIndex}.acceptableValues`) || []
+    const removedValue = current[valueIndex]
     setValue(
       `parameters.${paramIndex}.acceptableValues`,
       current.filter((_, i) => i !== valueIndex)
+    )
+
+    // Keep passValues in sync — a removed option can no longer count as pass
+    const currentPass = watch(`parameters.${paramIndex}.passValues`) || []
+    if (removedValue && currentPass.includes(removedValue)) {
+      setValue(
+        `parameters.${paramIndex}.passValues`,
+        currentPass.filter((v) => v !== removedValue)
+      )
+    }
+  }
+
+  const togglePassValue = (paramIndex: number, value: string) => {
+    const current = watch(`parameters.${paramIndex}.passValues`) || []
+    setValue(
+      `parameters.${paramIndex}.passValues`,
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value]
     )
   }
 
@@ -314,6 +336,8 @@ export function TemplateFormModal({
                 const isCritical = watch(`parameters.${index}.isCritical`)
                 const acceptableValues =
                   watch(`parameters.${index}.acceptableValues`) || []
+                const passValues =
+                  watch(`parameters.${index}.passValues`) || []
 
                 return (
                   <div
@@ -470,6 +494,35 @@ export function TemplateFormModal({
                             </Badge>
                           ))}
                         </div>
+
+                        {acceptableValues.length > 0 && (
+                          <div className="pt-2">
+                            <Label>ทำเครื่องหมายค่าที่ถือว่า &quot;ผ่าน&quot;</Label>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              ค่าที่ไม่ได้เลือกจะถือว่าเป็นผลตรวจ &quot;ไม่ผ่าน&quot;
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {acceptableValues.map((value, vIndex) => {
+                                const isPass = passValues.includes(value)
+                                return (
+                                  <Badge
+                                    key={vIndex}
+                                    variant={isPass ? 'default' : 'outline'}
+                                    className={cn(
+                                      'cursor-pointer',
+                                      isPass
+                                        ? 'bg-green-600 hover:bg-green-700'
+                                        : 'text-gray-500'
+                                    )}
+                                    onClick={() => togglePassValue(index, value)}
+                                  >
+                                    {value}
+                                  </Badge>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 

@@ -18,7 +18,8 @@ export interface QCParameter {
   maxValue?: number               // e.g., 4 (for temp ≤ 4°C)
   uom?: string                    // e.g., "°C"
   // For ACCEPTANCE type
-  acceptableValues?: string[]     // e.g., ["Normal", "Pink"]
+  acceptableValues?: string[]     // all selectable options, e.g., ["ปกติ", "ผิดปกติ"]
+  passValues?: string[]           // subset of acceptableValues that counts as PASS, e.g., ["ปกติ"]
   // Common
   isCritical: boolean             // CCP parameter
   description?: string
@@ -174,6 +175,7 @@ export interface CreateQCTemplateInput {
     maxValue?: number
     uom?: string
     acceptableValues?: string[]
+    passValues?: string[]
     isCritical: boolean
     description?: string
   }[]

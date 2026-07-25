@@ -151,6 +151,7 @@ export class QCService {
                 max_value: p.maxValue || null,
                 uom: p.uom || null,
                 acceptable_values: p.acceptableValues || null,
+                pass_values: p.passValues || null,
                 is_critical: p.isCritical,
                 description: p.description || null
             }))
@@ -215,6 +216,7 @@ export class QCService {
                 max_value: p.maxValue || null,
                 uom: p.uom || null,
                 acceptable_values: p.acceptableValues || null,
+                pass_values: p.passValues || null,
                 is_critical: p.isCritical,
                 description: p.description || null
             }))
@@ -389,7 +391,7 @@ export class QCService {
                         const maxOk = param.maxValue === undefined || r.numericValue <= param.maxValue
                         readingStatus = minOk && maxOk ? 'PASS' : 'FAIL'
                     } else if (param.type === 'ACCEPTANCE' && r.acceptanceValue) {
-                        readingStatus = param.acceptableValues?.includes(r.acceptanceValue) ? 'PASS' : 'FAIL'
+                        readingStatus = (param.passValues ?? param.acceptableValues)?.includes(r.acceptanceValue) ? 'PASS' : 'FAIL'
                     }
                 }
 
@@ -531,7 +533,7 @@ export class QCService {
                     const maxOk = param.maxValue === undefined || reading.numericValue <= param.maxValue
                     readingStatus = minOk && maxOk ? 'PASS' : 'FAIL'
                 } else if (param.type === 'ACCEPTANCE' && reading.acceptanceValue) {
-                    readingStatus = param.acceptableValues?.includes(reading.acceptanceValue) ? 'PASS' : 'FAIL'
+                    readingStatus = (param.passValues ?? param.acceptableValues)?.includes(reading.acceptanceValue) ? 'PASS' : 'FAIL'
                 }
             }
 
@@ -807,6 +809,7 @@ export class QCService {
                 maxValue: p.max_value,
                 uom: p.uom,
                 acceptableValues: p.acceptable_values,
+                passValues: p.pass_values,
                 isCritical: p.is_critical,
                 description: p.description
             })),
@@ -849,6 +852,7 @@ export class QCService {
                     maxValue: r.parameter.max_value,
                     uom: r.parameter.uom,
                     acceptableValues: r.parameter.acceptable_values,
+                    passValues: r.parameter.pass_values,
                     isCritical: r.parameter.is_critical,
                     description: r.parameter.description
                 } : undefined,
