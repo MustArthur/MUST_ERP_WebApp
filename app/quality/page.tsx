@@ -16,7 +16,7 @@ import {
   CreateQCTemplateInput,
 } from '@/types/quality'
 import {
-  InspectionCard,
+  InspectionTable,
   InspectionDetailModal,
   InspectionFormModal,
   InspectionEntryModal,
@@ -528,18 +528,13 @@ export default function QualityPage() {
               </div>
             )}
 
-            {/* Inspections Grid */}
+            {/* Inspections Table */}
             {!isLoading && filteredInspections.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredInspections.map(inspection => (
-                  <InspectionCard
-                    key={inspection.id}
-                    inspection={inspection}
-                    onView={handleViewInspection}
-                    onStartInspection={handleStartInspection}
-                  />
-                ))}
-              </div>
+              <InspectionTable
+                inspections={filteredInspections}
+                onView={handleViewInspection}
+                onStartInspection={handleStartInspection}
+              />
             )}
 
             {/* Empty State */}

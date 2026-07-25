@@ -1,4 +1,5 @@
 export { InspectionCard } from './inspection-card'
+export { InspectionTable } from './inspection-table'
 export { InspectionDetailModal } from './inspection-detail-modal'
 export { InspectionFormModal } from './inspection-form-modal'
 export { InspectionEntryModal } from './inspection-entry-modal'
