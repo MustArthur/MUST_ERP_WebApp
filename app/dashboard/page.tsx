@@ -131,6 +131,7 @@ export default function DashboardPage() {
                                             title="แนวโน้มราคา Fresh Chicken (บาท/กก.)"
                                             data={chicken.map(d => ({ name: d.label, value: Math.round(d.avgPrice * 100) / 100 }))}
                                             color="#f97316"
+                                            yDomain={[60, 80]}
                                         />
                                         <SimpleBarChart
                                             title="ปริมาณรับเข้า Fresh Chicken รายวัน (กก.)"

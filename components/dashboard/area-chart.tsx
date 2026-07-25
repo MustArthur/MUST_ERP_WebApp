@@ -23,6 +23,7 @@ interface SimpleAreaChartProps {
     dataKey?: string
     color?: string
     height?: number
+    yDomain?: [number, number]
 }
 
 export function SimpleAreaChart({
@@ -31,6 +32,7 @@ export function SimpleAreaChart({
     dataKey = 'value',
     color = '#3b82f6',
     height = 200,
+    yDomain,
 }: SimpleAreaChartProps) {
     return (
         <Card>
@@ -61,6 +63,7 @@ export function SimpleAreaChart({
                             tickLine={false}
                             axisLine={false}
                             width={40}
+                            domain={yDomain}
                         />
                         <Tooltip
                             contentStyle={{
