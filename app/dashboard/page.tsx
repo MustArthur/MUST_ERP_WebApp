@@ -6,17 +6,22 @@ import { StatsCard, StatsGrid } from '@/components/dashboard/stats-card'
 import { SimpleAreaChart } from '@/components/dashboard/area-chart'
 import { SimpleBarChart } from '@/components/dashboard/bar-chart'
 import { MultiLineChart } from '@/components/dashboard/line-chart'
+import { StackedBarChart } from '@/components/dashboard/stacked-bar-chart'
 import {
     getFreshChickenDailyTrend,
     getFreshChickenDailyTrendBySupplier,
+    getFreshChickenDailyQuantityBySupplier,
     getIceBagsDailyTrend,
     getLogisticsFuelDailyTrend,
     getSupplierSeriesColor,
     DailyPricePoint,
     DailyFuelCost,
     SupplierPriceTrend,
+    SupplierQuantityTrend,
 } from '@/lib/api/dashboard'
 import { formatCurrency, formatNumber } from '@/lib/utils'
+
+const FRESH_CHICKEN_DAILY_TARGET_KG = 1600
 
 function pctChange(current: number, previous: number): number {
     if (previous === 0) return 0
@@ -52,20 +57,23 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true)
     const [chicken, setChicken] = useState<DailyPricePoint[]>([])
     const [chickenBySupplier, setChickenBySupplier] = useState<SupplierPriceTrend>({ data: [], series: [] })
+    const [chickenQtyBySupplier, setChickenQtyBySupplier] = useState<SupplierQuantityTrend>({ data: [], series: [] })
     const [ice, setIce] = useState<DailyPricePoint[]>([])
     const [fuel, setFuel] = useState<DailyFuelCost[]>([])
 
     useEffect(() => {
         async function load() {
             setLoading(true)
-            const [chickenData, chickenBySupplierData, iceData, fuelData] = await Promise.all([
+            const [chickenData, chickenBySupplierData, chickenQtyBySupplierData, iceData, fuelData] = await Promise.all([
                 getFreshChickenDailyTrend(30),
                 getFreshChickenDailyTrendBySupplier(30),
+                getFreshChickenDailyQuantityBySupplier(30),
                 getIceBagsDailyTrend(30),
                 getLogisticsFuelDailyTrend(30),
             ])
             setChicken(chickenData)
             setChickenBySupplier(chickenBySupplierData)
+            setChickenQtyBySupplier(chickenQtyBySupplierData)
             setIce(iceData)
             setFuel(fuelData)
             setLoading(false)
@@ -144,10 +152,15 @@ export default function DashboardPage() {
                                             }))}
                                             yDomain={[60, 80]}
                                         />
-                                        <SimpleBarChart
+                                        <StackedBarChart
                                             title="ปริมาณรับเข้า Fresh Chicken รายวัน (กก.)"
-                                            data={chicken.map(d => ({ name: d.label, value: d.quantity }))}
-                                            color="#3b82f6"
+                                            data={chickenQtyBySupplier.data}
+                                            series={chickenQtyBySupplier.series.map((s, i) => ({
+                                                key: s.key,
+                                                name: s.supplierName,
+                                                color: getSupplierSeriesColor(i),
+                                            }))}
+                                            referenceLine={{ value: FRESH_CHICKEN_DAILY_TARGET_KG, label: `เป้าหมาย ${FRESH_CHICKEN_DAILY_TARGET_KG.toLocaleString()} กก./วัน` }}
                                         />
                                     </div>
                                 ) : (
