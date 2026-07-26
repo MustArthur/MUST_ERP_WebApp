@@ -151,6 +151,7 @@ export default function DashboardPage() {
                                                 color: getSupplierSeriesColor(i),
                                             }))}
                                             yDomain={[60, 80]}
+                                            labelOnChange
                                         />
                                         <StackedBarChart
                                             title="ปริมาณรับเข้า Fresh Chicken รายวัน (กก.)"

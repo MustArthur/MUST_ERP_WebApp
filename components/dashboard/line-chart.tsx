@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     LineChart,
@@ -24,9 +25,39 @@ interface MultiLineChartProps {
     series: LineSeries[]
     height?: number
     yDomain?: [number, number]
+    /** Show the value as a text label only at points where it changed from the previous point of that series. */
+    labelOnChange?: boolean
 }
 
-export function MultiLineChart({ title, data, series, height = 200, yDomain }: MultiLineChartProps) {
+/**
+ * Indices (per series) where the value first appears or differs from the prior data point.
+ * Recharts strips non-SVG fields like `payload` before a custom label function sees its props,
+ * so matching has to go through the point's `index` rather than the underlying data row.
+ */
+function computeChangeIndices(data: Record<string, string | number | undefined>[], key: string): Set<number> {
+    const indices = new Set<number>()
+    let lastValue: string | number | undefined
+    data.forEach((row, i) => {
+        const value = row[key]
+        if (value === undefined || value === null) return
+        if (lastValue === undefined || value !== lastValue) {
+            indices.add(i)
+        }
+        lastValue = value
+    })
+    return indices
+}
+
+export function MultiLineChart({ title, data, series, height = 200, yDomain, labelOnChange = false }: MultiLineChartProps) {
+    const changeIndicesBySeries = useMemo(() => {
+        if (!labelOnChange) return {}
+        const map: Record<string, Set<number>> = {}
+        for (const s of series) {
+            map[s.key] = computeChangeIndices(data, s.key)
+        }
+        return map
+    }, [data, series, labelOnChange])
+
     return (
         <Card>
             <CardHeader className="pb-2">
@@ -68,6 +99,27 @@ export function MultiLineChart({ title, data, series, height = 200, yDomain }: M
                                 strokeWidth={2}
                                 dot={{ r: 3 }}
                                 connectNulls={false}
+                                label={
+                                    labelOnChange
+                                        ? (props: any) => {
+                                            const { x, y, value, index } = props
+                                            if (value === undefined || value === null) return null
+                                            if (!changeIndicesBySeries[s.key]?.has(index)) return null
+                                            return (
+                                                <text
+                                                    x={x}
+                                                    y={y - 10}
+                                                    fill={s.color}
+                                                    fontSize={11}
+                                                    fontWeight={600}
+                                                    textAnchor="middle"
+                                                >
+                                                    {value}
+                                                </text>
+                                            )
+                                        }
+                                        : undefined
+                                }
                             />
                         ))}
                     </LineChart>
