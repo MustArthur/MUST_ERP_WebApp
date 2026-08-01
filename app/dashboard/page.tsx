@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Beef, Snowflake, Fuel, Package, Wallet } from 'lucide-react'
 import { StatsCard, StatsGrid } from '@/components/dashboard/stats-card'
 import { SimpleAreaChart } from '@/components/dashboard/area-chart'
@@ -93,6 +93,19 @@ export default function DashboardPage() {
 
     const iceCostTrend = ice.map(d => ({ name: d.label, value: Math.round(d.quantity * d.avgPrice) }))
 
+    // Assign one color per supplier, shared across both Fresh Chicken charts, so the same
+    // supplier always reads as the same color even though each chart sorts its series differently
+    // (price chart alphabetically, quantity chart by total volume).
+    const chickenSupplierColors = useMemo(() => {
+        const nameById = new Map<string, string>()
+        chickenBySupplier.series.forEach(s => nameById.set(s.supplierId, s.supplierName))
+        chickenQtyBySupplier.series.forEach(s => nameById.set(s.supplierId, s.supplierName))
+        const sortedIds = Array.from(nameById.keys()).sort((a, b) => nameById.get(a)!.localeCompare(nameById.get(b)!))
+        const colors = new Map<string, string>()
+        sortedIds.forEach((id, i) => colors.set(id, getSupplierSeriesColor(i)))
+        return colors
+    }, [chickenBySupplier, chickenQtyBySupplier])
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -145,10 +158,10 @@ export default function DashboardPage() {
                                         <MultiLineChart
                                             title="แนวโน้มราคา Fresh Chicken แยกตาม Supplier (บาท/กก.)"
                                             data={chickenBySupplier.data}
-                                            series={chickenBySupplier.series.map((s, i) => ({
+                                            series={chickenBySupplier.series.map(s => ({
                                                 key: s.key,
                                                 name: s.supplierName,
-                                                color: getSupplierSeriesColor(i),
+                                                color: chickenSupplierColors.get(s.supplierId) || '#3b82f6',
                                             }))}
                                             yDomain={[60, 80]}
                                             labelOnChange
@@ -156,10 +169,10 @@ export default function DashboardPage() {
                                         <StackedBarChart
                                             title="ปริมาณรับเข้า Fresh Chicken รายวัน (กก.)"
                                             data={chickenQtyBySupplier.data}
-                                            series={chickenQtyBySupplier.series.map((s, i) => ({
+                                            series={chickenQtyBySupplier.series.map(s => ({
                                                 key: s.key,
                                                 name: s.supplierName,
-                                                color: getSupplierSeriesColor(i),
+                                                color: chickenSupplierColors.get(s.supplierId) || '#3b82f6',
                                             }))}
                                             referenceLine={{ value: FRESH_CHICKEN_DAILY_TARGET_KG, label: `เป้าหมาย ${FRESH_CHICKEN_DAILY_TARGET_KG.toLocaleString()} กก./วัน` }}
                                         />
