@@ -10,6 +10,7 @@ import {
     Truck,
     Wrench,
     Package,
+    HardHat,
 } from 'lucide-react'
 
 interface ExpenseTableProps {
@@ -22,6 +23,7 @@ const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
     LOGISTICS: 'Logistics',
     MAINTENANCE: 'Maintenance',
     FACTORY_SUPPLIES: 'Factory Supplies',
+    PROJECT: 'Project',
 }
 
 const SUBCATEGORY_LABELS: Record<ExpenseSubcategory, string> = {
@@ -31,6 +33,7 @@ const SUBCATEGORY_LABELS: Record<ExpenseSubcategory, string> = {
     CORRECTIVE_MAINTENANCE: 'ซ่อมเครื่องจักร',
     PREVENTIVE_MAINTENANCE: 'บำรุงรักษาตามรอบ',
     FACTORY_SUPPLIES: 'วัสดุสิ้นเปลือง',
+    MACHINE_INSTALLATION: 'ติดตั้งเครื่องจักร',
 }
 
 const getCategoryBadge = (category: ExpenseCategory) => {
@@ -41,6 +44,8 @@ const getCategoryBadge = (category: ExpenseCategory) => {
             return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100"><Wrench className="w-3 h-3 mr-1" />{CATEGORY_LABELS[category]}</Badge>
         case 'FACTORY_SUPPLIES':
             return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100"><Package className="w-3 h-3 mr-1" />{CATEGORY_LABELS[category]}</Badge>
+        case 'PROJECT':
+            return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><HardHat className="w-3 h-3 mr-1" />{CATEGORY_LABELS[category]}</Badge>
     }
 }
 

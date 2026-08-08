@@ -38,6 +38,7 @@ import {
     Truck,
     Wrench,
     Package,
+    HardHat,
 } from 'lucide-react'
 
 export default function FactoryExpensesPage() {
@@ -93,6 +94,7 @@ export default function FactoryExpensesPage() {
             logisticsCount: expenses.filter(e => e.category === 'LOGISTICS').length,
             maintenanceCount: expenses.filter(e => e.category === 'MAINTENANCE').length,
             suppliesCount: expenses.filter(e => e.category === 'FACTORY_SUPPLIES').length,
+            projectCount: expenses.filter(e => e.category === 'PROJECT').length,
         }
     }, [expenses])
 
@@ -163,7 +165,7 @@ export default function FactoryExpensesPage() {
 
             <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
                 {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="bg-white rounded-xl shadow-sm border p-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-purple-100">
@@ -211,6 +213,18 @@ export default function FactoryExpensesPage() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-green-100">
+                                <HardHat className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Project</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats.projectCount}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filters */}
@@ -237,6 +251,7 @@ export default function FactoryExpensesPage() {
                                 <SelectItem value="LOGISTICS">Logistics (การขนส่ง)</SelectItem>
                                 <SelectItem value="MAINTENANCE">Maintenance (ซ่อมบำรุง)</SelectItem>
                                 <SelectItem value="FACTORY_SUPPLIES">Factory Supplies (วัสดุสิ้นเปลือง)</SelectItem>
+                                <SelectItem value="PROJECT">Project (โครงการ)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

@@ -44,6 +44,7 @@ const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
     { value: 'LOGISTICS', label: 'Logistics (การขนส่ง)' },
     { value: 'MAINTENANCE', label: 'Maintenance (ซ่อมบำรุงเครื่องจักร)' },
     { value: 'FACTORY_SUPPLIES', label: 'Factory Supplies (วัสดุสิ้นเปลือง)' },
+    { value: 'PROJECT', label: 'Project (โครงการ)' },
 ]
 
 const FUEL_TYPE_OPTIONS = [
@@ -64,14 +65,18 @@ const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; 
     FACTORY_SUPPLIES: [
         { value: 'FACTORY_SUPPLIES', label: 'วัสดุของใช้สิ้นเปลืองในโรงงาน' },
     ],
+    PROJECT: [
+        { value: 'MACHINE_INSTALLATION', label: 'ติดตั้งเครื่องจักร' },
+    ],
 }
 
 const expenseFormSchema = z.object({
     code: z.string().min(1, 'กรุณาระบุรหัส'),
-    category: z.enum(['LOGISTICS', 'MAINTENANCE', 'FACTORY_SUPPLIES']),
+    category: z.enum(['LOGISTICS', 'MAINTENANCE', 'FACTORY_SUPPLIES', 'PROJECT']),
     subcategory: z.enum([
         'FUEL', 'VEHICLE_GENERAL', 'SPARE_PARTS',
         'CORRECTIVE_MAINTENANCE', 'PREVENTIVE_MAINTENANCE', 'FACTORY_SUPPLIES',
+        'MACHINE_INSTALLATION',
     ]),
     expenseDate: z.string().min(1, 'กรุณาระบุวันที่'),
     amount: z.number().min(0, 'จำนวนเงินต้องไม่ติดลบ'),
@@ -213,6 +218,7 @@ export function ExpenseFormModal({
     const isFuel = watchedSubcategory === 'FUEL'
     const isVehicleGeneral = watchedSubcategory === 'VEHICLE_GENERAL'
     const isMaintenance = ['SPARE_PARTS', 'CORRECTIVE_MAINTENANCE', 'PREVENTIVE_MAINTENANCE'].includes(watchedSubcategory)
+    const showsMachineField = isMaintenance || watchedSubcategory === 'MACHINE_INSTALLATION'
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -430,7 +436,7 @@ export function ExpenseFormModal({
                                 />
                             )}
 
-                            {isMaintenance && (
+                            {showsMachineField && (
                                 <FormField
                                     control={form.control}
                                     name="machineId"

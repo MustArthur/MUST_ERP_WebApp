@@ -1,6 +1,6 @@
 // Factory Expense Types
 
-export type ExpenseCategory = 'LOGISTICS' | 'MAINTENANCE' | 'FACTORY_SUPPLIES'
+export type ExpenseCategory = 'LOGISTICS' | 'MAINTENANCE' | 'FACTORY_SUPPLIES' | 'PROJECT'
 
 export type ExpenseSubcategory =
     | 'FUEL'                     // Logistics: ค่าน้ำมันรถขนส่ง
@@ -9,6 +9,7 @@ export type ExpenseSubcategory =
     | 'CORRECTIVE_MAINTENANCE'   // Maintenance: ค่าซ่อมเครื่องจักร
     | 'PREVENTIVE_MAINTENANCE'   // Maintenance: ค่าบำรุงรักษาเครื่องจักรตามรอบ
     | 'FACTORY_SUPPLIES'         // Factory Supplies: วัสดุของใช้สิ้นเปลืองในโรงงาน
+    | 'MACHINE_INSTALLATION'     // Project: ค่าติดตั้งเครื่องจักร
 
 export interface FactoryExpense {
     id: string
