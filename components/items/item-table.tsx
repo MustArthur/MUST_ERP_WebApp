@@ -17,6 +17,7 @@ import {
     Package,
     Box,
     Tag,
+    Boxes,
     Eye,
     Warehouse,
     Copy,
@@ -42,6 +43,9 @@ const getItemTypeBadge = (item: Item) => {
     }
     if (catCode.startsWith('CAT-PKG')) {
         return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100"><Tag className="w-3 h-3 mr-1" />บรรจุภัณฑ์</Badge>
+    }
+    if (catCode.startsWith('CAT-SUP')) {
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100"><Boxes className="w-3 h-3 mr-1" />ของใช้สิ้นเปลือง</Badge>
     }
     return <Badge variant="outline">อื่นๆ</Badge>
 }

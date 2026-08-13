@@ -14,6 +14,7 @@ import {
     Package,
     Box,
     Tag,
+    Boxes,
     RefreshCw,
 } from 'lucide-react'
 
@@ -29,6 +30,9 @@ const getItemTypeBadge = (item: ItemType) => {
     }
     if (catCode.startsWith('CAT-PKG')) {
         return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100"><Tag className="w-3 h-3 mr-1" />บรรจุภัณฑ์</Badge>
+    }
+    if (catCode.startsWith('CAT-SUP')) {
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100"><Boxes className="w-3 h-3 mr-1" />ของใช้สิ้นเปลือง</Badge>
     }
     return <Badge variant="outline">อื่นๆ</Badge>
 }
@@ -162,8 +166,10 @@ export default function ItemDetailPage() {
                 {/* Supplier Section */}
                 <ItemSupplierSection item={item} />
 
-                {/* Used In Recipes Section */}
-                <ItemUsedInRecipesSection item={item} />
+                {/* Used In Recipes Section - only meaningful for items that can be recipe ingredients */}
+                {(item.code.startsWith('RM-') || item.code.startsWith('SP-')) && (
+                    <ItemUsedInRecipesSection item={item} />
+                )}
             </main>
 
             {/* Edit Modal */}
