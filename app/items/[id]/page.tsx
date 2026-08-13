@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Item as ItemType, UnitOfMeasure, Category, UpdateItemInput } from '@/types/item'
+import { Warehouse } from '@/types/inventory'
 import { getAllItems, updateItem, getCategories, getUnitsOfMeasure } from '@/lib/api/items'
+import { getWarehouses } from '@/lib/api/inventory'
 import { ItemFormModal, ItemSupplierSection, ItemUsedInRecipesSection } from '@/components/items'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -45,6 +47,7 @@ export default function ItemDetailPage() {
     const [item, setItem] = useState<ItemType | null>(null)
     const [categories, setCategories] = useState<Category[]>([])
     const [uoms, setUoms] = useState<UnitOfMeasure[]>([])
+    const [warehouses, setWarehouses] = useState<Warehouse[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [showEditModal, setShowEditModal] = useState(false)
 
@@ -52,15 +55,17 @@ export default function ItemDetailPage() {
     useEffect(() => {
         async function loadData() {
             setIsLoading(true)
-            const [items, cats, units] = await Promise.all([
+            const [items, cats, units, whs] = await Promise.all([
                 getAllItems(),
                 getCategories(),
                 getUnitsOfMeasure(),
+                getWarehouses(),
             ])
             const foundItem = items.find(i => i.id === itemId)
             setItem(foundItem || null)
             setCategories(cats)
             setUoms(units)
+            setWarehouses(whs)
             setIsLoading(false)
         }
         loadData()
@@ -177,6 +182,7 @@ export default function ItemDetailPage() {
                 item={item}
                 categories={categories}
                 uoms={uoms}
+                warehouses={warehouses}
                 isOpen={showEditModal}
                 onClose={() => setShowEditModal(false)}
                 onSave={async (data, isNew) => {

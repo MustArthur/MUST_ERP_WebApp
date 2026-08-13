@@ -7,6 +7,7 @@ import {
     UpdateItemInput,
     ItemFilters
 } from '@/types/item'
+import { Warehouse } from '@/types/inventory'
 import {
     getAllItems,
     createItem,
@@ -15,12 +16,14 @@ import {
     getCategories,
     getUnitsOfMeasure
 } from '@/lib/api/items'
+import { getWarehouses } from '@/lib/api/inventory'
 
 interface ItemsState {
     // Data
     items: Item[]
     categories: Category[]
     uoms: UnitOfMeasure[]
+    warehouses: Warehouse[]
 
     // UI State
     isLoading: boolean
@@ -31,6 +34,7 @@ interface ItemsState {
     fetchItems: () => Promise<void>
     fetchCategories: () => Promise<void>
     fetchUOMs: () => Promise<void>
+    fetchWarehouses: () => Promise<void>
     createItem: (input: CreateItemInput) => Promise<Item | null>
     updateItem: (id: string, input: UpdateItemInput) => Promise<Item | null>
     deleteItem: (id: string) => Promise<boolean>
@@ -49,6 +53,7 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
     items: [],
     categories: [],
     uoms: [],
+    warehouses: [],
     isLoading: false,
     error: null,
     filters: defaultFilters,
@@ -82,6 +87,16 @@ export const useItemsStore = create<ItemsState>((set, get) => ({
             set({ uoms })
         } catch (error) {
             console.error('Error fetching UOMs:', error)
+        }
+    },
+
+    // Fetch warehouses
+    fetchWarehouses: async () => {
+        try {
+            const warehouses = await getWarehouses()
+            set({ warehouses })
+        } catch (error) {
+            console.error('Error fetching warehouses:', error)
         }
     },
 

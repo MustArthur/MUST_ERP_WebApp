@@ -41,11 +41,13 @@ export default function ItemsPage() {
         items,
         categories,
         uoms,
+        warehouses,
         isLoading,
         filters,
         fetchItems,
         fetchCategories,
         fetchUOMs,
+        fetchWarehouses,
         createItem,
         updateItem,
         deleteItem,
@@ -64,7 +66,8 @@ export default function ItemsPage() {
         fetchItems()
         fetchCategories()
         fetchUOMs()
-    }, [fetchItems, fetchCategories, fetchUOMs])
+        fetchWarehouses()
+    }, [fetchItems, fetchCategories, fetchUOMs, fetchWarehouses])
 
     // Filter items
     const filteredItems = useMemo(() => {
@@ -338,6 +341,7 @@ export default function ItemsPage() {
                 duplicateFrom={duplicateSource}
                 categories={categories}
                 uoms={uoms}
+                warehouses={warehouses}
                 isOpen={showFormModal}
                 onClose={() => {
                     setShowFormModal(false)

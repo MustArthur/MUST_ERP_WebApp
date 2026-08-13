@@ -431,6 +431,7 @@ export default function InventoryPage() {
         item={editingItem}
         categories={categories}
         uoms={uoms}
+        warehouses={warehouses}
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
         onSave={handleSaveItem}

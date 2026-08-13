@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Item, Category, UnitOfMeasure, CreateItemInput, UpdateItemInput } from '@/types/item'
+import { Warehouse } from '@/types/inventory'
 import {
     Dialog,
     DialogContent,
@@ -47,6 +48,7 @@ const itemFormSchema = z.object({
     stockConversionFactor: z.number().min(0.000001, 'ต้องมากกว่า 0'),
     isActive: z.boolean(),
     requiresQC: z.boolean(),
+    defaultWarehouseId: z.string().optional(),
 })
 
 type ItemFormValues = z.infer<typeof itemFormSchema>
@@ -56,6 +58,7 @@ interface ItemFormModalProps {
     duplicateFrom?: Item | null
     categories: Category[]
     uoms: UnitOfMeasure[]
+    warehouses: Warehouse[]
     isOpen: boolean
     onClose: () => void
     onSave: (data: CreateItemInput | UpdateItemInput, isNew: boolean) => Promise<void>
@@ -66,6 +69,7 @@ export function ItemFormModal({
     duplicateFrom,
     categories,
     uoms,
+    warehouses,
     isOpen,
     onClose,
     onSave,
@@ -89,6 +93,7 @@ export function ItemFormModal({
             stockConversionFactor: 1,
             isActive: true,
             requiresQC: false,
+            defaultWarehouseId: '',
         },
     })
 
@@ -113,6 +118,7 @@ export function ItemFormModal({
                 stockConversionFactor: item.stockConversionFactor ?? 1,
                 isActive: item.isActive,
                 requiresQC: item.requiresQC || false,
+                defaultWarehouseId: item.defaultWarehouseId || '',
             })
         } else if (duplicateFrom) {
             form.reset({
@@ -128,6 +134,7 @@ export function ItemFormModal({
                 stockConversionFactor: duplicateFrom.stockConversionFactor ?? 1,
                 isActive: true,
                 requiresQC: duplicateFrom.requiresQC || false,
+                defaultWarehouseId: duplicateFrom.defaultWarehouseId || '',
             })
         } else {
             form.reset({
@@ -143,6 +150,7 @@ export function ItemFormModal({
                 stockConversionFactor: 1,
                 isActive: true,
                 requiresQC: false,
+                defaultWarehouseId: '',
             })
         }
     }, [item, duplicateFrom, form])
@@ -164,6 +172,7 @@ export function ItemFormModal({
                     stockConversionFactor: data.stockConversionFactor,
                     isActive: data.isActive,
                     requiresQC: data.requiresQC,
+                    defaultWarehouseId: data.defaultWarehouseId || '',
                 }, false)
             } else {
                 await onSave({
@@ -178,6 +187,7 @@ export function ItemFormModal({
                     leadTimeWeeks: data.leadTimeWeeks,
                     stockConversionFactor: data.stockConversionFactor,
                     requiresQC: data.requiresQC,
+                    defaultWarehouseId: data.defaultWarehouseId || undefined,
                 }, true)
             }
             onClose()
@@ -457,6 +467,38 @@ export function ItemFormModal({
                                 }}
                             />
                         </div>
+
+                        <FormField
+                            control={form.control}
+                            name="defaultWarehouseId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>คลังที่รับเข้าเริ่มต้น</FormLabel>
+                                    <Select
+                                        onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
+                                        value={field.value || 'none'}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="ไม่ระบุ (เลือกคลังเองตอนรับเข้า)" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="none">ไม่ระบุ (เลือกคลังเองตอนรับเข้า)</SelectItem>
+                                            {warehouses.map((wh) => (
+                                                <SelectItem key={wh.id} value={wh.id}>
+                                                    {wh.name} ({wh.code})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-muted-foreground">
+                                        ถ้ากำหนดไว้ ตอนสร้างใบรับวัตถุดิบจะเลือกคลังนี้ให้อัตโนมัติ
+                                    </p>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         <FormField
                             control={form.control}

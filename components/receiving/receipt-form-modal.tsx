@@ -192,8 +192,11 @@ export function ReceiptFormModal({
       form.setValue(`items.${index}.uom`, item.stock_uom_code || item.base_uom_code || 'KG')
       form.setValue(`items.${index}.unitPrice`, item.last_purchase_cost || 0)
 
-      // Auto-select warehouse: ถ้ามีแค่ 1 ตัว เลือกเลย
-      if (rawMaterialWarehouses.length === 1) {
+      // Auto-select warehouse: ใช้คลังเริ่มต้นที่กำหนดไว้ในรายละเอียด item ก่อน
+      if (item.default_warehouse_id) {
+        form.setValue(`items.${index}.warehouseId`, item.default_warehouse_id)
+      } else if (rawMaterialWarehouses.length === 1) {
+        // ถ้ามีแค่ 1 ตัว เลือกเลย
         form.setValue(`items.${index}.warehouseId`, rawMaterialWarehouses[0].id)
       } else if (rawMaterialWarehouses.length > 1) {
         // ถ้ามีหลายตัว เลือก default/active ตัวแรก

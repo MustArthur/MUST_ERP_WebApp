@@ -23,6 +23,8 @@ export interface Item {
     stock_uom_code?: string
     category_id?: string
     category_code?: string
+    default_warehouse_id?: string
+    default_warehouse_code?: string
 }
 
 /**
@@ -48,9 +50,11 @@ export async function getAllItems(): Promise<ItemType[]> {
           stock_uom_id,
           category_id,
           min_stock_qty,
+          default_warehouse_id,
           categories:category_id (id, code, name),
           units_of_measure:base_uom_id (id, code, name),
-          stock_uom:stock_uom_id (id, code, name)
+          stock_uom:stock_uom_id (id, code, name),
+          default_warehouse:default_warehouse_id (id, code, name)
         `)
         .order('code')
 
@@ -120,6 +124,9 @@ export async function getAllItems(): Promise<ItemType[]> {
             requiresQC: (i as any).requires_qc ?? false,
             leadTimeWeeks: (i as any).lead_time_weeks ?? 1,
             stockConversionFactor: (i as any).stock_conversion_factor ?? 1,
+            defaultWarehouseId: (i as any).default_warehouse_id || undefined,
+            defaultWarehouseCode: (i.default_warehouse as any)?.code || undefined,
+            defaultWarehouseName: (i.default_warehouse as any)?.name || undefined,
             createdAt: i.created_at,
             updatedAt: i.updated_at,
             stockQty,
@@ -150,6 +157,7 @@ export async function createItem(input: CreateItemInput): Promise<ItemType | nul
             requires_qc: input.requiresQC ?? false,
             lead_time_weeks: input.leadTimeWeeks ?? 1,
             stock_conversion_factor: input.stockConversionFactor ?? 1,
+            default_warehouse_id: input.defaultWarehouseId || null,
         })
         .select()
         .single()
@@ -181,6 +189,7 @@ export async function updateItem(id: string, input: UpdateItemInput): Promise<It
     if (input.requiresQC !== undefined) updateData.requires_qc = input.requiresQC
     if (input.leadTimeWeeks !== undefined) updateData.lead_time_weeks = input.leadTimeWeeks
     if (input.stockConversionFactor !== undefined) updateData.stock_conversion_factor = input.stockConversionFactor
+    if (input.defaultWarehouseId !== undefined) updateData.default_warehouse_id = input.defaultWarehouseId || null
 
     const { error } = await supabase
         .from('items')
@@ -350,7 +359,9 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
                 requires_qc,
                 base_uom_id,
                 stock_uom_id,
-                category_id
+                category_id,
+                default_warehouse_id,
+                default_warehouse:default_warehouse_id (id, code, name)
             )
         `)
         .eq('supplier_id', supplierId)
@@ -395,6 +406,8 @@ export async function getSupplierItems(supplierId: string): Promise<Item[]> {
             stock_uom_id: stockUomId,
             stock_uom_code: uomMap.get(stockUomId) || uomMap.get(item.base_uom_id) || 'G',
             category_id: item.category_id,
+            default_warehouse_id: item.default_warehouse_id || undefined,
+            default_warehouse_code: item.default_warehouse?.code || undefined,
         }
     })
 }
