@@ -2,7 +2,7 @@
 // Raw Material Receiving Types
 // ==========================================
 
-import { StockItem, UnitOfMeasure } from './inventory'
+import { StockItem } from './inventory'
 
 // ==========================================
 // Supplier Types
@@ -43,7 +43,7 @@ export interface PurchaseReceiptItem {
   qtyReceived: number             // Actually received
   qtyAccepted: number             // After QC passed
   qtyRejected: number             // After QC failed
-  uom: UnitOfMeasure
+  uom: string
   uomId?: string                  // UOM ID for inventory operations
   batchNo?: string
   mfgDate?: string
@@ -90,7 +90,7 @@ export interface CreateSupplierInput {
 export interface CreateReceiptItemInput {
   itemId: string
   qtyReceived: number
-  uom: UnitOfMeasure
+  uom: string
   batchNo?: string
   mfgDate?: string
   expDate?: string
@@ -112,7 +112,7 @@ export interface UpdateReceiptItemInput {
   id?: string                     // For existing items
   itemId: string
   qtyReceived: number
-  uom: UnitOfMeasure
+  uom: string
   batchNo?: string
   mfgDate?: string
   expDate?: string

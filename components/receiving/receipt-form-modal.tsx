@@ -10,10 +10,10 @@ import {
   CreatePurchaseReceiptInput,
   CreateReceiptItemInput,
 } from '@/types/receiving'
-import { UnitOfMeasure } from '@/types/inventory'
+import { UnitOfMeasure as UOM } from '@/types/item'
 import { useReceivingStore } from '@/stores/receiving-store'
 import { useInventoryStore } from '@/stores/inventory-store'
-import { getSupplierItems, Item } from '@/lib/api/items'
+import { getSupplierItems, getUnitsOfMeasure, Item } from '@/lib/api/items'
 import {
   Dialog,
   DialogContent,
@@ -80,18 +80,6 @@ interface ReceiptFormModalProps {
   onSave: (data: CreatePurchaseReceiptInput) => Promise<void>
 }
 
-const UOM_OPTIONS: { value: UnitOfMeasure; label: string }[] = [
-  { value: 'KG', label: 'กิโลกรัม (KG)' },
-  { value: 'G', label: 'กรัม (G)' },
-  { value: 'L', label: 'ลิตร (L)' },
-  { value: 'ML', label: 'มิลลิลิตร (ML)' },
-  { value: 'PC', label: 'ชิ้น (PC)' },
-  { value: 'BOX', label: 'กล่อง (BOX)' },
-  { value: 'PKG', label: 'แพ็ค (PKG)' },
-  { value: 'BTL', label: 'ขวด (BTL)' },
-  { value: 'BAG', label: 'ถุง (BAG)' },
-]
-
 export function ReceiptFormModal({
   receipt,
   isOpen,
@@ -100,6 +88,7 @@ export function ReceiptFormModal({
 }: ReceiptFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [rawMaterials, setRawMaterials] = useState<Item[]>([])
+  const [uoms, setUoms] = useState<UOM[]>([])
   const { suppliers, fetchSuppliers } = useReceivingStore()
   const { stockItems, warehouses, fetchStockItems, fetchWarehouses } = useInventoryStore()
 
@@ -147,6 +136,7 @@ export function ReceiptFormModal({
     fetchSuppliers()
     fetchStockItems()
     fetchWarehouses()
+    getUnitsOfMeasure().then(setUoms)
   }, [fetchSuppliers, fetchStockItems, fetchWarehouses])
 
   // Load items when supplier changes
@@ -242,7 +232,7 @@ export function ReceiptFormModal({
         items: data.items.map(item => ({
           itemId: item.itemId,
           qtyReceived: item.qtyReceived,
-          uom: item.uom as UnitOfMeasure,
+          uom: item.uom,
           batchNo: item.batchNo || undefined,
           mfgDate: item.mfgDate || undefined,
           expDate: item.expDate || undefined,
@@ -510,9 +500,9 @@ export function ReceiptFormModal({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {UOM_OPTIONS.map((uom) => (
-                                      <SelectItem key={uom.value} value={uom.value}>
-                                        {uom.label}
+                                    {uoms.map((uom) => (
+                                      <SelectItem key={uom.id} value={uom.code}>
+                                        {uom.name} ({uom.code})
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
