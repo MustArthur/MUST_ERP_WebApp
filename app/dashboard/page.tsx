@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Beef, Snowflake, Fuel, Package, Wallet } from 'lucide-react'
+import { Beef, Snowflake, Fuel, Package, Wallet, Truck, CreditCard } from 'lucide-react'
 import { StatsCard, StatsGrid } from '@/components/dashboard/stats-card'
 import { SimpleAreaChart } from '@/components/dashboard/area-chart'
 import { SimpleBarChart } from '@/components/dashboard/bar-chart'
@@ -13,11 +13,14 @@ import {
     getFreshChickenDailyQuantityBySupplier,
     getIceBagsDailyTrend,
     getLogisticsFuelDailyTrend,
+    getEasyPassDailyTrend,
+    getFuelCostByVehicle,
     getSupplierSeriesColor,
     DailyPricePoint,
     DailyFuelCost,
     SupplierPriceTrend,
     SupplierQuantityTrend,
+    VehicleFuelSummary,
 } from '@/lib/api/dashboard'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 
@@ -60,22 +63,28 @@ export default function DashboardPage() {
     const [chickenQtyBySupplier, setChickenQtyBySupplier] = useState<SupplierQuantityTrend>({ data: [], series: [] })
     const [ice, setIce] = useState<DailyPricePoint[]>([])
     const [fuel, setFuel] = useState<DailyFuelCost[]>([])
+    const [fuelByVehicle, setFuelByVehicle] = useState<VehicleFuelSummary[]>([])
+    const [easyPass, setEasyPass] = useState<DailyFuelCost[]>([])
 
     useEffect(() => {
         async function load() {
             setLoading(true)
-            const [chickenData, chickenBySupplierData, chickenQtyBySupplierData, iceData, fuelData] = await Promise.all([
+            const [chickenData, chickenBySupplierData, chickenQtyBySupplierData, iceData, fuelData, fuelByVehicleData, easyPassData] = await Promise.all([
                 getFreshChickenDailyTrend(30),
                 getFreshChickenDailyTrendBySupplier(30),
                 getFreshChickenDailyQuantityBySupplier(30),
                 getIceBagsDailyTrend(30),
                 getLogisticsFuelDailyTrend(30),
+                getFuelCostByVehicle(30),
+                getEasyPassDailyTrend(30),
             ])
             setChicken(chickenData)
             setChickenBySupplier(chickenBySupplierData)
             setChickenQtyBySupplier(chickenQtyBySupplierData)
             setIce(iceData)
             setFuel(fuelData)
+            setFuelByVehicle(fuelByVehicleData)
+            setEasyPass(easyPassData)
             setLoading(false)
         }
         load()
@@ -90,6 +99,12 @@ export default function DashboardPage() {
         .filter(f => f.date.startsWith(currentMonth))
         .reduce((sum, f) => sum + f.totalAmount, 0)
     const latestFuel = fuel[fuel.length - 1]
+    const topFuelVehicle = fuelByVehicle[0]
+
+    const easyPassThisMonth = easyPass
+        .filter(f => f.date.startsWith(currentMonth))
+        .reduce((sum, f) => sum + f.totalAmount, 0)
+    const latestEasyPass = easyPass[easyPass.length - 1]
 
     const iceCostTrend = ice.map(d => ({ name: d.label, value: Math.round(d.quantity * d.avgPrice) }))
 
@@ -254,6 +269,76 @@ export default function DashboardPage() {
                                     />
                                 ) : (
                                     <EmptyChart title="ค่าน้ำมัน" />
+                                )}
+                            </div>
+
+                            {/* Fuel by vehicle */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-medium text-gray-500">ค่าน้ำมันแยกตามคันรถ</h3>
+                                <StatsGrid>
+                                    <StatsCard
+                                        title="คันที่ใช้น้ำมันมากที่สุด (30 วัน)"
+                                        value={topFuelVehicle ? formatCurrency(topFuelVehicle.totalCost) : '-'}
+                                        icon={Truck}
+                                        color="text-indigo-600"
+                                        bgColor="bg-indigo-100"
+                                        subtitle={topFuelVehicle?.vehicleName}
+                                    />
+                                    <StatsCard
+                                        title="จำนวนคันที่มีข้อมูล"
+                                        value={fuelByVehicle.length}
+                                        unit="คัน"
+                                        icon={Truck}
+                                        color="text-blue-600"
+                                        bgColor="bg-blue-100"
+                                    />
+                                </StatsGrid>
+                                {fuelByVehicle.length > 0 ? (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <SimpleBarChart
+                                            title="ค่าน้ำมันแยกตามคันรถ (บาท, 30 วัน)"
+                                            data={fuelByVehicle.map(v => ({ name: v.vehicleName, value: Math.round(v.totalCost) }))}
+                                            showColors
+                                        />
+                                        <SimpleBarChart
+                                            title="ปริมาณน้ำมันแยกตามคันรถ (ลิตร, 30 วัน)"
+                                            data={fuelByVehicle.map(v => ({ name: v.vehicleName, value: Math.round(v.totalLiters) }))}
+                                            showColors
+                                        />
+                                    </div>
+                                ) : (
+                                    <EmptyChart title="ค่าน้ำมันแยกตามคันรถ" />
+                                )}
+                            </div>
+
+                            {/* EasyPass */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-medium text-gray-500">ค่าทางด่วน (EasyPass)</h3>
+                                <StatsGrid>
+                                    <StatsCard
+                                        title="ค่าทางด่วนเดือนนี้ (รวม)"
+                                        value={formatCurrency(easyPassThisMonth)}
+                                        icon={CreditCard}
+                                        color="text-teal-600"
+                                        bgColor="bg-teal-100"
+                                    />
+                                    <StatsCard
+                                        title="ค่าทางด่วนล่าสุด"
+                                        value={latestEasyPass ? formatCurrency(latestEasyPass.totalAmount) : '-'}
+                                        icon={CreditCard}
+                                        color="text-emerald-600"
+                                        bgColor="bg-emerald-100"
+                                        subtitle={latestEasyPass ? `ข้อมูลวันที่ ${latestEasyPass.label}` : undefined}
+                                    />
+                                </StatsGrid>
+                                {easyPass.length > 0 ? (
+                                    <SimpleAreaChart
+                                        title="แนวโน้มค่าทางด่วนรายวัน (บาท)"
+                                        data={easyPass.map(d => ({ name: d.label, value: Math.round(d.totalAmount) }))}
+                                        color="#14b8a6"
+                                    />
+                                ) : (
+                                    <EmptyChart title="ค่าทางด่วน (EasyPass)" />
                                 )}
                             </div>
                         </section>

@@ -265,3 +265,84 @@ export async function getLogisticsFuelDailyTrend(days = 30): Promise<DailyFuelCo
             totalAmount,
         }))
 }
+
+/**
+ * Daily total EasyPass toll spend (baht). Scoped to the literal `description = 'EasyPass'`
+ * tag within LOGISTICS/VEHICLE_GENERAL, which also holds unrelated one-off costs (repairs,
+ * other toll gates) that this widget intentionally excludes.
+ */
+export async function getEasyPassDailyTrend(days = 30): Promise<DailyFuelCost[]> {
+    const { data, error } = await supabase
+        .from('factory_expenses')
+        .select('expense_date, amount')
+        .eq('category', 'LOGISTICS')
+        .eq('subcategory', 'VEHICLE_GENERAL')
+        .eq('description', 'EasyPass')
+        .gte('expense_date', cutoffDate(days))
+
+    if (error) {
+        console.error('Error fetching EasyPass daily trend:', error)
+        return []
+    }
+
+    const byDate = new Map<string, number>()
+    for (const row of data || []) {
+        const date = row.expense_date
+        if (!date) continue
+        byDate.set(date, (byDate.get(date) || 0) + (row.amount || 0))
+    }
+
+    return Array.from(byDate.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, totalAmount]) => ({
+            date,
+            label: formatLabel(date),
+            totalAmount,
+        }))
+}
+
+export interface VehicleFuelSummary {
+    vehicleId: string
+    vehicleName: string
+    totalCost: number
+    totalLiters: number
+}
+
+/**
+ * Total fuel cost and liters per vehicle over the period, ranked by cost descending. Aggregated
+ * per vehicle rather than per day — with only ~11-19 fill-ups per vehicle over 30 days, a daily
+ * breakdown would be too sparse to read; the useful question here is "which vehicle costs the
+ * most", not a day-by-day trend.
+ */
+export async function getFuelCostByVehicle(days = 30): Promise<VehicleFuelSummary[]> {
+    const { data, error } = await supabase
+        .from('factory_expenses')
+        .select(`
+            amount,
+            fuel_quantity_liters,
+            vehicle_id,
+            vehicles:vehicle_id (id, name)
+        `)
+        .eq('category', 'LOGISTICS')
+        .eq('subcategory', 'FUEL')
+        .gte('expense_date', cutoffDate(days))
+
+    if (error) {
+        console.error('Error fetching fuel cost by vehicle:', error)
+        return []
+    }
+
+    const byVehicle = new Map<string, VehicleFuelSummary>()
+    for (const row of data || []) {
+        const vehicleId = row.vehicle_id
+        const vehicleName = (row.vehicles as any)?.name
+        if (!vehicleId || !vehicleName) continue
+
+        const existing = byVehicle.get(vehicleId) || { vehicleId, vehicleName, totalCost: 0, totalLiters: 0 }
+        existing.totalCost += row.amount || 0
+        existing.totalLiters += row.fuel_quantity_liters || 0
+        byVehicle.set(vehicleId, existing)
+    }
+
+    return Array.from(byVehicle.values()).sort((a, b) => b.totalCost - a.totalCost)
+}
