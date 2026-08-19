@@ -34,10 +34,11 @@ For users who know exactly which agent they need:
 | `/toh-connect` | `/toh-c` | Connect Supabase backend |
 | `/toh-design` | `/toh-ds` | Polish design |
 | `/toh-test` | `/toh-t` | Auto test & fix |
-| `/toh-line` | `/toh-l` | Create LINE Mini App |
-| `/toh-mobile` | `/toh-m` | Create Expo mobile app |
+| `/toh-line` | `/toh-l` | Convert to LINE MINI App |
+| `/toh-mobile` | `/toh-m` | Create mobile app (PWA / Capacitor) |
 | `/toh-fix` | `/toh-f` | Auto fix bugs |
 | `/toh-ship` | `/toh-s` | Deploy to production |
+| `/toh-protect` | `/toh-pt` | Security audit before deploy |
 | `/toh-help` | `/toh-h` | Show all commands |
 
 ---
@@ -87,7 +88,7 @@ Every `/toh-` command follows these rules:
 /toh dashboard with stats and charts
 /toh add product CRUD
 /toh connect database
-/toh convert to LINE Mini App
+/toh convert to LINE MINI App
 
 # Using specific commands (power users)
 /toh-vibe expense tracker for recording income and expenses
@@ -105,5 +106,5 @@ Every `/toh-` command follows these rules:
 | Category | Count |
 |----------|-------|
 | Main Command | 1 (`/toh`) |
-| Specific Commands | 12 |
-| **Total** | **13** |
+| Specific Commands | 13 |
+| **Total** | **14** |

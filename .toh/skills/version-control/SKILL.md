@@ -1,3 +1,13 @@
+---
+name: version-control
+description: >
+  Natural-language undo, rollback, and checkpoints that hide git entirely —
+  "ย้อนกลับ", "undo", "ไม่เอาแล้ว", "เอาอันเดิมคืน" map to safe git
+  stash/revert/checkpoint operations with cleanup and dev-server restart,
+  reported in plain language. Use when the user wants to undo changes, restore
+  a previous state, or save a safe checkpoint.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # ⏪ Version Control Skill
 
 > **Purpose:** Easy undo/rollback without knowing git

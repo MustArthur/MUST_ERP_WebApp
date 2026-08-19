@@ -9,7 +9,7 @@ description: Display all Toh Framework commands and quick usage guide
 When user calls `/toh-help`, display the following:
 
 <help_response>
-## 🎯 Toh Framework v1.8.1
+## 🎯 Toh Framework v2.1.0
 
 **"Type anything, AI does it for you"** - AI-Orchestration Driven Development
 
@@ -39,18 +39,19 @@ When user calls `/toh-help`, display the following:
 | Command | Shortcut | Description |
 |---------|----------|-------------|
 | `/toh` | - | 🧠 **Smart Command** - Type anything, AI picks the right Agent |
-| `/toh-plan` | `/toh-p` | 📋 **Plan** - Plan large projects |
+| `/toh-plan` | `/toh-p` | 📋 **Plan** - เขียน `.toh/plan.md` อนุมัติครั้งเดียว สร้างจนจบเอง |
 | `/toh-vibe` | `/toh-v` | 🎨 **Create Project** - UI + Logic + Mock Data in one command |
 | `/toh-ui` | `/toh-u` | 🖼️ **Create UI** - Pages, Components, Layouts |
 | `/toh-dev` | `/toh-d` | ⚙️ **Add Logic** - TypeScript, Zustand, Forms |
 | `/toh-design` | `/toh-ds` | ✨ **Polish Design** - Make it beautiful, not AI-looking |
 | `/toh-test` | `/toh-t` | 🧪 **Test** - Auto test & fix |
 | `/toh-connect` | `/toh-c` | 🔌 **Connect Backend** - Supabase, Auth, RLS |
-| `/toh-line` | `/toh-l` | 💚 **LINE Mini App** - LIFF integration |
-| `/toh-mobile` | `/toh-m` | 📱 **Mobile App** - Expo / React Native |
-| `/toh-fix` | `/toh-f` | 🔧 **Fix Bug** - Debug with 3-5-Rewrite Rule |
+| `/toh-line` | `/toh-l` | 💚 **LINE MINI App** (convert) |
+| `/toh-mobile` | `/toh-m` | 📱 **Mobile App** - PWA / Capacitor |
+| `/toh-fix` | `/toh-f` | 🔧 **Fix Bug** - Evidence-first debug: prove the root cause before touching code |
 | `/toh-ship` | `/toh-s` | 🚀 **Deploy** - Vercel, Production ready |
-| `/toh-protect` | `/toh-pr` | 🔐 **Security Audit** - Full security check |
+| `/toh-protect` | `/toh-pt` | 🔐 **Security Audit** - Full security check |
+| `/toh-help` | `/toh-h` | 📖 **Help** - Show every command, agent, and skill |
 
 ---
 
@@ -73,19 +74,25 @@ When user calls `/toh-help`, display the following:
 
 ---
 
-### 💾 Memory System (7 Files)
+### 💾 Memory System (7 Files · Tiered Loading)
 
 ```
 .toh/memory/
-├── active.md       # Current task
-├── summary.md      # Project summary
-├── decisions.md    # Key decisions
-├── changelog.md    # Session changes
-├── agents-log.md   # Agent activity
-├── architecture.md # Project structure
-├── components.md   # Component registry
-└── archive/        # Historical data
+├── Tier 1 · ALWAYS read at start (~800 tokens)
+│   ├── active.md       # Current task
+│   └── summary.md      # Project summary
+├── Tier 2 · read per task type
+│   ├── architecture.md # Project structure  (build/code work)
+│   ├── components.md   # Component registry  (build/code work)
+│   └── changelog.md    # Session changes     (debug work)
+├── Tier 3 · read only when referenced
+│   ├── decisions.md    # Key decisions
+│   └── agents-log.md   # Agent activity
+└── archive/            # Historical data
 ```
+
+**Writes:** always update `active.md`; update `summary.md` when the project
+shape changes; update the rest per relevance.
 
 ---
 
@@ -103,7 +110,7 @@ Every response from Toh includes:
 
 ### 🏗️ Tech Stack (Fixed)
 
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Styling:** Tailwind CSS + shadcn/ui
 - **State:** Zustand
 - **Forms:** React Hook Form + Zod
@@ -112,7 +119,7 @@ Every response from Toh includes:
 
 ---
 
-### 🤖 Sub-Agents (v1.6.0)
+### 🤖 Sub-Agents (8)
 
 | Agent | File | Specialty |
 |-------|------|-----------|
@@ -123,6 +130,7 @@ Every response from Toh includes:
 | 🧪 Test Runner | `test-runner.md` | Auto test & fix |
 | 🧠 Plan Orchestrator | `plan-orchestrator.md` | Analyze, Plan |
 | 📱 Platform Adapter | `platform-adapter.md` | LINE, Mobile, Desktop |
+| 🔍 Root Cause Debugger | `root-cause-debugger.md` | Investigate & prove bug root cause (read-only) |
 
 **Vibe Mode** = Orchestration Pattern (not an agent)
 ```
@@ -133,22 +141,23 @@ Every response from Toh includes:
 
 ### 📊 Framework Stats
 
-- 🤖 **7 Sub-Agents v2.1** - UI, Dev, Design, Test, Connect, Plan, Platform
-- 🎯 **15 Commands** - Including `/toh` smart command & `/toh-protect`
-- 📚 **24 Skills** - Including Security Engineer
-- 🎨 **13 Design Profiles** - Business-appropriate design
+- 🤖 **8 Sub-Agents v2.1** - UI, Dev, Design, Test, Connect, Plan, Platform, root-cause-debugger
+- 🎯 **14 Commands** - Including `/toh` smart command & `/toh-protect`
+- 📚 **23 Skills** - Including Orchestration Protocol & Security Engineer
+- 🎨 **Design Identity** - Per-project DESIGN.md design identity + versioned AVOID-LIST
 - 📦 **15 Component Templates** - Ready-to-use premium components
-- 🌐 **5 IDEs** - Claude Code, Cursor, Gemini, Antigravity, Codex
+- 🌐 **6 IDEs** - Claude Code, Cursor, Antigravity (+ Antigravity CLI), Codex (CLI + desktop app), ZCode, Gemini CLI (legacy)
 
 ---
 
-### 🆕 What's New in v1.8.1
+### 🆕 What's New in v2.1.0
 
-- 🌐 **Google Antigravity Workflows** - Full support! Commands appear with `/` in Antigravity
-- 🧠 **7-File Memory System** - Added `changelog.md` + `agents-log.md` for better tracking
-- 📢 **Agent Announcements** - See which agent is working on what
-- ⚡ **Parallel Execution** - Agents can work simultaneously when no dependencies
-- 🎯 **Agent Selection Reasoning** - See why AI chose specific agents
+- 🔌 **Codex Un-truncated** - Codex now reads the whole framework instead of silently dropping 6 of 8 agents: `AGENTS.md` slimmed from ~117 KB to under 13 KB with a hard size guard (Codex เห็นทีมผู้ช่วยครบทุกตัวแล้ว)
+- 🌌 **Antigravity + Antigravity CLI (agy)** - a native target with the full workspace `.agents/` surface: rules, workflows, subagents, skills + a deterministic Stop hook (Gemini CLI แบบเดิมยังใช้ได้ผ่าน `--legacy-gemini`)
+- 🧩 **Shared `.agents/skills/`** - one write, four tools: Codex, Cursor 2.4, Antigravity, and ZCode all discover the same 37 skills — 23 framework skills + 14 `/toh-*` command skills (ลงครั้งเดียว ใช้ได้สี่เครื่องมือ)
+- 💠 **ZCode (Z.ai) supported** - reads `AGENTS.md` + `.agents/skills/`, plus 14 native `/toh-*` slash commands from `.agents/commands/`; verified live with `zcode skills list` / `zcode commands list` (ZCode ใช้ /toh ได้ครบเหมือน IDE อื่น)
+- ⌨️ **Real Slash Aliases** - `/toh-v`, `/toh-p`, `/toh-pt` are now real Claude Code commands — no more "Unknown command"; `/toh-p` belongs solely to `/toh-plan`, `/toh-protect` moved to `/toh-pt` (ทางลัดใช้ได้จริงทุกตัว)
+- 🤖 **Native Agent Upgrades** - Claude Code subagents preload their skills natively, and Cursor 2.4 runs all 8 agents as native subagents instead of being told they don't exist (ทีมผู้ช่วยทำงานเต็มระบบทั้งใน Claude Code และ Cursor)
 
 ---
 
@@ -158,9 +167,10 @@ Every response from Toh includes:
 |-----|-----------------|
 | Claude Code | `CLAUDE.md` |
 | Cursor | `.cursor/rules/*.mdc` |
-| Gemini CLI | `.gemini/GEMINI.md` |
-| Google Antigravity | `.agent/workflows/` |
-| Codex CLI | `AGENTS.md` |
+| Antigravity CLI (agy) + IDE | `.agents/` — rules, skills, `.agents/workflows/` (legacy: `.agent/workflows/`) |
+| Codex (CLI + desktop app) | `AGENTS.md` |
+| ZCode (Z.ai) | `AGENTS.md` + `.agents/` — skills and `/toh-*` commands |
+| Gemini CLI (legacy, `--legacy-gemini`) | `.gemini/GEMINI.md` |
 
 ---
 
@@ -168,6 +178,7 @@ Every response from Toh includes:
 
 - **Website:** [tohframework.dev](https://tohframework.dev)
 - **npm:** `npm install -g toh-framework`
+- **Install / update:** `npx toh-framework install` — **Remove:** `npx toh-framework uninstall` (shows a preview and asks first; your plan, work log and notes are kept unless you say otherwise)
 - **GitHub:** [github.com/wasintoh/toh-framework](https://github.com/wasintoh/toh-framework)
 
 </help_response>

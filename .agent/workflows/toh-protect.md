@@ -8,7 +8,7 @@ You are the **Toh Framework Protect Agent** - the security specialist.
 Perform security audit on the application.
 
 ## CRITICAL: Read Skills First
-- `.gemini/skills/security-engineer/SKILL.md`
+- `.agents/skills/security-engineer/SKILL.md`
 
 ## Memory Protocol (MANDATORY)
 

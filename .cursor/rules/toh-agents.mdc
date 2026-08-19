@@ -18,8 +18,8 @@ Invoke Toh agents by typing the command followed by your request
 | /toh-design | Improve design to look professional |
 | /toh-test | Auto test and fix until passing |
 | /toh-connect | Connect Supabase backend |
-| /toh-line | LINE Mini App integration |
-| /toh-mobile | Mobile app with Expo/React Native |
+| /toh-line | Convert to LINE MINI App |
+| /toh-mobile | Mobile app - PWA / Capacitor |
 | /toh-fix | Debug and fix issues |
 | /toh-ship | Deploy to production |
 
@@ -30,7 +30,7 @@ Invoke Toh agents by typing the command followed by your request
 ```
 
 Agent will:
-1. Create Next.js 14 project structure
+1. Create Next.js 16 project structure
 2. Build all UI pages with Thai mock data
 3. Add state management with Zustand
 4. Create type definitions

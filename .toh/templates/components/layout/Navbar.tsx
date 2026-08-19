@@ -31,12 +31,14 @@ export function Navbar({
   const pathname = usePathname();
 
   return (
+    // Solid surface, never translucent/blurred (glassmorphism is an AVOID-LIST tell)
     <header className={cn(
-      "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+      "sticky top-0 z-50 w-full border-b bg-background",
       className
     )}>
       <div className="container flex h-16 items-center justify-between">
-        {/* Logo */}
+        {/* Logo: always top-left, always links home. Brand personality comes
+            from the DESIGN.md wordmark treatment — not from moving the logo. */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
             {logo || (
@@ -44,7 +46,8 @@ export function Navbar({
             )}
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop navigation: NEVER collapses into a hamburger —
+              text links stay visible at md and up. */}
           <nav className="hidden md:flex items-center gap-6">
             {items.map((item) => (
               <Link
@@ -69,7 +72,7 @@ export function Navbar({
             {actions}
           </div>
           
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button — mobile only (hidden at md+) */}
           <Button
             variant="ghost"
             size="icon"

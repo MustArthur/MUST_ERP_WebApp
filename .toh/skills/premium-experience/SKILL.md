@@ -307,10 +307,9 @@ export function CountUp({ end, duration = 2, prefix = "", suffix = "" }: CountUp
 --duration-slow: 300ms;      /* Page transitions */
 --duration-slower: 500ms;    /* Complex animations */
 
-/* Easing functions */
+/* Easing functions — no spring/bounce (AVOID-LIST) */
 --ease-out: cubic-bezier(0.33, 1, 0.68, 1);      /* Most animations */
 --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* Symmetric motion */
---ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Playful bounce */
 ```
 
 ### Animation Rules
@@ -549,40 +548,26 @@ export interface PaginatedResponse<T> {
 
 ---
 
-## 🎁 WOW Factor Elements
+## 🎁 WOW Factor
 
-### Must-Have WOW Features
+**WOW = the DESIGN.md signature element executed well + the craft floor.**
+
+Spend boldness in **ONE place** — the signature element declared in root
+`DESIGN.md` §1 (distinctive hero treatment, unusual data display, strong
+typographic motif) — and keep everything else quiet. WOW is never a checklist
+of decorations (gradient text, floating shapes, hover glows, confetti are
+AVOID-LIST tells — see `design-craft/AVOID-LIST.md`).
 
 ```yaml
-hero_section:
-  - Gradient text on heading (subtle)
-  - Animated background elements (floating shapes)
-  - CTA button with hover glow
-  - Stats with count-up animation
-
-dashboard:
-  - Animated stat cards (stagger in)
-  - Charts with loading animation
-  - Real-time indicators (pulsing dot)
-  - Smooth tab transitions
-
-lists:
-  - Staggered item appearance
-  - Hover lift effect on cards
-  - Smooth reorder animation (drag/drop)
-  - Pull-to-refresh indicator (mobile)
-
-forms:
-  - Input focus animations
-  - Real-time validation feedback
-  - Submit button loading state
-  - Success confetti (optional)
-
-navigation:
-  - Active state indicator animation
-  - Mobile menu slide-in
-  - Breadcrumb transitions
-  - Search expand animation
+wow:
+  signature_element:   # the ONE bold move, from DESIGN.md — flagship page only
+    - Executed with full craft: motion, spacing, typography all serve it
+  craft_floor:         # quiet everywhere else — this is what reads "premium"
+    - Responsive at every breakpoint (320px+)
+    - focus-visible rings on every interactive element
+    - Skeletons matching the real layout on every page
+    - Empty states with a real sentence + next action
+    - Realistic domain content, zero placeholder text
 ```
 
 ### Premium Design Details
@@ -592,20 +577,19 @@ shadows:
   cards: "shadow-sm hover:shadow-lg transition-shadow"
   modals: "shadow-2xl"
   dropdowns: "shadow-lg"
-  
+
 borders:
   cards: "border border-border/50"
   inputs: "border border-input focus:ring-2 focus:ring-primary/20"
-  
-backgrounds:
+
+backgrounds:   # solid surfaces from DESIGN.md tokens — no decorative gradients
   page: "bg-background"
   card: "bg-card"
   muted: "bg-muted/50"
-  gradient: "bg-gradient-to-br from-primary/10 via-background to-secondary/10"
 
 hover_states:
   cards: "hover:border-primary/50 transition-colors"
-  buttons: "hover:brightness-110 transition-all"
+  buttons: "hover:brightness-110 transition-[filter]"
   links: "hover:text-primary transition-colors"
 ```
 

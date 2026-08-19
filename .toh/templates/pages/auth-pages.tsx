@@ -33,7 +33,7 @@ export function LoginPage() {
           <div className="w-full max-w-md space-y-8">
             <FadeInUp>
               <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
                 <p className="mt-2 text-muted-foreground">
                   Sign in to your account to continue
                 </p>
@@ -147,13 +147,15 @@ export function LoginPage() {
               transition={{ duration: 0.5 }}
               className="mb-8"
             >
-              <div className="w-24 h-24 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center">
-                <span className="text-4xl font-bold text-primary">T</span>
+              <div className="w-24 h-24 mx-auto bg-primary/10 rounded-xl flex items-center justify-center">
+                <span className="text-4xl font-semibold text-primary">T</span>
               </div>
             </motion.div>
-            <h2 className="text-2xl font-bold mb-4">Your App Name</h2>
+            {/* Copy: state the product's concrete value (DESIGN.md copy voice) —
+                never "Join thousands of users" / social-proof filler */}
+            <h2 className="text-2xl font-semibold mb-4">Your App Name</h2>
             <p className="text-muted-foreground">
-              A brief tagline or description of your product that highlights its value.
+              One sentence on the concrete job this product does for the user.
             </p>
           </div>
         </div>
@@ -188,13 +190,15 @@ export function RegisterPage() {
               transition={{ duration: 0.5 }}
               className="mb-8"
             >
-              <div className="w-24 h-24 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center">
-                <span className="text-4xl font-bold text-primary">T</span>
+              <div className="w-24 h-24 mx-auto bg-primary/10 rounded-xl flex items-center justify-center">
+                <span className="text-4xl font-semibold text-primary">T</span>
               </div>
             </motion.div>
-            <h2 className="text-2xl font-bold mb-4">Join thousands of users</h2>
+            {/* Copy: real value, not "Join thousands of users" filler */}
+            <h2 className="text-2xl font-semibold mb-4">Set up your account in minutes</h2>
             <p className="text-muted-foreground">
-              Start building amazing products with our platform today.
+              State what the user will have right after signing up — the first
+              concrete thing this product does for them.
             </p>
           </div>
         </div>
@@ -204,7 +208,7 @@ export function RegisterPage() {
           <div className="w-full max-w-md space-y-8">
             <FadeInUp>
               <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
                 <p className="mt-2 text-muted-foreground">
                   Enter your details to get started
                 </p>

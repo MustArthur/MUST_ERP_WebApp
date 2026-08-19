@@ -1,3 +1,13 @@
+---
+name: error-handling
+description: >
+  Intelligent error handling — silently auto-fix routine errors (missing
+  imports, undefined variables, type mismatches, missing dependencies, syntax
+  and lint issues) and translate everything else into friendly, non-technical
+  language with clear next steps. The user never sees raw error messages or
+  stack traces. Use whenever an error, warning, or failure surfaces while working.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 🔧 Error Handling Skill
 
 > **Purpose:** Auto-fix errors silently, translate when necessary

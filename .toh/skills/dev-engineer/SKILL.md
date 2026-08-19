@@ -27,6 +27,9 @@ NEVER ask:
 - "What form library?" → Use React Hook Form (our standard)
 
 ALWAYS do:
+- When scaffolding a NEW project, run `npm view [package] version` for each dependency
+  to get the latest STABLE before pinning — check live, never hardcode a version number here
+  (the framework must not go stale; internalize the principle, not the digits)
 - Create TypeScript types FIRST
 - Create Zustand store for state
 - Add form validation with Zod

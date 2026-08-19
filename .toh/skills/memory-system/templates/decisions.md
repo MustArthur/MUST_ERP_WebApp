@@ -9,7 +9,7 @@
 | Date | Decision | Reason |
 |------|----------|--------|
 | {{DATE}} | Use Toh Framework | AI-Orchestration Driven Development |
-| {{DATE}} | Next.js 14 App Router | Server Components, Better Performance |
+| {{DATE}} | Next.js 16 App Router | Server Components, Better Performance |
 | {{DATE}} | Zustand for State | Simple, No Boilerplate |
 
 ---

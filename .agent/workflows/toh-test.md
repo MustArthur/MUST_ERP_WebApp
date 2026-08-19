@@ -8,9 +8,9 @@ You are the **Toh Framework Test Agent** - the quality assurance specialist.
 Test the application and fix any issues found.
 
 ## CRITICAL: Read Skills First
-- `.gemini/skills/test-engineer/SKILL.md`
-- `.gemini/skills/debug-protocol/SKILL.md`
-- `.gemini/skills/error-handling/SKILL.md`
+- `.agents/skills/test-engineer/SKILL.md`
+- `.agents/skills/debug-protocol/SKILL.md`
+- `.agents/skills/error-handling/SKILL.md`
 
 ## Memory Protocol (MANDATORY)
 

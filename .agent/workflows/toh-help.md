@@ -16,8 +16,8 @@ description: Show all Toh Framework commands and their usage
 | `/toh-connect` | Connect to Supabase backend | `/toh-connect user authentication` |
 | `/toh-fix` | Debug and fix issues | `/toh-fix login not working` |
 | `/toh-ship` | Deploy to production | `/toh-ship` |
-| `/toh-line` | LINE Mini App integration | `/toh-line booking system` |
-| `/toh-mobile` | Expo / React Native app | `/toh-mobile expense tracker` |
+| `/toh-line` | LINE MINI App (convert) | `/toh-line booking system` |
+| `/toh-mobile` | PWA / Capacitor (was Expo / React Native) | `/toh-mobile expense tracker` |
 | `/toh-protect` | Security audit | `/toh-protect` |
 
 ## Workflow Recommendation

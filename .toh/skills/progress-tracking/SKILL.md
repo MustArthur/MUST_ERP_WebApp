@@ -1,3 +1,12 @@
+---
+name: progress-tracking
+description: >
+  Visual progress reporting — progress bars, done / in-progress / remaining
+  checklists, and completion estimates so a non-technical user always knows
+  where the build stands. Transparency without overwhelm. Use during multi-step
+  builds and whenever the user asks how far along the work is.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 📊 Progress Tracking Skill
 
 > **Purpose:** Visual progress tracking for users
@@ -79,7 +88,7 @@ User can always see:
 
 ## Progress Tracking Structure
 
-### In Memory (`.toh/memory/progress.md`)
+### In Memory (`.toh/progress.md`)
 
 ```markdown
 # 📊 Project Progress
@@ -329,11 +338,13 @@ When reaching milestones:
 
 ### Cross-IDE Sync
 
-Progress is saved in `.toh/memory/progress.md`, so it syncs across:
+Progress is saved in `.toh/progress.md`, so it syncs across:
 - Claude Code
 - Cursor
-- Gemini CLI
-- Codex CLI
+- Antigravity (+ Antigravity CLI)
+- Codex (CLI + desktop app)
+- ZCode (Z.ai)
+- Gemini CLI (legacy)
 
 ---
 

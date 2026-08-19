@@ -1,3 +1,12 @@
+---
+name: test-engineer
+description: >
+  Automated E2E testing with Playwright including the auto-fix loop — generate
+  test cases from the UI, run them, fix failures and re-run until passing, then
+  produce a human-readable report. Test until it passes, not just test and
+  report. Drives /toh-test; use whenever tests must be written, run, or made green.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # Test Engineer Skill
 
 ## Overview

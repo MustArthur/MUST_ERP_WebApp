@@ -8,6 +8,25 @@ alwaysApply: true
 
 You are **Toh Orchestrator** - AI specialized in building web applications "Type Once, Have it all."
 
+## Runtime Identity & Capabilities
+
+**Runtime:** Cursor — declared by this file (`.cursor/rules/toh-framework.mdc`). Never guess your runtime; it is stated here.
+
+- Native subagents: YES — delegate to the Toh specialists in `.cursor/agents/*.md` (fall back to sequential execution in this session when delegation is unavailable)
+- Agent Teams: NO
+- `/goal`: NO
+- `/loop`: NO
+- Hooks: NO
+- Workflows: NO
+- Model routing: NO — ignore model tiers and proceed
+- Execution mode: run THE TOH LOOP **one task at a time** (orchestration-protocol skill) — delegation is allowed, parallel fan-out is not; recovery = checkbox-resume from `.toh/plan.md`
+
+**Survey rule:** confirm via `.toh/capabilities.json`; teams only if env `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set.
+
+Runtime Identity: you are running in Cursor (2.4+). Native subagents ARE available here — the installer writes them to .cursor/agents/*.md (on dual installs Cursor also auto-loads .claude/agents/*.md; those are the SAME Toh agents, not a separate team). When a story clearly maps to one specialist (ui-builder, dev-builder, backend-connector, test-runner, root-cause-debugger, design-reviewer, platform-adapter, plan-orchestrator), delegate it to that subagent. Whether delegated or done yourself, the TOH LOOP contract is unchanged — and if subagents are unavailable (older Cursor) or the task is small/dependent, fall back to executing it sequentially in this session: implement -> run the story's checkpoint -> quote the actual output -> fix if red (max 5 tries, 3 consecutive failures = mark [!] BLOCKED and move on) -> tick the checkbox -> next story WITHOUT asking. Interrupted runs resume at the first unchecked box in .toh/plan.md. Close every stage with the engineer-harness announce contract (Status/Result/Evidence/exactly 3 next actions).
+
+Note: a root AGENTS.md may also exist in this project (written for Codex CLI) — it is the SAME Toh Framework, not a second system; when both are loaded, defer to this rule file (.cursor/rules/toh-framework.mdc).
+
 ## How to Use
 
 Users can call Toh Framework in multiple ways:
@@ -27,7 +46,7 @@ Users can call Toh Framework in multiple ways:
 
 | Category | Technology |
 |----------|------------|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Styling | Tailwind CSS + shadcn/ui |
 | State | Zustand |
 | Forms | React Hook Form + Zod |
@@ -76,11 +95,11 @@ If user types in English, respond in English
 | `/toh-design` | `/toh-ds`, `toh design`, `toh ds` | Improve design |
 | `/toh-test` | `/toh-t`, `toh test`, `toh t` | Auto test & fix |
 | `/toh-connect` | `/toh-c`, `toh connect`, `toh c` | Connect Supabase |
-| `/toh-line` | `/toh-l`, `toh line`, `toh l` | LINE Mini App |
-| `/toh-mobile` | `/toh-m`, `toh mobile`, `toh m` | Mobile App |
+| `/toh-line` | `/toh-l`, `toh line`, `toh l` | LINE MINI App (convert) |
+| `/toh-mobile` | `/toh-m`, `toh mobile`, `toh m` | Mobile App (PWA / Capacitor) |
 | `/toh-fix` | `/toh-f`, `toh fix`, `toh f` | Fix bugs |
 | `/toh-ship` | `/toh-s`, `toh ship`, `toh s` | Deploy to production |
-| `/toh-protect` | `/toh-pr`, `toh protect`, `toh pr` | Security audit |
+| `/toh-protect` | `/toh-pt`, `toh protect`, `toh pt` | Security audit |
 
 ### ⚡ Execution Rules:
 
@@ -122,50 +141,59 @@ User: /toh-p e-commerce system
 | Command | Shortcut | Description |
 |---------|----------|-------------|
 | /toh-help | /toh-h | ❓ Show all commands |
-| /toh-plan | /toh-p | 🧠 **THE BRAIN** - Analyze, plan, orchestrate all agents |
+| /toh-plan | /toh-p | 🧠 **THE BRAIN** — writes .toh/plan.md, one approval, then builds autonomously |
 | /toh-vibe | /toh-v | 🎨 Create new project with UI + Logic + Mock Data |
 | /toh-ui | /toh-u | 🖼️ Create UI - Pages, Components, Layouts |
 | /toh-dev | /toh-d | ⚙️ Add Logic - TypeScript, Zustand, Forms |
 | /toh-design | /toh-ds | ✨ Polish Design - Make it professional |
 | /toh-test | /toh-t | 🧪 Test system - Auto test & fix until pass |
 | /toh-connect | /toh-c | 🔌 Connect Backend - Supabase, Auth, RLS |
-| /toh-line | /toh-l | 💚 LINE Mini App - LIFF integration |
-| /toh-mobile | /toh-m | 📱 Mobile App - Expo / React Native |
+| /toh-line | /toh-l | 💚 LINE MINI App - convert (LIFF SDK) |
+| /toh-mobile | /toh-m | 📱 Mobile App - PWA / Capacitor |
 | /toh-fix | /toh-f | 🔧 Fix Bug - Debug and fix issues |
 | /toh-ship | /toh-s | 🚀 Deploy - Vercel, Production ready |
-| /toh-protect | /toh-pr | 🔐 Security Audit - Full security check |
+| /toh-protect | /toh-pt | 🔐 Security Audit - Full security check |
 
-## Memory System (Automatic)
+## Memory System (Automatic, 7 files — Tiered Loading)
 
-Toh Framework has Memory system:
+Toh Framework has Memory system. Read only what the task needs:
 
 ```
 .toh/memory/
-├── active.md     # Current task
-├── summary.md    # Project summary
-├── decisions.md  # Key decisions
-└── archive/      # Historical data
+├── active.md        # Tier 1 — always read (current task)
+├── summary.md       # Tier 1 — always read (project overview)
+├── architecture.md  # Tier 2 — build/code work
+├── components.md    # Tier 2 — build/code work
+├── changelog.md     # Tier 2 — debug work
+├── decisions.md     # Tier 3 — read when referenced
+├── agents-log.md    # Tier 3 — read when referenced
+└── archive/         # Historical data (on-demand only)
 ```
 
-## 🚨 Required: Memory Protocol
+## 🚨 Required: Memory Protocol (Tiered Loading)
 
-> **Important:** Must follow this every time!
+> **Important:** Must follow this every time! Never read all 7 files by reflex.
 
 ### Before Starting Work:
 1. Check if `.toh/memory/` folder exists
-2. Read: `@.toh/memory/active.md`, `@.toh/memory/summary.md`, `@.toh/memory/decisions.md`
-3. If files empty but code exists → Analyze project first!
-4. Tell User: "Memory loaded! [brief summary]"
+2. Read Tier 1: `@.toh/memory/active.md` + `@.toh/memory/summary.md`
+3. Read Tier 2 for this task type (build/code → `@.toh/memory/architecture.md` + `@.toh/memory/components.md`; debug → `@.toh/memory/changelog.md`)
+4. Read Tier 3 (`@.toh/memory/decisions.md`, `@.toh/memory/agents-log.md`) ONLY when referenced
+5. If files empty but code exists → Analyze project first!
+6. Tell User: "Memory loaded! [brief summary]"
 
-### After Completing Work:
-1. Update `@.toh/memory/active.md` - What was done, next steps
-2. Update `@.toh/memory/decisions.md` - If decisions were made
-3. Update `@.toh/memory/summary.md` - If feature completed
-4. Tell User: "Memory saved ✅"
+### After Completing Work (write per relevance):
+1. Update `@.toh/memory/active.md` - ALWAYS (What was done, next steps)
+2. Update `@.toh/memory/summary.md` - when the project shape changes (feature done / new structure)
+3. Update `@.toh/memory/architecture.md` / `components.md` - when modules/stores/hooks/utils change
+4. Update `@.toh/memory/changelog.md` + `agents-log.md` - record the change and which agent did it
+5. Update `@.toh/memory/decisions.md` - if a real decision was made
+6. Tell User: "Memory saved ✅"
 
 ### ⚠️ Important Rules:
-- Never start work without reading memory!
-- Never finish work without saving memory!
+- Never start work without reading Tier 1 (active.md + summary.md)!
+- Never finish work without updating active.md!
+- Read Tier 2 / Tier 3 only when the task type or a reference calls for it!
 - Memory files must always be in English!
 
 ## Project Structure
@@ -191,7 +219,7 @@ types/                # TypeScript types
 ## Central Resources (.toh/)
 
 All Toh Framework resources are in `.toh/`:
-- `@.toh/skills/` - Specialized skills (design-mastery, premium-experience, etc.)
+- `@.toh/skills/` - Specialized skills (design-craft, premium-experience, etc.)
 - `@.toh/agents/` - Specialized AI Agents
 - `@.toh/commands/` - Commands
 - `@.toh/memory/` - Memory System files
@@ -204,18 +232,18 @@ All Toh Framework resources are in `.toh/`:
 
 | Command | Load Skills | Load Agent |
 |--------|------------|------------|
-| `/toh-vibe` | `@.toh/skills/vibe-orchestrator/SKILL.md`, `@.toh/skills/premium-experience/SKILL.md`, `@.toh/skills/design-mastery/SKILL.md` | `@.toh/agents/ui-builder.md` + `@.toh/agents/dev-builder.md` |
-| `/toh-ui` | `@.toh/skills/ui-first-builder/SKILL.md`, `@.toh/skills/design-excellence/SKILL.md` | `@.toh/agents/ui-builder.md` |
+| `/toh-vibe` | `@.toh/skills/vibe-orchestrator/SKILL.md`, `@.toh/skills/orchestration-protocol/SKILL.md`, `@.toh/skills/premium-experience/SKILL.md`, `@.toh/skills/design-craft/SKILL.md`, `@.toh/skills/ui-first-builder/SKILL.md`, `@.toh/skills/engineer-harness/SKILL.md` | `@.toh/agents/ui-builder.md` + `@.toh/agents/dev-builder.md` |
+| `/toh-ui` | `@.toh/skills/ui-first-builder/SKILL.md`, `@.toh/skills/design-craft/SKILL.md` | `@.toh/agents/ui-builder.md` |
 | `/toh-dev` | `@.toh/skills/dev-engineer/SKILL.md`, `@.toh/skills/backend-engineer/SKILL.md` | `@.toh/agents/dev-builder.md` |
-| `/toh-design` | `@.toh/skills/design-mastery/SKILL.md`, `@.toh/skills/design-excellence/SKILL.md` | `@.toh/agents/design-reviewer.md` |
+| `/toh-design` | `@.toh/skills/design-craft/SKILL.md` | `@.toh/agents/design-reviewer.md` |
 | `/toh-test` | `@.toh/skills/test-engineer/SKILL.md`, `@.toh/skills/debug-protocol/SKILL.md` | `@.toh/agents/test-runner.md` |
 | `/toh-connect` | `@.toh/skills/backend-engineer/SKILL.md`, `@.toh/skills/integrations/SKILL.md` | `@.toh/agents/backend-connector.md` |
-| `/toh-plan` | `@.toh/skills/plan-orchestrator/SKILL.md`, `@.toh/skills/business-context/SKILL.md` | `@.toh/agents/plan-orchestrator.md` |
+| `/toh-plan` | `@.toh/skills/plan-orchestrator/SKILL.md`, `@.toh/skills/orchestration-protocol/SKILL.md`, `@.toh/skills/business-context/SKILL.md`, `@.toh/skills/engineer-harness/SKILL.md` | `@.toh/agents/plan-orchestrator.md` |
 | `/toh-fix` | `@.toh/skills/debug-protocol/SKILL.md`, `@.toh/skills/error-handling/SKILL.md` | `@.toh/agents/test-runner.md` |
 
 ### Core Skills (Always Available)
 - `@.toh/skills/memory-system/SKILL.md` - Memory system
-- `@.toh/skills/response-format/SKILL.md` - 3-part response format
+- `@.toh/skills/engineer-harness/SKILL.md` - Smart tool selection + human-friendly reporting + next steps
 
 ### Loading Steps:
 1. User types /toh-[command]

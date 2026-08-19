@@ -1,8 +1,10 @@
 ---
 command: /toh-protect
-aliases: ["/toh-p", "/toh-security", "/toh-audit"]
+aliases: ["/toh-pt", "/toh-security", "/toh-audit"]
 description: Full security audit for AI-generated code - scan for vulnerabilities before deploy
-trigger: /toh-protect or /toh-p
+trigger: /toh-protect or /toh-pt
+skills:
+  - engineer-harness
 ---
 
 # /toh-protect - Security Audit
@@ -15,7 +17,7 @@ Comprehensive security audit for AI-generated code. Scans for vulnerabilities, h
 
 ```
 /toh-protect [scope]
-/toh-p [scope]
+/toh-pt [scope]
 /toh-security [scope]
 /toh-audit [scope]
 ```
@@ -28,14 +30,17 @@ User: /toh-protect
 +-------------------------------------------------------------+
 |  SECURITY AUDIT                                             |
 +-------------------------------------------------------------+
-|  0. READ MEMORY (MANDATORY - ALL 7 FILES!)                  |
+|  0. READ MEMORY (Tiered - not all 7)                        |
+|  Tier 1 - read ALWAYS (~800 tokens):                        |
 |     |- .toh/memory/active.md      (current task)            |
-|     |- .toh/memory/summary.md     (project overview)        |
-|     |- .toh/memory/decisions.md   (past decisions)          |
+|     +- .toh/memory/summary.md     (project overview)        |
+|  Tier 2 - read per task type:                               |
 |     |- .toh/memory/changelog.md   (session changes)         |
-|     |- .toh/memory/agents-log.md  (agent activity)          |
-|     |- .toh/memory/architecture.md (project structure)      |
-|     +- .toh/memory/components.md  (existing components)     |
+|     |- .toh/memory/components.md  (existing components)     |
+|     +- .toh/memory/architecture.md (project structure)      |
+|  Tier 3 - only when referenced:                             |
+|     |- .toh/memory/decisions.md   (past decisions)          |
+|     +- .toh/memory/agents-log.md  (agent activity)          |
 |                                                             |
 |  1. READ Skills                                             |
 |     +- ~/.toh/skills/security-engineer/SKILL.md             |
@@ -63,9 +68,10 @@ User: /toh-protect
 |  6. GENERATE REPORT                                         |
 |     +- Save to .toh/security-audit-[date].md                |
 |                                                             |
-|  7. SAVE MEMORY (MANDATORY!)                                |
-|     |- Update active.md (audit results)                     |
-|     +- Add to decisions.md (security decisions)             |
+|  7. SAVE MEMORY                                             |
+|     |- Update active.md (ALWAYS - audit results)            |
+|     |- Update summary.md (if shape changed)                 |
+|     +- Update decisions.md (security decisions)             |
 +-------------------------------------------------------------+
 ```
 
@@ -77,7 +83,7 @@ User: /toh-protect
 
 # Audit specific scope
 /toh-protect src/api/
-/toh-p auth system
+/toh-pt auth system
 /toh-security checkout flow
 
 # Pre-deploy check
@@ -173,6 +179,14 @@ RECOMMENDATIONS
 Full report: .toh/security-audit-2024-12-26.md
 ====================================
 ```
+
+## Closing
+
+Close per **engineer-harness Section C** (announce block: Status / Result / Evidence + exactly 3 next actions). Default post-audit trio:
+
+1. `/toh-fix <critical finding>` — fix the critical findings first ← recommended
+2. `/toh-test` — verify nothing broke after the fixes
+3. `/toh-ship` — deploy once the audit is clean
 
 ## Auto-Fix Support
 

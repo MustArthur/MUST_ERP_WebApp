@@ -1,3 +1,13 @@
+---
+name: integrations
+description: >
+  One-request, complete setup of external services — payment (Stripe, PromptPay,
+  Omise, 2C2P), email, auth, analytics, storage and other integrations, including
+  Thai-market services. Installs SDKs, creates API routes, env templates, and UI
+  components in one pass. Use when the user asks to add payments, email, login,
+  analytics, or any third-party service (e.g. "เพิ่มระบบชำระเงิน").
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 🔌 Integrations Skill
 
 > **Purpose:** One-click setup for external services

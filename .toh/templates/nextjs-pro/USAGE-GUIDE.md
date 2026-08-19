@@ -47,7 +47,7 @@ skills/
 ├── vibe-orchestrator/
 ├── ui-first-builder/
 ├── dev-engineer/
-├── design-excellence/
+├── design-craft/
 ├── backend-engineer/
 └── platform-specialist/
 
@@ -93,8 +93,8 @@ claude
 | `/toh-dev` | `/toh-d` | เพิ่ม logic, state, validation |
 | `/toh-design` | `/toh-ds` | Polish design ให้ดู pro |
 | `/toh-connect` | `/toh-c` | เชื่อม Supabase backend |
-| `/toh-line` | `/toh-l` | แปลงเป็น LINE Mini App |
-| `/toh-mobile` | `/toh-m` | สร้าง mobile app (Expo) |
+| `/toh-line` | `/toh-l` | แปลงเป็น LINE MINI App |
+| `/toh-mobile` | `/toh-m` | สร้าง mobile app (PWA / Capacitor) |
 | `/toh-fix` | `/toh-f` | แก้ bug อัตโนมัติ |
 | `/toh-ship` | `/toh-s` | Deploy to production |
 
@@ -213,13 +213,13 @@ claude
 /toh-dev filter by date range และ export to CSV
 ```
 
-### 📱 สร้าง LINE Mini App
+### 📱 สร้าง LINE MINI App
 
 ```bash
 # Step 1: สร้าง web app ก่อน
 /toh-vibe ระบบจองคิว ร้านอาหาร
 
-# Step 2: แปลงเป็น LINE Mini App
+# Step 2: แปลงเป็น LINE MINI App (ยังใช้ LIFF SDK)
 /toh-line เพิ่ม LINE login และ share
 
 # Step 3: เพิ่ม LINE features
@@ -313,7 +313,7 @@ claude
 # Connect Backend
 /toh-c
 
-# LINE Mini App
+# LINE MINI App
 /toh-l
 
 # Mobile App

@@ -2,7 +2,7 @@
 
 import { motion, MotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ButtonHTMLAttributes, forwardRef, ReactNode } from "react";
+import { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { Loader2 } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -40,54 +40,50 @@ interface AnimatedButtonProps
   loadingText?: string;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  /** React 19: ref is a normal prop — no ref-forwarding wrapper needed. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const MotionButton = motion.button;
 
-export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      isLoading,
-      loadingText,
-      leftIcon,
-      rightIcon,
-      children,
-      disabled,
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <MotionButton
-        ref={ref}
-        className={cn(buttonVariants({ variant, size, className }))}
-        disabled={disabled || isLoading}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.1 }}
-        {...(props as MotionProps)}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            {loadingText || children}
-          </>
-        ) : (
-          <>
-            {leftIcon}
-            {children}
-            {rightIcon}
-          </>
-        )}
-      </MotionButton>
-    );
-  }
-);
-
-AnimatedButton.displayName = "AnimatedButton";
+export function AnimatedButton({
+  className,
+  variant,
+  size,
+  isLoading,
+  loadingText,
+  leftIcon,
+  rightIcon,
+  children,
+  disabled,
+  ref,
+  ...props
+}: AnimatedButtonProps) {
+  return (
+    <MotionButton
+      ref={ref}
+      className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled || isLoading}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.1 }}
+      {...(props as MotionProps)}
+    >
+      {isLoading ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {loadingText || children}
+        </>
+      ) : (
+        <>
+          {leftIcon}
+          {children}
+          {rightIcon}
+        </>
+      )}
+    </MotionButton>
+  );
+}
 
 // CTA Button with glow effect
 interface CTAButtonProps extends AnimatedButtonProps {

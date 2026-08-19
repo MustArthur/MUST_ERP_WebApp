@@ -1,11 +1,13 @@
 {
-  "version": "1.8.1",
-  "installedAt": "2026-01-30T10:28:48.514Z",
+  "version": "2.1.0",
+  "installedAt": "2026-08-19T03:28:19.687Z",
   "targetDir": "/Users/art_tamrongsak/Documents/MUST_ERP_WebApp",
   "ides": [
     "claude",
     "cursor",
-    "gemini"
+    "antigravity",
+    "codex",
+    "zcode"
   ],
   "components": {
     "skills": true,
@@ -13,5 +15,1788 @@
     "commands": true,
     "templates": true,
     "memory": true
-  }
+  },
+  "manifestSchema": 2,
+  "language": "th",
+  "flags": {
+    "legacyGemini": false,
+    "legacyCursorrules": false
+  },
+  "files": [
+    {
+      "path": ".agent/workflows/toh-connect.md",
+      "sha256": "ca1eb21a19b8be18c31196ad0b718a5aa2476b051046b42bf423a3fe495fd5d9",
+      "preexisted": true,
+      "preexistedSha256": "dcbbda0c9ba658522b9a683841d5253cfee2e68a602ef2212ff6489d8495a130",
+      "preexistedBytes": 2397
+    },
+    {
+      "path": ".agent/workflows/toh-design.md",
+      "sha256": "12c7a44d82283eddfff23a767009ab2fad02231a6c1fa5e087f8e9e202326469",
+      "preexisted": true,
+      "preexistedSha256": "1bac99a3699a65a282b1cac4750437943c75605114c3dcd0f1b775763002335c",
+      "preexistedBytes": 2190
+    },
+    {
+      "path": ".agent/workflows/toh-dev.md",
+      "sha256": "c2b28e82ba4afaebaa7f06b3eb26bade8f5deee6b7818911d13844a036939ee5",
+      "preexisted": true,
+      "preexistedSha256": "79aec2197aaaad78e9a2225dc304e9273031682a1a240eab79672069b292603a",
+      "preexistedBytes": 2050
+    },
+    {
+      "path": ".agent/workflows/toh-fix.md",
+      "sha256": "41ba0d2e575fa364093e0c5bc17d236bb90794095b272c9fc8699b3efec392be",
+      "preexisted": true,
+      "preexistedSha256": "6961ade0034038567323b688117bc2e169cbf5a919c754fe0cb7603e4e6130ac",
+      "preexistedBytes": 1854
+    },
+    {
+      "path": ".agent/workflows/toh-help.md",
+      "sha256": "64454dcf05a2d131023ae750b1dd963a30f255cdb69e73f5a6cc9e3f5c0f1e4c",
+      "preexisted": true,
+      "preexistedSha256": "927150e4e38de0f4e74c4b30647d2dda30779dd9fb5e005c59fd74d2890d78ff",
+      "preexistedBytes": 1834
+    },
+    {
+      "path": ".agent/workflows/toh-line.md",
+      "sha256": "a5f96df9fee6523f1bf6eca6ad70f1e2416956027f3b3aec55ba2714ca56a9f4",
+      "preexisted": true,
+      "preexistedSha256": "44f0d924be6c155bf6e2a94970e0eebb35d0ffad7aad6aebcca78aa226c3ddea",
+      "preexistedBytes": 2771
+    },
+    {
+      "path": ".agent/workflows/toh-mobile.md",
+      "sha256": "17b8fcd9bb5e41a129f7b69e9d40f8fcea1d54cb450216a6f42dac1836869ff1",
+      "preexisted": true,
+      "preexistedSha256": "3b8a40405865d50056c0a03f3ac497442b8d1e21d95759703317bd7d726cd960",
+      "preexistedBytes": 2794
+    },
+    {
+      "path": ".agent/workflows/toh-plan.md",
+      "sha256": "37a50dc00d8136819923145b1851bf73f469af3a591dfb54c5c3cc9fe0c1fb66",
+      "preexisted": true,
+      "preexistedSha256": "5505e9029c76de9ebcd222b085528b042d4b46220309e2bf0150de810db40140",
+      "preexistedBytes": 2502
+    },
+    {
+      "path": ".agent/workflows/toh-protect.md",
+      "sha256": "24784606a04b203803d6db9a5251fb524f96b8b02598beb21993a57024d9b563",
+      "preexisted": true,
+      "preexistedSha256": "170cc315eff71685fe50f4f2f08ec1356dc3e10a4e30f7cee4deb1b4c66d5dbf",
+      "preexistedBytes": 2701
+    },
+    {
+      "path": ".agent/workflows/toh-ship.md",
+      "sha256": "15de39fa0aa34d8d50434ea241d4a239e3913121bac626826ba7840edc1e354a",
+      "preexisted": true,
+      "preexistedSha256": "ce1cdc0f7bb13c8a10b56608944c0887fbda2558b45ae7d4cde3032a3a5c7d5e",
+      "preexistedBytes": 2256
+    },
+    {
+      "path": ".agent/workflows/toh-test.md",
+      "sha256": "e16c6a969c9a13114cf8800adea7f33dcc2f4794e4a9e5ed3bad1d1765a7c2ed",
+      "preexisted": true,
+      "preexistedSha256": "5451a0b922905b88bd9191af68f050c46285e51b57e38fec767b4ae195f5a32d",
+      "preexistedBytes": 1921
+    },
+    {
+      "path": ".agent/workflows/toh-ui.md",
+      "sha256": "1f3fcd24da84c6ba2af341ac323f0f634d6c289bdc8db112b0f625c5adc899d8",
+      "preexisted": true,
+      "preexistedSha256": "2cedb03d51d337d422f174eecc35318283196f0c4c3916fe06b0e730320d568e",
+      "preexistedBytes": 2157
+    },
+    {
+      "path": ".agent/workflows/toh-vibe.md",
+      "sha256": "cbc4e9e15c2a6027217bd2630d99cc263d0b1627acbb2afe01844d1e8f8aaae6",
+      "preexisted": true,
+      "preexistedSha256": "ca8485a1d1641df58d6cd32097600a2745d4a95e385152b8d7f4ff36237cb43d",
+      "preexistedBytes": 2767
+    },
+    {
+      "path": ".agent/workflows/toh.md",
+      "sha256": "8fc52974f94557398399d8720a2ad401921d8df5f1d94a7d4344bfd3093031cc"
+    },
+    {
+      "path": ".agents/agents/backend-connector.md",
+      "sha256": "aa5d569f3191255747082f5cfae86ab92c474c5f9c1940e976bb6e88b7e29c00"
+    },
+    {
+      "path": ".agents/agents/design-reviewer.md",
+      "sha256": "a71fe4ee200373a816dd9f4a38f066ea97de51674402f13b6fb25235324035c4"
+    },
+    {
+      "path": ".agents/agents/dev-builder.md",
+      "sha256": "dd845d74ceae9e0f0b558de5a2bd5c304fcd69d75b520d03ce376f7b4b8a1c68"
+    },
+    {
+      "path": ".agents/agents/plan-orchestrator.md",
+      "sha256": "43ff5faebfea48965a8b2932882e02983a1ff2968454d4985b2402f1118442b4"
+    },
+    {
+      "path": ".agents/agents/platform-adapter.md",
+      "sha256": "3ecc00646713a7a6e798439b41ab876af9649f6468ec9ab91977c9598e5730a7"
+    },
+    {
+      "path": ".agents/agents/root-cause-debugger.md",
+      "sha256": "f2e312e7f04e1092346449e330c628d055606e0a7706ca8b9bb13dec08b2251d"
+    },
+    {
+      "path": ".agents/agents/test-runner.md",
+      "sha256": "a1d3b5fa44d72f739b19f15475f10142b52e65a083bb03849c60ed0e08a3dea9"
+    },
+    {
+      "path": ".agents/agents/ui-builder.md",
+      "sha256": "dbea92d941b349d80ee2d2eb7ec33b4964720c23cf47bc27224ef16fc1e4cdf1"
+    },
+    {
+      "path": ".agents/commands/toh-connect.md",
+      "sha256": "4949bc2043f2bd942094e4c4c7d6f7904c2d3a00f126387d8964532d29a77313"
+    },
+    {
+      "path": ".agents/commands/toh-design.md",
+      "sha256": "74540471fb6110c3d0a9c040ae38f63d3688be392d06b1e42289ef1770b77d9c"
+    },
+    {
+      "path": ".agents/commands/toh-dev.md",
+      "sha256": "f245e84d72957d0871ac28d89d41f269bc568554a642d763d868ae4ce1904750"
+    },
+    {
+      "path": ".agents/commands/toh-fix.md",
+      "sha256": "6846128aa65ff3098a2cb9bb92c73ccdbe257fb2a2f99286f84a669293925e7b"
+    },
+    {
+      "path": ".agents/commands/toh-help.md",
+      "sha256": "64454dcf05a2d131023ae750b1dd963a30f255cdb69e73f5a6cc9e3f5c0f1e4c"
+    },
+    {
+      "path": ".agents/commands/toh-line.md",
+      "sha256": "1b04eb548476056c5fc2ab886d7a8339f8ab334dba2fe953fe4b733d67f8b67c"
+    },
+    {
+      "path": ".agents/commands/toh-mobile.md",
+      "sha256": "56357a3107dc2841c1a6fa4c1c1642b7268d03d55f6a234da608bec51bededa0"
+    },
+    {
+      "path": ".agents/commands/toh-plan.md",
+      "sha256": "3d6027377a04008ec1b53c4fd6ff8e2acce7dd171b6ce3146277a8d97c4b91cc"
+    },
+    {
+      "path": ".agents/commands/toh-protect.md",
+      "sha256": "9846e1bd5006db431c6fd331861bdd08ac6f7a73df560cb98386b01e04417828"
+    },
+    {
+      "path": ".agents/commands/toh-ship.md",
+      "sha256": "64e7202698a118c6ac180ed6d3373d168144d405ebf8f781b2c24c0b54969906"
+    },
+    {
+      "path": ".agents/commands/toh-test.md",
+      "sha256": "e4219a45f6d27159453c9a6b6a2fcd093cc06104749f7d035903175565f6bdb2"
+    },
+    {
+      "path": ".agents/commands/toh-ui.md",
+      "sha256": "f644984b0c6ce1d18b2c6e194ab439f1a127b099449e679a08838b8f469a2087"
+    },
+    {
+      "path": ".agents/commands/toh-vibe.md",
+      "sha256": "ccd74159df4d0ad0374d8535ded7735c16d4a26b3ed9e8275057ee38c4a56a94"
+    },
+    {
+      "path": ".agents/commands/toh.md",
+      "sha256": "831c4f93d0e65ec90b90dcf7b26f1d0a1ff59bd82a2190cb0ba86153b57ab123"
+    },
+    {
+      "path": ".agents/hooks.json",
+      "sha256": "e095d78f72deedf570119fcc0e8eb02f89427d577fdea18e720d441a1b1e4e51"
+    },
+    {
+      "path": ".agents/rules/toh-framework.md",
+      "sha256": "61639fa99dd876b80e50b390a194335e8861f962899505be933b07d12265fe20"
+    },
+    {
+      "path": ".agents/skills/backend-engineer/SKILL.md",
+      "sha256": "486e17746dc07355e841421b982ebf9f63d5861acc1ddeb356d97216ed92a757",
+      "preexisted": true,
+      "preexistedSha256": "bca4448d605ed7cf2c18c475a055c28d4e4ca972d63bb2f4b1422763330c06b7",
+      "preexistedBytes": 14686
+    },
+    {
+      "path": ".agents/skills/business-context/SKILL.md",
+      "sha256": "69f3eb67e333e2f67d68e9bf45ae76f37bc22e92acca8a711aca314e012f3c93",
+      "preexisted": true,
+      "preexistedSha256": "b7dba7640d6706e35e97671810daaf097ff589599d7cae0ba6f2db160b16e1f1",
+      "preexistedBytes": 7367
+    },
+    {
+      "path": ".agents/skills/debug-protocol/SKILL.md",
+      "sha256": "7ce193b5e49be87d5ad56ea2c59a67ada83d063c97e19c19db88a5b1da85e0a0",
+      "preexisted": true,
+      "preexistedSha256": "57ba065ce0084267ed0d5f2eb6ef67c968693957a4c04f9812ddc501eb60bd5e",
+      "preexistedBytes": 12151
+    },
+    {
+      "path": ".agents/skills/design-craft/SKILL.md",
+      "sha256": "eb7bda8ffd253072be79951a49c692682fdca20e92bcc217fb85ae9f89122cc2"
+    },
+    {
+      "path": ".agents/skills/dev-engineer/SKILL.md",
+      "sha256": "538da90a427280f9fe039cbb61ef37cea961fe8ea28a6cd30f8b76a7c4a07de9",
+      "preexisted": true,
+      "preexistedSha256": "997a12e6fbc6b1fdfe51f4a2bc441a9d22990bbac2a5976f0957882760054ea9",
+      "preexistedBytes": 14836
+    },
+    {
+      "path": ".agents/skills/engineer-harness/SKILL.md",
+      "sha256": "3222a693a6ec80a6b490aa534946ce63b4dc82c7a298256ff89599dfefb27ab4"
+    },
+    {
+      "path": ".agents/skills/error-handling/SKILL.md",
+      "sha256": "a8392351f98c9dd97665b7518a0af7dbac0f80fab26f44b88f4e3fd9135d8d57",
+      "preexisted": true,
+      "preexistedSha256": "819e005d7ebc27ab984b0b3023a40df894d037ac76cc112cf84a2dcc0c3fc6f0",
+      "preexistedBytes": 9253
+    },
+    {
+      "path": ".agents/skills/integrations/SKILL.md",
+      "sha256": "6aa4f05f1c13bc23bfc21c625c81a6306b408a137fb998c1136b43706e0fceba",
+      "preexisted": true,
+      "preexistedSha256": "890898c7f8d257a4c029cd84949a82a3dd1f8c6593767b7c029fc27721947673",
+      "preexistedBytes": 8857
+    },
+    {
+      "path": ".agents/skills/memory-system/SKILL.md",
+      "sha256": "8fe82067ee7193d2f79c138d1e7386da9241cb7ee58b46308b5f08aa97411b0c",
+      "preexisted": true,
+      "preexistedSha256": "04e3b47ae70df535d23f6288d0318ade93a4c240e48da5d01aa779b752356332",
+      "preexistedBytes": 12466
+    },
+    {
+      "path": ".agents/skills/orchestration-protocol/SKILL.md",
+      "sha256": "23118ba5dff20e9d970322457cc1db593e5a0b165a1c98ac967f904bec9fe391"
+    },
+    {
+      "path": ".agents/skills/plan-orchestrator/SKILL.md",
+      "sha256": "ac12c8459c4833098d18f39e084cabaa21777451924aef5cba56b0c1892d0706",
+      "preexisted": true,
+      "preexistedSha256": "da2dc5afa2e908aa2782c12f029349c1587b8ac3cafacb96fe9f57a779bf4b1a",
+      "preexistedBytes": 11060
+    },
+    {
+      "path": ".agents/skills/platform-specialist/SKILL.md",
+      "sha256": "65aad3da1813b3ed6e2cf8afd7e00e82b83a216014f919e64dc55e1f69fb4804",
+      "preexisted": true,
+      "preexistedSha256": "70cf19d4194c2dc61f83c7e70181cacc19ec34e37bca57847df595f86250d8cf",
+      "preexistedBytes": 15684
+    },
+    {
+      "path": ".agents/skills/premium-experience/SKILL.md",
+      "sha256": "485844685dd172905c5a74dbe712935fd93c92a6ca43dff61e7fb75383ed3071",
+      "preexisted": true,
+      "preexistedSha256": "c1ea8ad0ac2913f1690423fe677d0804f50c7112fe4d27c134c0fbeb8961c304",
+      "preexistedBytes": 17263
+    },
+    {
+      "path": ".agents/skills/preview-mode/SKILL.md",
+      "sha256": "51685195dc6d2204302e6d4b8adfc68dbab28b4769022050a1dd10d4a7e51d46",
+      "preexisted": true,
+      "preexistedSha256": "d7b4df3a4587916b68e682f22a17a1d9c53d6dfcc51c822a995d721dceab54c9",
+      "preexistedBytes": 10004
+    },
+    {
+      "path": ".agents/skills/progress-tracking/SKILL.md",
+      "sha256": "17c538e9f2e64fb3f4458b255105f9e36e934cc33f24195ae9550f05f1a812d9",
+      "preexisted": true,
+      "preexistedSha256": "9d7d4b2212364120bfc6ac2c5874fc4ad40ce4efeb7881896317ce2933d42c3f",
+      "preexistedBytes": 7736
+    },
+    {
+      "path": ".agents/skills/prompt-optimizer/SKILL.md",
+      "sha256": "fb5a0301e7b44d0fd08e107a9f437dfce0636697bdd4e356129a41dbe2818745",
+      "preexisted": true,
+      "preexistedSha256": "e92e4bcd63a2195efb8eaa10c5602fded0cd4b0a9adf957ac93346f41afb8faf",
+      "preexistedBytes": 8743
+    },
+    {
+      "path": ".agents/skills/security-engineer/SKILL.md",
+      "sha256": "4105d05add832e798ae6394621c31db03f83903180cc6bbc3aeb593bc3333f28",
+      "preexisted": true,
+      "preexistedSha256": "9d02833e8ee3d407f04921d172a6928777e1a4452385566c25af4fbdc9a8ee68",
+      "preexistedBytes": 10750
+    },
+    {
+      "path": ".agents/skills/session-recovery/SKILL.md",
+      "sha256": "ea7bab80b4dadb29ad727b5335a113a89355a3579e878755bfb76bc4a3f1fedd",
+      "preexisted": true,
+      "preexistedSha256": "5ff5749bccf1919c0176b9ab6381a7998940ba3d5dfa4a790710ba1ac757c38e",
+      "preexistedBytes": 7984
+    },
+    {
+      "path": ".agents/skills/smart-routing/SKILL.md",
+      "sha256": "650bd1a4e709c0512858817aec78871dcd1cdf8a03e51066c79ff776535018f0",
+      "preexisted": true,
+      "preexistedSha256": "2031db4ded52f3428d9ab384ae44b5cbd32d8cd5eec8627b7251f81a9028af77",
+      "preexistedBytes": 12580
+    },
+    {
+      "path": ".agents/skills/test-engineer/SKILL.md",
+      "sha256": "0cc5f1bc087ecf563a1d567b7e2a7a31e06a1f481e90b592b90473a7f88641ee",
+      "preexisted": true,
+      "preexistedSha256": "8c46182ed3d1df560d940e3a10190f2dbdfeb2484f1e0715fdf0c535df7aa0fc",
+      "preexistedBytes": 13238
+    },
+    {
+      "path": ".agents/skills/toh-connect/SKILL.md",
+      "sha256": "ddb8ea4617a7008f8ed1d09c532cda0bccaca9c2904efd5f3f520cedafe9cedc"
+    },
+    {
+      "path": ".agents/skills/toh-design/SKILL.md",
+      "sha256": "2d115d50595a8ac05bc093dbf3c94e202b9fb3e71eb698ba292b64ee5f0699b3"
+    },
+    {
+      "path": ".agents/skills/toh-dev/SKILL.md",
+      "sha256": "06b623076e2cb4d67fc650f0a9df9a57c9ce91fd6e0c7ed0900f5c46a6621541"
+    },
+    {
+      "path": ".agents/skills/toh-fix/SKILL.md",
+      "sha256": "da66a0b800a5d27b86b2f46ed1bc3bcd18a263c62ccb00c8643f5f3fca16c2ba"
+    },
+    {
+      "path": ".agents/skills/toh-help/SKILL.md",
+      "sha256": "8f7287ca20641122be7136788071896f6951bfcba2fc9744cea7a3e96cec2792"
+    },
+    {
+      "path": ".agents/skills/toh-line/SKILL.md",
+      "sha256": "732f64b3149f6b9c728f7f040082758eb4e4ff720bf86e8c05ff6982651dd085"
+    },
+    {
+      "path": ".agents/skills/toh-mobile/SKILL.md",
+      "sha256": "7b350704d664b119db8a83f12a2d604dd9d634b6cbd5293f61606c0886f57b7a"
+    },
+    {
+      "path": ".agents/skills/toh-plan/SKILL.md",
+      "sha256": "6ba536146919b83d89acc8569354ec6cee809cb67a5cda42c16f56197dea4617"
+    },
+    {
+      "path": ".agents/skills/toh-protect/SKILL.md",
+      "sha256": "6954cc0e6c71f17edd952a260967abc4bf4a70bbbbe5dcef9903f4c6913b0c5a"
+    },
+    {
+      "path": ".agents/skills/toh-ship/SKILL.md",
+      "sha256": "fec06d8d4c1f1d6dfcbe7ebae391132fa1de7cee96abd98d4f6ab75c4c43cea3"
+    },
+    {
+      "path": ".agents/skills/toh-test/SKILL.md",
+      "sha256": "efb179d88f1cd818bb6a035b8b070b8c0a975c7cd02d57c245e0f2e4068c5ed7"
+    },
+    {
+      "path": ".agents/skills/toh-ui/SKILL.md",
+      "sha256": "612712ff4978b9a6c6b0bedaa7d9989b921def26a6d4d863312bf47a32d9645f"
+    },
+    {
+      "path": ".agents/skills/toh-vibe/SKILL.md",
+      "sha256": "fe5828cd2a80cdac28cd2c4c91561970d98850345d1747b5888a9008cf1cf23b"
+    },
+    {
+      "path": ".agents/skills/toh/SKILL.md",
+      "sha256": "615c734b2d3d5a88ce595817fcbee5faba75da6eb910bc8fd4035a46567babf8"
+    },
+    {
+      "path": ".agents/skills/ui-first-builder/SKILL.md",
+      "sha256": "9e75f0cc17372f150d2d2aa8917fd21c09801f34d9360ce946259771b403fe6f",
+      "preexisted": true,
+      "preexistedSha256": "8e29eaf59a3cb41cf0ccb832ead7e097a3dcd90a3dda44fe86316a561bbbe784",
+      "preexistedBytes": 8835
+    },
+    {
+      "path": ".agents/skills/version-control/SKILL.md",
+      "sha256": "d853766bf6ffbcc2c42e247205b5bead82f979a56aba066495d6b18e82177d44",
+      "preexisted": true,
+      "preexistedSha256": "8fefa386918371ce885b8d528c3d4d9ac9330eed26dc8534d669876512af9961",
+      "preexistedBytes": 6970
+    },
+    {
+      "path": ".agents/skills/vibe-orchestrator/SKILL.md",
+      "sha256": "da43085ae71e305e8df048924a137c9d08988af879095b9b6084ad062e6fbf75",
+      "preexisted": true,
+      "preexistedSha256": "d9237ed99b30431fdbd2c83311c5ae27f5d9a6f173f576d1fddb8d11d062eac6",
+      "preexistedBytes": 15548
+    },
+    {
+      "path": ".agents/workflows/toh-connect.md",
+      "sha256": "ca1eb21a19b8be18c31196ad0b718a5aa2476b051046b42bf423a3fe495fd5d9"
+    },
+    {
+      "path": ".agents/workflows/toh-design.md",
+      "sha256": "12c7a44d82283eddfff23a767009ab2fad02231a6c1fa5e087f8e9e202326469"
+    },
+    {
+      "path": ".agents/workflows/toh-dev.md",
+      "sha256": "c2b28e82ba4afaebaa7f06b3eb26bade8f5deee6b7818911d13844a036939ee5"
+    },
+    {
+      "path": ".agents/workflows/toh-fix.md",
+      "sha256": "41ba0d2e575fa364093e0c5bc17d236bb90794095b272c9fc8699b3efec392be"
+    },
+    {
+      "path": ".agents/workflows/toh-help.md",
+      "sha256": "64454dcf05a2d131023ae750b1dd963a30f255cdb69e73f5a6cc9e3f5c0f1e4c"
+    },
+    {
+      "path": ".agents/workflows/toh-line.md",
+      "sha256": "a5f96df9fee6523f1bf6eca6ad70f1e2416956027f3b3aec55ba2714ca56a9f4"
+    },
+    {
+      "path": ".agents/workflows/toh-mobile.md",
+      "sha256": "17b8fcd9bb5e41a129f7b69e9d40f8fcea1d54cb450216a6f42dac1836869ff1"
+    },
+    {
+      "path": ".agents/workflows/toh-plan.md",
+      "sha256": "37a50dc00d8136819923145b1851bf73f469af3a591dfb54c5c3cc9fe0c1fb66"
+    },
+    {
+      "path": ".agents/workflows/toh-protect.md",
+      "sha256": "24784606a04b203803d6db9a5251fb524f96b8b02598beb21993a57024d9b563"
+    },
+    {
+      "path": ".agents/workflows/toh-ship.md",
+      "sha256": "15de39fa0aa34d8d50434ea241d4a239e3913121bac626826ba7840edc1e354a"
+    },
+    {
+      "path": ".agents/workflows/toh-test.md",
+      "sha256": "e16c6a969c9a13114cf8800adea7f33dcc2f4794e4a9e5ed3bad1d1765a7c2ed"
+    },
+    {
+      "path": ".agents/workflows/toh-ui.md",
+      "sha256": "1f3fcd24da84c6ba2af341ac323f0f634d6c289bdc8db112b0f625c5adc899d8"
+    },
+    {
+      "path": ".agents/workflows/toh-vibe.md",
+      "sha256": "cbc4e9e15c2a6027217bd2630d99cc263d0b1627acbb2afe01844d1e8f8aaae6"
+    },
+    {
+      "path": ".agents/workflows/toh.md",
+      "sha256": "8fc52974f94557398399d8720a2ad401921d8df5f1d94a7d4344bfd3093031cc"
+    },
+    {
+      "path": ".claude/agents/backend-connector.md",
+      "sha256": "67e0d8f30ff05849901e37acb00e8dfb1fbebebc63072fd9002eceab00fcd6be",
+      "preexisted": true,
+      "preexistedSha256": "de0c3f615683767239ea89da895927b152b209dc33bbc80e548a1221c478bc56",
+      "preexistedBytes": 26506
+    },
+    {
+      "path": ".claude/agents/design-reviewer.md",
+      "sha256": "c67c20b479c971a97030174468133f590e0edd4036ae3f26ca8e1127d8d32dce",
+      "preexisted": true,
+      "preexistedSha256": "677fd1cd0cc03455c18f2b40b282ed5a14938a5668457c33c08df8387fb739ae",
+      "preexistedBytes": 25598
+    },
+    {
+      "path": ".claude/agents/dev-builder.md",
+      "sha256": "1c1a157d9c0076d9ffe3a8209cc9dceca17b81ff3476d5de1d9c7dc17f49ffe3",
+      "preexisted": true,
+      "preexistedSha256": "815ff540fba7b84c9429afc6e2e79ce6e720827574cc3ffa8098c454444d2645",
+      "preexistedBytes": 39148
+    },
+    {
+      "path": ".claude/agents/plan-orchestrator.md",
+      "sha256": "becb3a25abbfde8d55eb38dea9b242fd9339022e0202f8c3ae060f689eea7bdf",
+      "preexisted": true,
+      "preexistedSha256": "888c92ee1ff4bb5c8740d552489608a9f5712203ff4fbed0b96399d2aa9d5c89",
+      "preexistedBytes": 20981
+    },
+    {
+      "path": ".claude/agents/platform-adapter.md",
+      "sha256": "13c586c841c4fc84fa4e0ee28570241390c11672f66c55cc75302276de3e0800",
+      "preexisted": true,
+      "preexistedSha256": "5ca388f8c28ae8f84b6955690c898e1d5f2b34daf8e7856783335f2349e88f3b",
+      "preexistedBytes": 33814
+    },
+    {
+      "path": ".claude/agents/root-cause-debugger.md",
+      "sha256": "ff7952e85e643a6c3b204e4945a77e140dd9e3e6fe6e81d4009f8a02f42f5f40"
+    },
+    {
+      "path": ".claude/agents/test-runner.md",
+      "sha256": "e08c917d7446d134abe82f7b2a1c20ad16c1e6c864474bde4da1aff13c862ed6",
+      "preexisted": true,
+      "preexistedSha256": "ba792601c737ebd3f2fe3819ced5f4006fcfe950f9f9f37a61bbad42fbfbae22",
+      "preexistedBytes": 17186
+    },
+    {
+      "path": ".claude/agents/ui-builder.md",
+      "sha256": "821b4fc26dcde5fcb839becbd28c3728848b8fbb601e9c43f85d1d8a4c12b48b",
+      "preexisted": true,
+      "preexistedSha256": "42ac45f181af0fa4176af2e5b53f2c10a7657f9211b39f690b0dc668103b9df4",
+      "preexistedBytes": 30711
+    },
+    {
+      "path": ".claude/commands/README.md",
+      "sha256": "027d9111dcd0081b42280ce6a1b48d0b229a015f9025e0d9b14bc46ee818bdc6",
+      "preexisted": true,
+      "preexistedSha256": "26c7d8378de064b21b3fc43e60aa551586e24d0a611aebfce10c481b986ef420",
+      "preexistedBytes": 3181
+    },
+    {
+      "path": ".claude/commands/toh-audit.md",
+      "sha256": "6531b13f17e99f825a2abbd753a381ab6d51e8b4a7572d7f393c70e1ab208fdf"
+    },
+    {
+      "path": ".claude/commands/toh-c.md",
+      "sha256": "23740b91b12b9ef39fdfbaa316c703e98e8197af6c3ba32b84f4b6ae2287934b"
+    },
+    {
+      "path": ".claude/commands/toh-connect.md",
+      "sha256": "fd924538ae2762e4569e51528a80087ea10f0ed57213dbb709a477e440819950",
+      "preexisted": true,
+      "preexistedSha256": "4c782f911540cfabd61dd42bab930166ca74f53f8e932c6fd6f11384edeb89a7",
+      "preexistedBytes": 3062
+    },
+    {
+      "path": ".claude/commands/toh-d.md",
+      "sha256": "ccc59dc17a0d8570d20bc4828350c6735ea93dec181e28c698e85a1ad7b1ff49"
+    },
+    {
+      "path": ".claude/commands/toh-design.md",
+      "sha256": "05e37dfeae2f456354330b756553c715f18e13fc99ceee460a238cbadc96a3ab",
+      "preexisted": true,
+      "preexistedSha256": "debc10596d62f01f724eb1278474c22a2b4378f7afd2829971703ba7e12eb825",
+      "preexistedBytes": 2990
+    },
+    {
+      "path": ".claude/commands/toh-dev.md",
+      "sha256": "1572d05a05ef23b3b1b5f2404b5ce60053e928bcc2d9d6001003566b2c2798ba",
+      "preexisted": true,
+      "preexistedSha256": "7dd4d45053bb11825b3b8797319b35e7e7965b68b9af732847ccb14a7bd009c6",
+      "preexistedBytes": 3428
+    },
+    {
+      "path": ".claude/commands/toh-ds.md",
+      "sha256": "6b257c493e6cc23b1507305d5d09694db08df5af1aed6f2f779b7b06c1c0e75a"
+    },
+    {
+      "path": ".claude/commands/toh-f.md",
+      "sha256": "09747dcd5b7bea6617ffe48dc5de8b3a3643ac1adfdbd970cf37fffc7c63ad18"
+    },
+    {
+      "path": ".claude/commands/toh-fix.md",
+      "sha256": "1df1d58084e925910e979e52aa21fd7552e85f9064dded188295ccae0c9f3a46",
+      "preexisted": true,
+      "preexistedSha256": "b8f0b3bd23fb6b432d009a5ec3351dfc474dd7da4ec6b2dc63015f41a5b87dbb",
+      "preexistedBytes": 6869
+    },
+    {
+      "path": ".claude/commands/toh-h.md",
+      "sha256": "61e5ea4951f1b37b7a11a525e65e30fc1b34e37666a20c0ef54907a52ae8be58"
+    },
+    {
+      "path": ".claude/commands/toh-help.md",
+      "sha256": "77454afa452147e8dc018b6613aa0d3f4c7590a34390f02fd921fc8107f3a366",
+      "preexisted": true,
+      "preexistedSha256": "259e2e02b42a5beca54c074ed379ec58be9f4b5e8142c3f74e32d844948458cb",
+      "preexistedBytes": 5195
+    },
+    {
+      "path": ".claude/commands/toh-l.md",
+      "sha256": "a4c21dcfa7419667bcf72f0c9f3151ff940f9139808d56548be195f080c1a640"
+    },
+    {
+      "path": ".claude/commands/toh-line.md",
+      "sha256": "d4b047d508b819e88b2a26d16bd093de5aca2fa7ac919c6f0b7d9808bd59fbb7",
+      "preexisted": true,
+      "preexistedSha256": "d726556f9fa3d2d2625f16467bf6e0ba7aedfe1d0d9f4d430b9c8afe5a85d6f5",
+      "preexistedBytes": 3258
+    },
+    {
+      "path": ".claude/commands/toh-m.md",
+      "sha256": "feb27e1a9887f2398de8e47b566b0a00bcc134f20a1dcf15425c3beb3aeaa34d"
+    },
+    {
+      "path": ".claude/commands/toh-mobile.md",
+      "sha256": "5e672cb9f2f2403c6c303c772a125260d9a35d24f4543d156649bd6aa201795d",
+      "preexisted": true,
+      "preexistedSha256": "9f3c7b908c8d9ac44f5249bce3e05817d3765b26b3dc245273aeaccee3bc450e",
+      "preexistedBytes": 2814
+    },
+    {
+      "path": ".claude/commands/toh-p.md",
+      "sha256": "64a8b1ee266436586e01fc353fd33b673dcf0d972544b7a79cc0b05bb6d8f365"
+    },
+    {
+      "path": ".claude/commands/toh-plan.md",
+      "sha256": "0b57be5c8dcd3182b6ad703c4b4ccadb18c58d65f03635c8371e38205c618adb",
+      "preexisted": true,
+      "preexistedSha256": "8107a48bd85ef3d29d3dd1c62ef05ee55e63f58388b2eed4cd91c43c1e93ef90",
+      "preexistedBytes": 16766
+    },
+    {
+      "path": ".claude/commands/toh-protect.md",
+      "sha256": "28c900415014c23c322f33db2384946ed968e8a95dae696e694303ff299a7a8d",
+      "preexisted": true,
+      "preexistedSha256": "4572300277de29a87e5f977e7777df1432c20d19f8b1b810abbd574a0483f033",
+      "preexistedBytes": 7314
+    },
+    {
+      "path": ".claude/commands/toh-pt.md",
+      "sha256": "6531b13f17e99f825a2abbd753a381ab6d51e8b4a7572d7f393c70e1ab208fdf"
+    },
+    {
+      "path": ".claude/commands/toh-s.md",
+      "sha256": "03f257e1afe6003036dbc2aae0001f297aca09b778c02185372dffc327763e63"
+    },
+    {
+      "path": ".claude/commands/toh-security.md",
+      "sha256": "6531b13f17e99f825a2abbd753a381ab6d51e8b4a7572d7f393c70e1ab208fdf"
+    },
+    {
+      "path": ".claude/commands/toh-ship.md",
+      "sha256": "2e18e9ab0b2b196763d671957f3c9fc29668d02d60c8e62af463dd26b1107976",
+      "preexisted": true,
+      "preexistedSha256": "0fc3a408912e781220cf06981e278dedb10ee816320a04798659e4c688ecf9cd",
+      "preexistedBytes": 3201
+    },
+    {
+      "path": ".claude/commands/toh-t.md",
+      "sha256": "00ebe758d55d70da5b34aed79e9c25734b2989a00c9995228d3329dedb1e47d9"
+    },
+    {
+      "path": ".claude/commands/toh-test.md",
+      "sha256": "f79d8a269f642930fca18c39f637c0b7e96584b52d8ab94d7ee55c5a8f8a6c1b",
+      "preexisted": true,
+      "preexistedSha256": "c17c4752a6a42308e409736ec1a3d97e26c2d7bc2b6f301edc05ec9da22beccd",
+      "preexistedBytes": 7761
+    },
+    {
+      "path": ".claude/commands/toh-u.md",
+      "sha256": "891a413ffe0eee10b0263e55f0e0dab558c15ff1fca1ab8d7b512976c7550873"
+    },
+    {
+      "path": ".claude/commands/toh-ui.md",
+      "sha256": "00f1d846d13669af981b80a28a887058f649413bc0b1dbd709010cdc487978b5",
+      "preexisted": true,
+      "preexistedSha256": "8df5a1c84e61247f56b41a9a655326f5b2d26c008c8a9c323188ce157134bf84",
+      "preexistedBytes": 2508
+    },
+    {
+      "path": ".claude/commands/toh-v.md",
+      "sha256": "7afff831ea262166ec79d5ab2b18d61ef92231a6aef45f3791bacba80032fb42"
+    },
+    {
+      "path": ".claude/commands/toh-vibe.md",
+      "sha256": "0721b1c6e47a8bb10b55dfade3b9c04c8882b47aa4b235300d6efcc6bbc95397",
+      "preexisted": true,
+      "preexistedSha256": "1fc536fa6ac2ae4ea15ff825564b871b348a329859c9ceceb11c533ae92ddb9c",
+      "preexistedBytes": 13951
+    },
+    {
+      "path": ".claude/commands/toh.md",
+      "sha256": "31f6e2b0f29cb21f86a921f6dae1e3cbe476e2b756b6bf12b53eebd782e60239",
+      "preexisted": true,
+      "preexistedSha256": "b01877658db0fc179d4f0c10446d034677dfe67086382bc632916c063b6d84f1",
+      "preexistedBytes": 27428
+    },
+    {
+      "path": ".claude/loop.md",
+      "sha256": "fd60787157a49192b46f13647b502b4955e0c1e65a1c2541d3446467ee0b2f42"
+    },
+    {
+      "path": ".claude/memory/active.md",
+      "sha256": "f74943bdc0e044b4abb6844a194705d9237249fca6c0a1ac87e511516751e957",
+      "preexisted": true,
+      "preexistedSha256": "58b4065c07986bd93ad76dea8b64e32ea564e3a07ccfa3aa414c03bd28544492",
+      "preexistedBytes": 22959
+    },
+    {
+      "path": ".claude/memory/agents-log.md",
+      "sha256": "c37f843a30847ac6896c661abd5b0ad7c71e76e91645ef0bd9cc8e3c024d5256"
+    },
+    {
+      "path": ".claude/memory/architecture.md",
+      "sha256": "f7b872cc0f029bc1f16636bcb693239791bbfea0ee8fdc6a50c7adca2998d948",
+      "preexisted": true,
+      "preexistedSha256": "d0f3a9dc70259011671b2d42280846fc431def32be2b22adb1d68fff8150839d",
+      "preexistedBytes": 1445
+    },
+    {
+      "path": ".claude/memory/changelog.md",
+      "sha256": "d7a8212374b4738967770995e029857fbf6bae75d12d5d7de0dccf9549617c3e",
+      "preexisted": true,
+      "preexistedSha256": "b60b40f9f5d997e851fc27a2cb806b33e9a414e72693b6fcd6727b0396802e41",
+      "preexistedBytes": 437
+    },
+    {
+      "path": ".claude/memory/components.md",
+      "sha256": "4838288881ebe9e81566edd0c1d4cc8b52cd2a9b6571eacb7df6ba04a41721ee",
+      "preexisted": true,
+      "preexistedSha256": "5d7d08d982f4a06074ae49f6a83ffeb79f81c37050744a20fdde9c9303dde7de",
+      "preexistedBytes": 1293
+    },
+    {
+      "path": ".claude/memory/decisions.md",
+      "sha256": "dd52ef46c0814bc6c37549d7518f720e8ccd070df70b93ddb7c6fff6f952e20f",
+      "preexisted": true,
+      "preexistedSha256": "213dde547f2b502ee8adc6f03ddf6ad8c27c2ccea61c4caf75ee4ef831114106",
+      "preexistedBytes": 8194
+    },
+    {
+      "path": ".claude/memory/summary.md",
+      "sha256": "ed4f856a432f79c566d1b890645b226b03cde818839f8237e8dd24b695e60470",
+      "preexisted": true,
+      "preexistedSha256": "31a7d66ab538bd9f5a2351f1f4760873f3b67ac302c31622a113978dcc97fc5c",
+      "preexistedBytes": 4707
+    },
+    {
+      "path": ".claude/settings.json",
+      "sha256": "8e1d15df4fcc7fc4079c1e51dd6a939c271f3bea428abf20ac4aafc752b3014c"
+    },
+    {
+      "path": ".claude/skills/backend-engineer/SKILL.md",
+      "sha256": "bca4448d605ed7cf2c18c475a055c28d4e4ca972d63bb2f4b1422763330c06b7"
+    },
+    {
+      "path": ".claude/skills/business-context/SKILL.md",
+      "sha256": "7843981a450fbf200edbef5c9e7be7d4e775fbac0c6aace18bef1d16e812706f",
+      "preexisted": true,
+      "preexistedSha256": "b7dba7640d6706e35e97671810daaf097ff589599d7cae0ba6f2db160b16e1f1",
+      "preexistedBytes": 7367
+    },
+    {
+      "path": ".claude/skills/debug-protocol/SKILL.md",
+      "sha256": "c64d293788c21ce1c21e7d36dd69fab834b1ea2c901f3b34e12cb2837849fa1b",
+      "preexisted": true,
+      "preexistedSha256": "565ed7241459e16c33fd8f9610d8c9911b470f7ce11e31ca594b9967f1288111",
+      "preexistedBytes": 12152
+    },
+    {
+      "path": ".claude/skills/design-craft/AVOID-LIST.md",
+      "sha256": "408be11a887d659bdb15f7d6f0b7059353838c6e31031acd7a22f8998ce7c60e"
+    },
+    {
+      "path": ".claude/skills/design-craft/DESIGN-TEMPLATE.md",
+      "sha256": "5352437984257c8a35bead1b889a6bbb5b19b7a2279011c547024ccd24e934fa"
+    },
+    {
+      "path": ".claude/skills/design-craft/SKILL.md",
+      "sha256": "57fe3b08ada8804979c2bc9ef13727785866f30d18c1541a4e3fa886f8e852bf"
+    },
+    {
+      "path": ".claude/skills/design-excellence/SKILL.md",
+      "sha256": "bd317c6b91c7610e6edb38aeb94bceb59447f6ded151a9b5107504e308b30180"
+    },
+    {
+      "path": ".claude/skills/design-mastery/SKILL.md",
+      "sha256": "66cdc51c9754ca395cd48f106ce6f554b0ef4b2e7fde94bd78b6da9ad91a58f0"
+    },
+    {
+      "path": ".claude/skills/dev-engineer/SKILL.md",
+      "sha256": "80d7c38df4a4e14fcebac326d692f7ebbd65f98360498beca3e592b3b015137d",
+      "preexisted": true,
+      "preexistedSha256": "32a020d1d9a2a46ad607f8cdbb9a9d785e3529cecfcb675ca0480f02599c1260",
+      "preexistedBytes": 14836
+    },
+    {
+      "path": ".claude/skills/engineer-harness/SKILL.md",
+      "sha256": "e483c51aa7d41a8bce04480854ce3f9bd52516fce4abf2684179b457e4904972"
+    },
+    {
+      "path": ".claude/skills/error-handling/SKILL.md",
+      "sha256": "ea75284f0dac0a240e07a85850e9398afc9f209d4520e8f3945a10a431e4e30e",
+      "preexisted": true,
+      "preexistedSha256": "819e005d7ebc27ab984b0b3023a40df894d037ac76cc112cf84a2dcc0c3fc6f0",
+      "preexistedBytes": 9253
+    },
+    {
+      "path": ".claude/skills/integrations/SKILL.md",
+      "sha256": "0b1bd8edf35cd75156ab3d3449d62a0f8c6ac6732caf35fe9b7967b989a76443",
+      "preexisted": true,
+      "preexistedSha256": "890898c7f8d257a4c029cd84949a82a3dd1f8c6593767b7c029fc27721947673",
+      "preexistedBytes": 8857
+    },
+    {
+      "path": ".claude/skills/memory-system/SKILL.md",
+      "sha256": "a38a343b85180d92a192517dc7fbc17371bdd6a0199aee0b8734b1c2f4a5fc68",
+      "preexisted": true,
+      "preexistedSha256": "04e3b47ae70df535d23f6288d0318ade93a4c240e48da5d01aa779b752356332",
+      "preexistedBytes": 12466
+    },
+    {
+      "path": ".claude/skills/memory-system/templates/active.md",
+      "sha256": "e505c08c069f702f84d334fbe23f2ade6565b9b0214434bf2886836b1c83aa8f"
+    },
+    {
+      "path": ".claude/skills/memory-system/templates/config.json",
+      "sha256": "f2ea0f16ab5d8b5f8d51cd89e055edbe67b472dfa758f4a303e74b100a0295df"
+    },
+    {
+      "path": ".claude/skills/memory-system/templates/decisions.md",
+      "sha256": "c976905d3f4c2f220ea731bcdca120d9ea1c503e6cb212b701ed7a15dd9928c3",
+      "preexisted": true,
+      "preexistedSha256": "803110b2c157aec9a0b610df7badc0441f155b9f5aaba33ebf19493e23188830",
+      "preexistedBytes": 940
+    },
+    {
+      "path": ".claude/skills/memory-system/templates/summary.md",
+      "sha256": "3d55d8453233de5a1e416cd73b830e4d95353583b4445f1c3538ca7c91024563",
+      "preexisted": true,
+      "preexistedSha256": "80553eb5c7b870efb0e51968574cbb57dfda8da9cd916eacd3c31333398ba56d",
+      "preexistedBytes": 837
+    },
+    {
+      "path": ".claude/skills/orchestration-protocol/SKILL.md",
+      "sha256": "a851a81b62d2b93158ac85cc54c2e9cff19ec0b1db494da54cb577383ee89d31"
+    },
+    {
+      "path": ".claude/skills/plan-orchestrator/SKILL.md",
+      "sha256": "8cda4fa2497ed50feadcf03934f93621aba3ca4488c0f26a619a8a0038050254",
+      "preexisted": true,
+      "preexistedSha256": "da2dc5afa2e908aa2782c12f029349c1587b8ac3cafacb96fe9f57a779bf4b1a",
+      "preexistedBytes": 11060
+    },
+    {
+      "path": ".claude/skills/platform-specialist/SKILL.md",
+      "sha256": "c8de21cd890c07d2ee3a4bd47b7508d8677878495599fb8daa5c464b03ea42a9",
+      "preexisted": true,
+      "preexistedSha256": "70cf19d4194c2dc61f83c7e70181cacc19ec34e37bca57847df595f86250d8cf",
+      "preexistedBytes": 15684
+    },
+    {
+      "path": ".claude/skills/premium-experience/SKILL.md",
+      "sha256": "d28b2c4f1a8c220f3137c1f82b626c2c086c79b7e5f07ac128e016ad51b90092",
+      "preexisted": true,
+      "preexistedSha256": "c1ea8ad0ac2913f1690423fe677d0804f50c7112fe4d27c134c0fbeb8961c304",
+      "preexistedBytes": 17263
+    },
+    {
+      "path": ".claude/skills/preview-mode/SKILL.md",
+      "sha256": "35e5989a1814937e2622dd08156c7337921da26e69b3d4c21db7bb3b0370c9d1",
+      "preexisted": true,
+      "preexistedSha256": "d7b4df3a4587916b68e682f22a17a1d9c53d6dfcc51c822a995d721dceab54c9",
+      "preexistedBytes": 10004
+    },
+    {
+      "path": ".claude/skills/progress-tracking/SKILL.md",
+      "sha256": "938b903b7289ed7f9a91784983cd1f5893494617c0c02677dfff02e7b756f1ac",
+      "preexisted": true,
+      "preexistedSha256": "f1d439e7b5b5fc99565fef8a6533398ffd3882d9daa4d2ba8fabde6a943f1766",
+      "preexistedBytes": 7742
+    },
+    {
+      "path": ".claude/skills/prompt-optimizer/SKILL.md",
+      "sha256": "73685e19af25f94aa5b1cf449105de8a7a98533daae5d1ffc5c13c87fc36671b"
+    },
+    {
+      "path": ".claude/skills/prompt-optimizer/references/advanced-examples.md",
+      "sha256": "1756389b782ba0deceb23f812cbb73668022019b4df3f36a57b62b7f97b732a9"
+    },
+    {
+      "path": ".claude/skills/response-format/SKILL.md",
+      "sha256": "e99fe2a8ebfe972bc550fdfb3c28c6f50a87c818371fe184d68f27a5fcdd7197"
+    },
+    {
+      "path": ".claude/skills/security-engineer/SKILL.md",
+      "sha256": "4fd2194bed3274dd52ff957c12d7d0fe30fdbffd1e9ff532088b316cefc27e2b",
+      "preexisted": true,
+      "preexistedSha256": "9d02833e8ee3d407f04921d172a6928777e1a4452385566c25af4fbdc9a8ee68",
+      "preexistedBytes": 10750
+    },
+    {
+      "path": ".claude/skills/session-recovery/SKILL.md",
+      "sha256": "e51b351908adc5c6945f8c3118a9b664923fae537d684937fbeb7199d346372c",
+      "preexisted": true,
+      "preexistedSha256": "60c6ab4fa2335045ae9d1590d53c34dee44f6f41dd7305e2c80453f13969cf8e",
+      "preexistedBytes": 8002
+    },
+    {
+      "path": ".claude/skills/smart-routing/SKILL.md",
+      "sha256": "a28d6934b0aeabc52a70fd527a200ec7dc8b7c083a50631873f614ed762c52c3",
+      "preexisted": true,
+      "preexistedSha256": "8342b3c1ba5789395bba170d4bcb84de579b0da1344db0f7956cd2a70db0ddfe",
+      "preexistedBytes": 12616
+    },
+    {
+      "path": ".claude/skills/smart-suggestions/SKILL.md",
+      "sha256": "7ecdca654f6c2cc2bdabee4bbf149c5007a83fc28833dd6f8ddf181d49160598"
+    },
+    {
+      "path": ".claude/skills/test-engineer/SKILL.md",
+      "sha256": "ad763e283b795683310a7cf9f185e777838027fc29eca423e93c3e320ef7fa27",
+      "preexisted": true,
+      "preexistedSha256": "8c46182ed3d1df560d940e3a10190f2dbdfeb2484f1e0715fdf0c535df7aa0fc",
+      "preexistedBytes": 13238
+    },
+    {
+      "path": ".claude/skills/ui-first-builder/SKILL.md",
+      "sha256": "5307e5993700a553d3dde047628abda93532deffe9d5da0be77104cc3d130ede",
+      "preexisted": true,
+      "preexistedSha256": "2a913f09f038782f308e6fd79da21899ec58c499ca227b859ec1fe9521631713",
+      "preexistedBytes": 8835
+    },
+    {
+      "path": ".claude/skills/version-control/SKILL.md",
+      "sha256": "7a6d16894bbdb90b6897769c9ff5aefb890bef1f41564fb5f459ec47ced543b9",
+      "preexisted": true,
+      "preexistedSha256": "8fefa386918371ce885b8d528c3d4d9ac9330eed26dc8534d669876512af9961",
+      "preexistedBytes": 6970
+    },
+    {
+      "path": ".claude/skills/vibe-orchestrator/SKILL.md",
+      "sha256": "72bac923ddd6cc292c2c08f833bec205bf004433a89a4bf54419b373f6fe74d1",
+      "preexisted": true,
+      "preexistedSha256": "d9237ed99b30431fdbd2c83311c5ae27f5d9a6f173f576d1fddb8d11d062eac6",
+      "preexistedBytes": 15548
+    },
+    {
+      "path": ".claude/templates/README.md",
+      "sha256": "4f629277c73473dd468dfedf33a1da37292c4c508f5ff0b6194e7f88941078c8"
+    },
+    {
+      "path": ".claude/templates/components/feedback/EmptyState.tsx",
+      "sha256": "e494d190c9a357ed3f133e10ecb8544bd85473396720d9de4215168fef9ee47d"
+    },
+    {
+      "path": ".claude/templates/components/feedback/LoadingSpinner.tsx",
+      "sha256": "4d096ced2d3477d4021917ae5baba10f0dedb44a95b7b5f332c59fc8daddaec4",
+      "preexisted": true,
+      "preexistedSha256": "1bc6d82769aad8b75804664749c1f1c687bf453690eab204aa49ae1677c9d2fb",
+      "preexistedBytes": 1649
+    },
+    {
+      "path": ".claude/templates/components/feedback/Skeleton.tsx",
+      "sha256": "b7be73abe3648638c7b4df08abeef22717cc36545b0a0be863d10d1c793edfce"
+    },
+    {
+      "path": ".claude/templates/components/feedback/index.ts",
+      "sha256": "ac34d5f3207d9c4483dd9964d02e966784bf4acdd29b8c441a7320e88b4eed28"
+    },
+    {
+      "path": ".claude/templates/components/index.ts",
+      "sha256": "38b10211923b7d6d9708098edd09e29006da0e8064bb32d0009789c93be77fbc"
+    },
+    {
+      "path": ".claude/templates/components/interactive/AnimatedButton.tsx",
+      "sha256": "3716554ec1d20a19805484fcac984954529cdcc655adecd5ddfaaef371fbe96f",
+      "preexisted": true,
+      "preexistedSha256": "d15112f6c1a3ef6fd3d245ee4f4e279fa482acef00697ca8e78a86f2c79a683b",
+      "preexistedBytes": 3703
+    },
+    {
+      "path": ".claude/templates/components/interactive/AnimatedCard.tsx",
+      "sha256": "91f822cd29faad7051e037b08f6826618b304c18feaba3655ea749cb829eeeae"
+    },
+    {
+      "path": ".claude/templates/components/interactive/index.ts",
+      "sha256": "ebe4819fbd417c881e53eca9c9cb55413ac22fb539111a4c84c411358ab3fe70"
+    },
+    {
+      "path": ".claude/templates/components/layout/Footer.tsx",
+      "sha256": "e0a90b06d61a2bf113e1f516a2a31440fbefe59df0fa0d3b7f858c7981c6767a"
+    },
+    {
+      "path": ".claude/templates/components/layout/Navbar.tsx",
+      "sha256": "80ccb7fdb37f30c74b7d59b93c232c2d5aede33872590e0f57b8c2e75660aaa1",
+      "preexisted": true,
+      "preexistedSha256": "b4d9c22e4bb3f02ff8f0c10f3b8ace14af4c58e6c2a98279a7ea8c1630eafa0e",
+      "preexistedBytes": 3511
+    },
+    {
+      "path": ".claude/templates/components/layout/Sidebar.tsx",
+      "sha256": "894f4c6485a8d92fa4499f5039dda38f636460f6f47f8f46fb2d1a7619128446"
+    },
+    {
+      "path": ".claude/templates/components/layout/index.ts",
+      "sha256": "5528df1fbfeaecdc808d1595058812c0b2885c3a6f1a25b00ef1f43c79d39b4a"
+    },
+    {
+      "path": ".claude/templates/components/motion/CountUp.tsx",
+      "sha256": "5fdf7cd7e023482235ad4e9fb28f549497b777f4d4ce1a9a65e3f12fe9e7a3ad"
+    },
+    {
+      "path": ".claude/templates/components/motion/FadeIn.tsx",
+      "sha256": "c018721268762a8dad35b67d46e8a28d8b848765ca0b8852e77ae99ecebdba74"
+    },
+    {
+      "path": ".claude/templates/components/motion/PageTransition.tsx",
+      "sha256": "75ead4c331423082f7a06c4a43f342ea04ff64874095ad38b6126306b29876c7"
+    },
+    {
+      "path": ".claude/templates/components/motion/StaggerContainer.tsx",
+      "sha256": "ec39b1674db2ba24c496c87794a8df09de8e61bb683cb7c08e2d69c913360fe8"
+    },
+    {
+      "path": ".claude/templates/components/motion/index.ts",
+      "sha256": "267f0da201a35cc72cf19bd8333fdf4ad7151e6f9dea76d163473840d9078f1a"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/README.md",
+      "sha256": "8218ffe1332c3143dadb39f8e8e59cb528f1278df3956deb18564f7d3703f7ec",
+      "preexisted": true,
+      "preexistedSha256": "d7b6375709c67d9650931c9ecc61f2954f66492ef5232697f8f77f469f307a5f",
+      "preexistedBytes": 4205
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/USAGE-GUIDE.md",
+      "sha256": "4f470eca200d2bdd6c4355cc49f30763a9009b73d767199cdcc688412a0487a4",
+      "preexisted": true,
+      "preexistedSha256": "8fbc8ae6269602cb148bcbcff9e9bd708a880f938d0c57149e66f73dd2ffc9c2",
+      "preexistedBytes": 9463
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/app/globals.css",
+      "sha256": "8f51d1ff9d19aad29f81f28a563c0b5cc98c56b8764bc9cdd9fb9000a7c9e2c7",
+      "preexisted": true,
+      "preexistedSha256": "fb09c1d5d4d41ce883e772f0c8f883ee25e0ebefcdb1c69024422c8f9f1e8976",
+      "preexistedBytes": 2740
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/app/layout.tsx",
+      "sha256": "7ffea5772cd416e9b9936cc2e21c082f8edda10b82359a36e1c395b11652cbca"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/app/page.tsx",
+      "sha256": "59df9ab2f9d66e6466c89a755331465f101dd6af4f85725d98d4ee1fb791a9e2"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/components/features/product-card.tsx",
+      "sha256": "ec3d786a82fb29304e0c2739afbbed087c5acecab2fdd3433f81ef4f92defe9d"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/components/layout/header.tsx",
+      "sha256": "854f54e5551c40b72fc1cb536b75ca232bac5c2ea535b91cdb969086b13191ae",
+      "preexisted": true,
+      "preexistedSha256": "f7f47bcfd207b5a7e34e111b6bfac58a4aebe47aecc3a34837e3dd246f51b97e",
+      "preexistedBytes": 1626
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/lib/api/products.ts",
+      "sha256": "cb1371d4e35c38dd351156cfd93102ee5645462c209235bc30e1bbaa4c7ab0ee"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/lib/mock-data.ts",
+      "sha256": "0bc9d26be7b8d47c665ce92bfce668f84fd22fad75b07f83e0bc2d51cacdd8d2"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/lib/supabase.ts",
+      "sha256": "8245db9e3db15c93385bd0425014f5aed6e45300c3d62137b9e14bccfd8af918"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/lib/utils.ts",
+      "sha256": "7444554e640926ff74565ffe73aaee9f09e24b9d398d94c6928d60eec4661325"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/lib/validations/product.ts",
+      "sha256": "283709285d6a61151dd325cb82e256181b7c840b19e621372f4a892712c02b31"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/package.json",
+      "sha256": "c2ac6aefaf5637427feb8696c6a7c311c76952b6ef151e1d33c2ca2b68709b9f",
+      "preexisted": true,
+      "preexistedSha256": "60db203aaa3b0093c02654ae28c7a4726f944584453cd98ee68d489d54f4079d",
+      "preexistedBytes": 1004
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/providers/app-provider.tsx",
+      "sha256": "8d5619ceb887f00c27e88c823863a202a52ef45519d7a4b57fa29ea0f943c5c2"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/stores/product-store.ts",
+      "sha256": "43c3331cbd3c428db710cbcc64de83e3f26dde147d35b81cd9a08aef8d3b3fc0"
+    },
+    {
+      "path": ".claude/templates/nextjs-pro/types/index.ts",
+      "sha256": "090b5916410eccc26bbcb0f5ed0d742a7cec5e4cd17fde6aeb977116c33301d5"
+    },
+    {
+      "path": ".claude/templates/pages/auth-pages.tsx",
+      "sha256": "0919623d6dc86057f936f3742fb616dd0d98cb05b0e3ee31b32e11ddb317bb51",
+      "preexisted": true,
+      "preexistedSha256": "98f9a8cd0c96a334689684cef713d7eedbdce13f3ef7156c025aeaa633f02d18",
+      "preexistedBytes": 11891
+    },
+    {
+      "path": ".claude/templates/pages/dashboard-page.tsx",
+      "sha256": "529f982c08402255010e3d33e3e4dd6f167aff51c7bdec012f18ec379ad6bb92",
+      "preexisted": true,
+      "preexistedSha256": "3dea7229ea61cd49a1c1a07db7ab329d657035ea70f73a286e080f0b134d85c7",
+      "preexistedBytes": 8733
+    },
+    {
+      "path": ".claude/templates/pages/landing-page.tsx",
+      "sha256": "262f19d9623dd2a7c4afbb903a45500bd18438e279087023b5d5e6095e7eed1a",
+      "preexisted": true,
+      "preexistedSha256": "7bd386d0f6c3fc788d8d8a00de6f9473dc1e2634c173373759e6e6983c5eaf73",
+      "preexistedBytes": 11255
+    },
+    {
+      "path": ".codex/config.toml",
+      "sha256": "e705818d647447e19515931de2f5bdd956ae6318da915172d3f89138e25fc8c7"
+    },
+    {
+      "path": ".cursor/agents/backend-connector.md",
+      "sha256": "b0dd4ec292436550d2643bbb71c6e7c75f68bc09f0753fd8d48b095ca62ad805"
+    },
+    {
+      "path": ".cursor/agents/design-reviewer.md",
+      "sha256": "30352a61390b7c1470f892b77d1fd0e0cf7ab858042ebb00deea78a4ea3c8609"
+    },
+    {
+      "path": ".cursor/agents/dev-builder.md",
+      "sha256": "60ee4bbd5420b10ea1b922d7a004b0307b2e0c52482d91bc949ea0d10b359e47"
+    },
+    {
+      "path": ".cursor/agents/plan-orchestrator.md",
+      "sha256": "6b10db4e0d239f45b19f317dc64ab6ee8307c78adb9747d115c6540ab9221be8"
+    },
+    {
+      "path": ".cursor/agents/platform-adapter.md",
+      "sha256": "8b142bd1e4dcf8dbde84650c83a73b1abd6486979cec637e6d4754d3a29d1b08"
+    },
+    {
+      "path": ".cursor/agents/root-cause-debugger.md",
+      "sha256": "4cf8a087079d1183a724cab97f706c772651ce798bcf426cd9d16be8af73f4a3"
+    },
+    {
+      "path": ".cursor/agents/test-runner.md",
+      "sha256": "74db8a8b94810e330cb12fb8c20afc5cc77c6dacce35ed35c8c1ee548beb8aad"
+    },
+    {
+      "path": ".cursor/agents/ui-builder.md",
+      "sha256": "0672755bfacbad91ae083168a1c9412ab8369d9aa529a98c809b3a6252dbabca"
+    },
+    {
+      "path": ".cursor/rules/toh-agents.mdc",
+      "sha256": "ef077ffe100bd744528b14a077ae3b1c2ccf33938e784664272422f8c817edfc",
+      "preexisted": true,
+      "preexistedSha256": "91c1e6577fcd41d1b54dd456aea8cee5c2f10a3df56540c1836e53d6b0db6a57",
+      "preexistedBytes": 1163
+    },
+    {
+      "path": ".cursor/rules/toh-framework.mdc",
+      "sha256": "110e16aadbb231cf4eca392fc15a6c35902c146d1aef8283d1cf1a4bff616eec",
+      "preexisted": true,
+      "preexistedSha256": "ebbf6c85b3255d9649260ee6435fb3e65188ad30ef1cc207b67473d8cd5eebf0",
+      "preexistedBytes": 9972
+    },
+    {
+      "path": ".toh/agents/README.md",
+      "sha256": "e3585a2d9d2af6df1bbe665b5f88d570746dcaabfbbd160760e5a512a514add6",
+      "preexisted": true,
+      "preexistedSha256": "46b4f8e02d43d53908ca46df30424bf89edd7b6c9ba8a92845701f8ca2cccf39",
+      "preexistedBytes": 8328
+    },
+    {
+      "path": ".toh/agents/backend-connector.md",
+      "sha256": "b32718b39a89e6d67fd8619f7de251f2556f35b009fcd4a2b63739e36f02172f",
+      "preexisted": true,
+      "preexistedSha256": "07be5839f66e8d2aa60cc9fef0672b5a883fe07ac82b10422a3361018b7781b8",
+      "preexistedBytes": 26723
+    },
+    {
+      "path": ".toh/agents/design-reviewer.md",
+      "sha256": "dd2b9e1cf2377c849958bce5ac5cabb0a74d9c2c2c3e783ad94a572127c432be",
+      "preexisted": true,
+      "preexistedSha256": "8e84c686c377d0c03731d73b142f06f8adba24258fb8cac715bac0803381bc04",
+      "preexistedBytes": 25787
+    },
+    {
+      "path": ".toh/agents/dev-builder.md",
+      "sha256": "06d6152c39a339e8b8c535d2eb1826d12b01e6c356661f4c5c13f6e3c27b6c19",
+      "preexisted": true,
+      "preexistedSha256": "fb935dbab15745378a266a0be802602b8ba03f93a3077ea879172c485f1d06ee",
+      "preexistedBytes": 39469
+    },
+    {
+      "path": ".toh/agents/plan-orchestrator.md",
+      "sha256": "f790a09230eec69cd3ac8b54c56572453a88c7e9b448d3a73eca4cf515a0a6a3",
+      "preexisted": true,
+      "preexistedSha256": "3a4ec0fd98ffeca238e4c0a52d9787fc3797d9217e09b76fbac8aca8a0c9dc2c",
+      "preexistedBytes": 20521
+    },
+    {
+      "path": ".toh/agents/platform-adapter.md",
+      "sha256": "0546b7c5217284112a37a7032a74d95ce92649cd4203bf1fb97fadf5cd04802a",
+      "preexisted": true,
+      "preexistedSha256": "8af2d2c32b98193fff51eca7dd1a0917befbe15cf229527989f07bd221c63d58",
+      "preexistedBytes": 32877
+    },
+    {
+      "path": ".toh/agents/root-cause-debugger.md",
+      "sha256": "bd6b81fd6d6a6ce0973aa17427251aff4763f0a3c07eca8d5ae8e863feb69383"
+    },
+    {
+      "path": ".toh/agents/test-runner.md",
+      "sha256": "9dc5a88ea872a8a381b524f8eeb0ec5e65bab49e8518774ea5b9843085109e7c",
+      "preexisted": true,
+      "preexistedSha256": "05f21fe6e059c5a26ce4e115fb5283e805eba5697f50fa8dfe2c745cb713f99f",
+      "preexistedBytes": 17038
+    },
+    {
+      "path": ".toh/agents/ui-builder.md",
+      "sha256": "e62101e56e418de77ca0e921f0b9a8b42fbac906461031face75dbc86a5b4ddd",
+      "preexisted": true,
+      "preexistedSha256": "138a6ffa140109eea9f6f60d304e0428f75f82f92a76cf814eccce41cd732fce",
+      "preexistedBytes": 30418
+    },
+    {
+      "path": ".toh/capabilities.json",
+      "sha256": "83b3e73d6bea52003a175c500f55f8137abb0fc02d176d5ea38a80d93409eb31"
+    },
+    {
+      "path": ".toh/commands/README.md",
+      "sha256": "027d9111dcd0081b42280ce6a1b48d0b229a015f9025e0d9b14bc46ee818bdc6",
+      "preexisted": true,
+      "preexistedSha256": "26c7d8378de064b21b3fc43e60aa551586e24d0a611aebfce10c481b986ef420",
+      "preexistedBytes": 3181
+    },
+    {
+      "path": ".toh/commands/toh-connect.md",
+      "sha256": "fd924538ae2762e4569e51528a80087ea10f0ed57213dbb709a477e440819950",
+      "preexisted": true,
+      "preexistedSha256": "4c782f911540cfabd61dd42bab930166ca74f53f8e932c6fd6f11384edeb89a7",
+      "preexistedBytes": 3062
+    },
+    {
+      "path": ".toh/commands/toh-design.md",
+      "sha256": "05e37dfeae2f456354330b756553c715f18e13fc99ceee460a238cbadc96a3ab",
+      "preexisted": true,
+      "preexistedSha256": "debc10596d62f01f724eb1278474c22a2b4378f7afd2829971703ba7e12eb825",
+      "preexistedBytes": 2990
+    },
+    {
+      "path": ".toh/commands/toh-dev.md",
+      "sha256": "1572d05a05ef23b3b1b5f2404b5ce60053e928bcc2d9d6001003566b2c2798ba",
+      "preexisted": true,
+      "preexistedSha256": "7dd4d45053bb11825b3b8797319b35e7e7965b68b9af732847ccb14a7bd009c6",
+      "preexistedBytes": 3428
+    },
+    {
+      "path": ".toh/commands/toh-fix.md",
+      "sha256": "1df1d58084e925910e979e52aa21fd7552e85f9064dded188295ccae0c9f3a46",
+      "preexisted": true,
+      "preexistedSha256": "b8f0b3bd23fb6b432d009a5ec3351dfc474dd7da4ec6b2dc63015f41a5b87dbb",
+      "preexistedBytes": 6869
+    },
+    {
+      "path": ".toh/commands/toh-help.md",
+      "sha256": "77454afa452147e8dc018b6613aa0d3f4c7590a34390f02fd921fc8107f3a366",
+      "preexisted": true,
+      "preexistedSha256": "259e2e02b42a5beca54c074ed379ec58be9f4b5e8142c3f74e32d844948458cb",
+      "preexistedBytes": 5195
+    },
+    {
+      "path": ".toh/commands/toh-line.md",
+      "sha256": "d4b047d508b819e88b2a26d16bd093de5aca2fa7ac919c6f0b7d9808bd59fbb7",
+      "preexisted": true,
+      "preexistedSha256": "d726556f9fa3d2d2625f16467bf6e0ba7aedfe1d0d9f4d430b9c8afe5a85d6f5",
+      "preexistedBytes": 3258
+    },
+    {
+      "path": ".toh/commands/toh-mobile.md",
+      "sha256": "5e672cb9f2f2403c6c303c772a125260d9a35d24f4543d156649bd6aa201795d",
+      "preexisted": true,
+      "preexistedSha256": "9f3c7b908c8d9ac44f5249bce3e05817d3765b26b3dc245273aeaccee3bc450e",
+      "preexistedBytes": 2814
+    },
+    {
+      "path": ".toh/commands/toh-plan.md",
+      "sha256": "99814ec7ada50a362a663d4a21a6a9d8bba219808f4df2cc78c746b5ba9c0155",
+      "preexisted": true,
+      "preexistedSha256": "8107a48bd85ef3d29d3dd1c62ef05ee55e63f58388b2eed4cd91c43c1e93ef90",
+      "preexistedBytes": 16766
+    },
+    {
+      "path": ".toh/commands/toh-protect.md",
+      "sha256": "28c900415014c23c322f33db2384946ed968e8a95dae696e694303ff299a7a8d",
+      "preexisted": true,
+      "preexistedSha256": "4572300277de29a87e5f977e7777df1432c20d19f8b1b810abbd574a0483f033",
+      "preexistedBytes": 7314
+    },
+    {
+      "path": ".toh/commands/toh-ship.md",
+      "sha256": "2e18e9ab0b2b196763d671957f3c9fc29668d02d60c8e62af463dd26b1107976",
+      "preexisted": true,
+      "preexistedSha256": "0fc3a408912e781220cf06981e278dedb10ee816320a04798659e4c688ecf9cd",
+      "preexistedBytes": 3201
+    },
+    {
+      "path": ".toh/commands/toh-test.md",
+      "sha256": "f79d8a269f642930fca18c39f637c0b7e96584b52d8ab94d7ee55c5a8f8a6c1b",
+      "preexisted": true,
+      "preexistedSha256": "c17c4752a6a42308e409736ec1a3d97e26c2d7bc2b6f301edc05ec9da22beccd",
+      "preexistedBytes": 7761
+    },
+    {
+      "path": ".toh/commands/toh-ui.md",
+      "sha256": "00f1d846d13669af981b80a28a887058f649413bc0b1dbd709010cdc487978b5",
+      "preexisted": true,
+      "preexistedSha256": "8df5a1c84e61247f56b41a9a655326f5b2d26c008c8a9c323188ce157134bf84",
+      "preexistedBytes": 2508
+    },
+    {
+      "path": ".toh/commands/toh-vibe.md",
+      "sha256": "09d0d1f1255260ac9ed28150782cea9a5dcfbc3e141b76d7a9a91a9a504d6c6a",
+      "preexisted": true,
+      "preexistedSha256": "1fc536fa6ac2ae4ea15ff825564b871b348a329859c9ceceb11c533ae92ddb9c",
+      "preexistedBytes": 13951
+    },
+    {
+      "path": ".toh/commands/toh.md",
+      "sha256": "31f6e2b0f29cb21f86a921f6dae1e3cbe476e2b756b6bf12b53eebd782e60239",
+      "preexisted": true,
+      "preexistedSha256": "b01877658db0fc179d4f0c10446d034677dfe67086382bc632916c063b6d84f1",
+      "preexistedBytes": 27428
+    },
+    {
+      "path": ".toh/memory/active.md",
+      "sha256": "9fa0530db453ce68eea43267a3a87716dea1661484aaf5847ed4f01c7be6e7ab",
+      "preexisted": true,
+      "preexistedSha256": "c73e4801f9f6f64e487bcbed5576c5992bd01954e77b51bfbb89b256330b22bc",
+      "preexistedBytes": 690
+    },
+    {
+      "path": ".toh/memory/agents-log.md",
+      "sha256": "020bee7c3a8307b49867f21c6f7fd149d25c07ec0588a64af9d339cb662d6088"
+    },
+    {
+      "path": ".toh/memory/architecture.md",
+      "sha256": "f7b872cc0f029bc1f16636bcb693239791bbfea0ee8fdc6a50c7adca2998d948",
+      "preexisted": true,
+      "preexistedSha256": "d0f3a9dc70259011671b2d42280846fc431def32be2b22adb1d68fff8150839d",
+      "preexistedBytes": 1445
+    },
+    {
+      "path": ".toh/memory/changelog.md",
+      "sha256": "5ed2cef41a9d54947fb3ec1f2a40a314771aa3bae59222fe1de3cebd89841b83",
+      "preexisted": true,
+      "preexistedSha256": "24b63d3065b1f28b2091f3029716bb132949f0554e6119ac6f31b843229fedb2",
+      "preexistedBytes": 266
+    },
+    {
+      "path": ".toh/memory/components.md",
+      "sha256": "4838288881ebe9e81566edd0c1d4cc8b52cd2a9b6571eacb7df6ba04a41721ee",
+      "preexisted": true,
+      "preexistedSha256": "dba9952f841cd64ee50f6cc4572fc90e43e0582e4801c47791b2316b859a434c",
+      "preexistedBytes": 3031
+    },
+    {
+      "path": ".toh/memory/decisions.md",
+      "sha256": "9f9534ae3f17632ab7b2f8c4d11be49c63508156c1ddfccc1bc08b265f025153",
+      "preexisted": true,
+      "preexistedSha256": "7cfea94357efff7d666171842abb3acba595c6ccb65931dd640f2876af691de5",
+      "preexistedBytes": 634
+    },
+    {
+      "path": ".toh/memory/summary.md",
+      "sha256": "ce00ce41205bfacd775c36969510cf6f24e814ae617ad5eef5c1f60e7c61bbf4",
+      "preexisted": true,
+      "preexistedSha256": "1c34dee425e78a2b5681047f408f2dd288ee06d88ab1d957420f38755c787138",
+      "preexistedBytes": 2076
+    },
+    {
+      "path": ".toh/plan.md",
+      "sha256": "2841b1f0bf8f757e3c429d8702e0835c5ef50d612be7d44d9a75e80608ea1a85"
+    },
+    {
+      "path": ".toh/progress.md",
+      "sha256": "031c310d6c9dec9d8547f9a16eeb560f83d4589365960cf50848b4b5faea6b53"
+    },
+    {
+      "path": ".toh/skills/backend-engineer/SKILL.md",
+      "sha256": "bca4448d605ed7cf2c18c475a055c28d4e4ca972d63bb2f4b1422763330c06b7"
+    },
+    {
+      "path": ".toh/skills/business-context/SKILL.md",
+      "sha256": "7843981a450fbf200edbef5c9e7be7d4e775fbac0c6aace18bef1d16e812706f",
+      "preexisted": true,
+      "preexistedSha256": "b7dba7640d6706e35e97671810daaf097ff589599d7cae0ba6f2db160b16e1f1",
+      "preexistedBytes": 7367
+    },
+    {
+      "path": ".toh/skills/debug-protocol/SKILL.md",
+      "sha256": "c64d293788c21ce1c21e7d36dd69fab834b1ea2c901f3b34e12cb2837849fa1b",
+      "preexisted": true,
+      "preexistedSha256": "565ed7241459e16c33fd8f9610d8c9911b470f7ce11e31ca594b9967f1288111",
+      "preexistedBytes": 12152
+    },
+    {
+      "path": ".toh/skills/design-craft/AVOID-LIST.md",
+      "sha256": "408be11a887d659bdb15f7d6f0b7059353838c6e31031acd7a22f8998ce7c60e"
+    },
+    {
+      "path": ".toh/skills/design-craft/DESIGN-TEMPLATE.md",
+      "sha256": "5352437984257c8a35bead1b889a6bbb5b19b7a2279011c547024ccd24e934fa"
+    },
+    {
+      "path": ".toh/skills/design-craft/SKILL.md",
+      "sha256": "57fe3b08ada8804979c2bc9ef13727785866f30d18c1541a4e3fa886f8e852bf"
+    },
+    {
+      "path": ".toh/skills/dev-engineer/SKILL.md",
+      "sha256": "80d7c38df4a4e14fcebac326d692f7ebbd65f98360498beca3e592b3b015137d",
+      "preexisted": true,
+      "preexistedSha256": "32a020d1d9a2a46ad607f8cdbb9a9d785e3529cecfcb675ca0480f02599c1260",
+      "preexistedBytes": 14836
+    },
+    {
+      "path": ".toh/skills/engineer-harness/SKILL.md",
+      "sha256": "e483c51aa7d41a8bce04480854ce3f9bd52516fce4abf2684179b457e4904972"
+    },
+    {
+      "path": ".toh/skills/error-handling/SKILL.md",
+      "sha256": "ea75284f0dac0a240e07a85850e9398afc9f209d4520e8f3945a10a431e4e30e",
+      "preexisted": true,
+      "preexistedSha256": "819e005d7ebc27ab984b0b3023a40df894d037ac76cc112cf84a2dcc0c3fc6f0",
+      "preexistedBytes": 9253
+    },
+    {
+      "path": ".toh/skills/integrations/SKILL.md",
+      "sha256": "0b1bd8edf35cd75156ab3d3449d62a0f8c6ac6732caf35fe9b7967b989a76443",
+      "preexisted": true,
+      "preexistedSha256": "890898c7f8d257a4c029cd84949a82a3dd1f8c6593767b7c029fc27721947673",
+      "preexistedBytes": 8857
+    },
+    {
+      "path": ".toh/skills/memory-system/SKILL.md",
+      "sha256": "a38a343b85180d92a192517dc7fbc17371bdd6a0199aee0b8734b1c2f4a5fc68",
+      "preexisted": true,
+      "preexistedSha256": "04e3b47ae70df535d23f6288d0318ade93a4c240e48da5d01aa779b752356332",
+      "preexistedBytes": 12466
+    },
+    {
+      "path": ".toh/skills/memory-system/templates/active.md",
+      "sha256": "e505c08c069f702f84d334fbe23f2ade6565b9b0214434bf2886836b1c83aa8f"
+    },
+    {
+      "path": ".toh/skills/memory-system/templates/config.json",
+      "sha256": "f2ea0f16ab5d8b5f8d51cd89e055edbe67b472dfa758f4a303e74b100a0295df"
+    },
+    {
+      "path": ".toh/skills/memory-system/templates/decisions.md",
+      "sha256": "c976905d3f4c2f220ea731bcdca120d9ea1c503e6cb212b701ed7a15dd9928c3",
+      "preexisted": true,
+      "preexistedSha256": "803110b2c157aec9a0b610df7badc0441f155b9f5aaba33ebf19493e23188830",
+      "preexistedBytes": 940
+    },
+    {
+      "path": ".toh/skills/memory-system/templates/summary.md",
+      "sha256": "3d55d8453233de5a1e416cd73b830e4d95353583b4445f1c3538ca7c91024563",
+      "preexisted": true,
+      "preexistedSha256": "80553eb5c7b870efb0e51968574cbb57dfda8da9cd916eacd3c31333398ba56d",
+      "preexistedBytes": 837
+    },
+    {
+      "path": ".toh/skills/orchestration-protocol/SKILL.md",
+      "sha256": "a851a81b62d2b93158ac85cc54c2e9cff19ec0b1db494da54cb577383ee89d31"
+    },
+    {
+      "path": ".toh/skills/plan-orchestrator/SKILL.md",
+      "sha256": "8cda4fa2497ed50feadcf03934f93621aba3ca4488c0f26a619a8a0038050254",
+      "preexisted": true,
+      "preexistedSha256": "da2dc5afa2e908aa2782c12f029349c1587b8ac3cafacb96fe9f57a779bf4b1a",
+      "preexistedBytes": 11060
+    },
+    {
+      "path": ".toh/skills/platform-specialist/SKILL.md",
+      "sha256": "c8de21cd890c07d2ee3a4bd47b7508d8677878495599fb8daa5c464b03ea42a9",
+      "preexisted": true,
+      "preexistedSha256": "70cf19d4194c2dc61f83c7e70181cacc19ec34e37bca57847df595f86250d8cf",
+      "preexistedBytes": 15684
+    },
+    {
+      "path": ".toh/skills/premium-experience/SKILL.md",
+      "sha256": "d28b2c4f1a8c220f3137c1f82b626c2c086c79b7e5f07ac128e016ad51b90092",
+      "preexisted": true,
+      "preexistedSha256": "c1ea8ad0ac2913f1690423fe677d0804f50c7112fe4d27c134c0fbeb8961c304",
+      "preexistedBytes": 17263
+    },
+    {
+      "path": ".toh/skills/preview-mode/SKILL.md",
+      "sha256": "35e5989a1814937e2622dd08156c7337921da26e69b3d4c21db7bb3b0370c9d1",
+      "preexisted": true,
+      "preexistedSha256": "d7b4df3a4587916b68e682f22a17a1d9c53d6dfcc51c822a995d721dceab54c9",
+      "preexistedBytes": 10004
+    },
+    {
+      "path": ".toh/skills/progress-tracking/SKILL.md",
+      "sha256": "938b903b7289ed7f9a91784983cd1f5893494617c0c02677dfff02e7b756f1ac",
+      "preexisted": true,
+      "preexistedSha256": "f1d439e7b5b5fc99565fef8a6533398ffd3882d9daa4d2ba8fabde6a943f1766",
+      "preexistedBytes": 7742
+    },
+    {
+      "path": ".toh/skills/prompt-optimizer/SKILL.md",
+      "sha256": "73685e19af25f94aa5b1cf449105de8a7a98533daae5d1ffc5c13c87fc36671b"
+    },
+    {
+      "path": ".toh/skills/prompt-optimizer/references/advanced-examples.md",
+      "sha256": "1756389b782ba0deceb23f812cbb73668022019b4df3f36a57b62b7f97b732a9"
+    },
+    {
+      "path": ".toh/skills/security-engineer/SKILL.md",
+      "sha256": "4fd2194bed3274dd52ff957c12d7d0fe30fdbffd1e9ff532088b316cefc27e2b",
+      "preexisted": true,
+      "preexistedSha256": "9d02833e8ee3d407f04921d172a6928777e1a4452385566c25af4fbdc9a8ee68",
+      "preexistedBytes": 10750
+    },
+    {
+      "path": ".toh/skills/session-recovery/SKILL.md",
+      "sha256": "e51b351908adc5c6945f8c3118a9b664923fae537d684937fbeb7199d346372c",
+      "preexisted": true,
+      "preexistedSha256": "60c6ab4fa2335045ae9d1590d53c34dee44f6f41dd7305e2c80453f13969cf8e",
+      "preexistedBytes": 8002
+    },
+    {
+      "path": ".toh/skills/smart-routing/SKILL.md",
+      "sha256": "a28d6934b0aeabc52a70fd527a200ec7dc8b7c083a50631873f614ed762c52c3",
+      "preexisted": true,
+      "preexistedSha256": "8342b3c1ba5789395bba170d4bcb84de579b0da1344db0f7956cd2a70db0ddfe",
+      "preexistedBytes": 12616
+    },
+    {
+      "path": ".toh/skills/test-engineer/SKILL.md",
+      "sha256": "ad763e283b795683310a7cf9f185e777838027fc29eca423e93c3e320ef7fa27",
+      "preexisted": true,
+      "preexistedSha256": "8c46182ed3d1df560d940e3a10190f2dbdfeb2484f1e0715fdf0c535df7aa0fc",
+      "preexistedBytes": 13238
+    },
+    {
+      "path": ".toh/skills/ui-first-builder/SKILL.md",
+      "sha256": "5307e5993700a553d3dde047628abda93532deffe9d5da0be77104cc3d130ede",
+      "preexisted": true,
+      "preexistedSha256": "2a913f09f038782f308e6fd79da21899ec58c499ca227b859ec1fe9521631713",
+      "preexistedBytes": 8835
+    },
+    {
+      "path": ".toh/skills/version-control/SKILL.md",
+      "sha256": "7a6d16894bbdb90b6897769c9ff5aefb890bef1f41564fb5f459ec47ced543b9",
+      "preexisted": true,
+      "preexistedSha256": "8fefa386918371ce885b8d528c3d4d9ac9330eed26dc8534d669876512af9961",
+      "preexistedBytes": 6970
+    },
+    {
+      "path": ".toh/skills/vibe-orchestrator/SKILL.md",
+      "sha256": "72bac923ddd6cc292c2c08f833bec205bf004433a89a4bf54419b373f6fe74d1",
+      "preexisted": true,
+      "preexistedSha256": "d9237ed99b30431fdbd2c83311c5ae27f5d9a6f173f576d1fddb8d11d062eac6",
+      "preexistedBytes": 15548
+    },
+    {
+      "path": ".toh/templates/README.md",
+      "sha256": "4f629277c73473dd468dfedf33a1da37292c4c508f5ff0b6194e7f88941078c8"
+    },
+    {
+      "path": ".toh/templates/components/feedback/EmptyState.tsx",
+      "sha256": "e494d190c9a357ed3f133e10ecb8544bd85473396720d9de4215168fef9ee47d"
+    },
+    {
+      "path": ".toh/templates/components/feedback/LoadingSpinner.tsx",
+      "sha256": "4d096ced2d3477d4021917ae5baba10f0dedb44a95b7b5f332c59fc8daddaec4",
+      "preexisted": true,
+      "preexistedSha256": "1bc6d82769aad8b75804664749c1f1c687bf453690eab204aa49ae1677c9d2fb",
+      "preexistedBytes": 1649
+    },
+    {
+      "path": ".toh/templates/components/feedback/Skeleton.tsx",
+      "sha256": "b7be73abe3648638c7b4df08abeef22717cc36545b0a0be863d10d1c793edfce"
+    },
+    {
+      "path": ".toh/templates/components/feedback/index.ts",
+      "sha256": "ac34d5f3207d9c4483dd9964d02e966784bf4acdd29b8c441a7320e88b4eed28"
+    },
+    {
+      "path": ".toh/templates/components/index.ts",
+      "sha256": "38b10211923b7d6d9708098edd09e29006da0e8064bb32d0009789c93be77fbc"
+    },
+    {
+      "path": ".toh/templates/components/interactive/AnimatedButton.tsx",
+      "sha256": "3716554ec1d20a19805484fcac984954529cdcc655adecd5ddfaaef371fbe96f",
+      "preexisted": true,
+      "preexistedSha256": "d15112f6c1a3ef6fd3d245ee4f4e279fa482acef00697ca8e78a86f2c79a683b",
+      "preexistedBytes": 3703
+    },
+    {
+      "path": ".toh/templates/components/interactive/AnimatedCard.tsx",
+      "sha256": "91f822cd29faad7051e037b08f6826618b304c18feaba3655ea749cb829eeeae"
+    },
+    {
+      "path": ".toh/templates/components/interactive/index.ts",
+      "sha256": "ebe4819fbd417c881e53eca9c9cb55413ac22fb539111a4c84c411358ab3fe70"
+    },
+    {
+      "path": ".toh/templates/components/layout/Footer.tsx",
+      "sha256": "e0a90b06d61a2bf113e1f516a2a31440fbefe59df0fa0d3b7f858c7981c6767a"
+    },
+    {
+      "path": ".toh/templates/components/layout/Navbar.tsx",
+      "sha256": "80ccb7fdb37f30c74b7d59b93c232c2d5aede33872590e0f57b8c2e75660aaa1",
+      "preexisted": true,
+      "preexistedSha256": "b4d9c22e4bb3f02ff8f0c10f3b8ace14af4c58e6c2a98279a7ea8c1630eafa0e",
+      "preexistedBytes": 3511
+    },
+    {
+      "path": ".toh/templates/components/layout/Sidebar.tsx",
+      "sha256": "894f4c6485a8d92fa4499f5039dda38f636460f6f47f8f46fb2d1a7619128446"
+    },
+    {
+      "path": ".toh/templates/components/layout/index.ts",
+      "sha256": "5528df1fbfeaecdc808d1595058812c0b2885c3a6f1a25b00ef1f43c79d39b4a"
+    },
+    {
+      "path": ".toh/templates/components/motion/CountUp.tsx",
+      "sha256": "5fdf7cd7e023482235ad4e9fb28f549497b777f4d4ce1a9a65e3f12fe9e7a3ad"
+    },
+    {
+      "path": ".toh/templates/components/motion/FadeIn.tsx",
+      "sha256": "c018721268762a8dad35b67d46e8a28d8b848765ca0b8852e77ae99ecebdba74"
+    },
+    {
+      "path": ".toh/templates/components/motion/PageTransition.tsx",
+      "sha256": "75ead4c331423082f7a06c4a43f342ea04ff64874095ad38b6126306b29876c7"
+    },
+    {
+      "path": ".toh/templates/components/motion/StaggerContainer.tsx",
+      "sha256": "ec39b1674db2ba24c496c87794a8df09de8e61bb683cb7c08e2d69c913360fe8"
+    },
+    {
+      "path": ".toh/templates/components/motion/index.ts",
+      "sha256": "267f0da201a35cc72cf19bd8333fdf4ad7151e6f9dea76d163473840d9078f1a"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/README.md",
+      "sha256": "8218ffe1332c3143dadb39f8e8e59cb528f1278df3956deb18564f7d3703f7ec",
+      "preexisted": true,
+      "preexistedSha256": "d7b6375709c67d9650931c9ecc61f2954f66492ef5232697f8f77f469f307a5f",
+      "preexistedBytes": 4205
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/USAGE-GUIDE.md",
+      "sha256": "4f470eca200d2bdd6c4355cc49f30763a9009b73d767199cdcc688412a0487a4",
+      "preexisted": true,
+      "preexistedSha256": "8fbc8ae6269602cb148bcbcff9e9bd708a880f938d0c57149e66f73dd2ffc9c2",
+      "preexistedBytes": 9463
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/app/globals.css",
+      "sha256": "8f51d1ff9d19aad29f81f28a563c0b5cc98c56b8764bc9cdd9fb9000a7c9e2c7",
+      "preexisted": true,
+      "preexistedSha256": "fb09c1d5d4d41ce883e772f0c8f883ee25e0ebefcdb1c69024422c8f9f1e8976",
+      "preexistedBytes": 2740
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/app/layout.tsx",
+      "sha256": "7ffea5772cd416e9b9936cc2e21c082f8edda10b82359a36e1c395b11652cbca"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/app/page.tsx",
+      "sha256": "59df9ab2f9d66e6466c89a755331465f101dd6af4f85725d98d4ee1fb791a9e2"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/components/features/product-card.tsx",
+      "sha256": "ec3d786a82fb29304e0c2739afbbed087c5acecab2fdd3433f81ef4f92defe9d"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/components/layout/header.tsx",
+      "sha256": "854f54e5551c40b72fc1cb536b75ca232bac5c2ea535b91cdb969086b13191ae",
+      "preexisted": true,
+      "preexistedSha256": "f7f47bcfd207b5a7e34e111b6bfac58a4aebe47aecc3a34837e3dd246f51b97e",
+      "preexistedBytes": 1626
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/lib/api/products.ts",
+      "sha256": "cb1371d4e35c38dd351156cfd93102ee5645462c209235bc30e1bbaa4c7ab0ee"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/lib/mock-data.ts",
+      "sha256": "0bc9d26be7b8d47c665ce92bfce668f84fd22fad75b07f83e0bc2d51cacdd8d2"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/lib/supabase.ts",
+      "sha256": "8245db9e3db15c93385bd0425014f5aed6e45300c3d62137b9e14bccfd8af918"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/lib/utils.ts",
+      "sha256": "7444554e640926ff74565ffe73aaee9f09e24b9d398d94c6928d60eec4661325"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/lib/validations/product.ts",
+      "sha256": "283709285d6a61151dd325cb82e256181b7c840b19e621372f4a892712c02b31"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/package.json",
+      "sha256": "c2ac6aefaf5637427feb8696c6a7c311c76952b6ef151e1d33c2ca2b68709b9f",
+      "preexisted": true,
+      "preexistedSha256": "60db203aaa3b0093c02654ae28c7a4726f944584453cd98ee68d489d54f4079d",
+      "preexistedBytes": 1004
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/providers/app-provider.tsx",
+      "sha256": "8d5619ceb887f00c27e88c823863a202a52ef45519d7a4b57fa29ea0f943c5c2"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/stores/product-store.ts",
+      "sha256": "43c3331cbd3c428db710cbcc64de83e3f26dde147d35b81cd9a08aef8d3b3fc0"
+    },
+    {
+      "path": ".toh/templates/nextjs-pro/types/index.ts",
+      "sha256": "090b5916410eccc26bbcb0f5ed0d742a7cec5e4cd17fde6aeb977116c33301d5"
+    },
+    {
+      "path": ".toh/templates/pages/auth-pages.tsx",
+      "sha256": "0919623d6dc86057f936f3742fb616dd0d98cb05b0e3ee31b32e11ddb317bb51",
+      "preexisted": true,
+      "preexistedSha256": "98f9a8cd0c96a334689684cef713d7eedbdce13f3ef7156c025aeaa633f02d18",
+      "preexistedBytes": 11891
+    },
+    {
+      "path": ".toh/templates/pages/dashboard-page.tsx",
+      "sha256": "529f982c08402255010e3d33e3e4dd6f167aff51c7bdec012f18ec379ad6bb92",
+      "preexisted": true,
+      "preexistedSha256": "3dea7229ea61cd49a1c1a07db7ab329d657035ea70f73a286e080f0b134d85c7",
+      "preexistedBytes": 8733
+    },
+    {
+      "path": ".toh/templates/pages/landing-page.tsx",
+      "sha256": "262f19d9623dd2a7c4afbb903a45500bd18438e279087023b5d5e6095e7eed1a",
+      "preexisted": true,
+      "preexistedSha256": "7bd386d0f6c3fc788d8d8a00de6f9473dc1e2634c173373759e6e6983c5eaf73",
+      "preexistedBytes": 11255
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "ab21b3e5a40d016040e696cf94a0f77936ddb4e4dbc1baefd65612d98d3fb185",
+      "preexisted": true,
+      "preexistedSha256": "9bef9ab89046da0ae655c0081ae5f67d5755152bcad783ca3108aeead21834c5",
+      "preexistedBytes": 18393
+    }
+  ],
+  "dirsCreated": [
+    ".agents/agents",
+    ".agents/commands",
+    ".agents/rules",
+    ".agents/skills/design-craft",
+    ".agents/skills/engineer-harness",
+    ".agents/skills/orchestration-protocol",
+    ".agents/skills/toh",
+    ".agents/skills/toh-connect",
+    ".agents/skills/toh-design",
+    ".agents/skills/toh-dev",
+    ".agents/skills/toh-fix",
+    ".agents/skills/toh-help",
+    ".agents/skills/toh-line",
+    ".agents/skills/toh-mobile",
+    ".agents/skills/toh-plan",
+    ".agents/skills/toh-protect",
+    ".agents/skills/toh-ship",
+    ".agents/skills/toh-test",
+    ".agents/skills/toh-ui",
+    ".agents/skills/toh-vibe",
+    ".agents/workflows",
+    ".claude/skills/design-craft",
+    ".claude/skills/engineer-harness",
+    ".claude/skills/orchestration-protocol",
+    ".cursor/agents",
+    ".toh/skills/design-craft",
+    ".toh/skills/engineer-harness",
+    ".toh/skills/orchestration-protocol"
+  ]
 }

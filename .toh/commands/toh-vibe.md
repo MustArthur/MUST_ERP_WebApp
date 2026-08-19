@@ -1,468 +1,89 @@
 ---
 command: /toh-vibe
 aliases: ["/toh-v"]
-description: Create new project with UI + Logic + Mock Data in one command
-trigger: /toh-vibe or /toh-v followed by app description
----
-
-# /toh-vibe - Create New Project ✨
-
-## 🎯 Philosophy
-
-**"First Impression ต้อง WOW! - ชนะ Lovable ตั้งแต่แรก"**
-
-เมื่อ user เห็น output ครั้งแรก ต้อง:
-- ✅ สวย professional ไม่ดู "AI-looking" (Anti AI-pattern!)
-- ✅ หลายหน้า (4-6 หน้า minimum) พร้อมใช้งานจริง
-- ✅ Mock data realistic (ไม่ใช่ Lorem ipsum!)
-- ✅ Design เหมาะกับประเภทธุรกิจ (ไม่ใช่ template เดียว)
-- ✅ User รู้ทุกอย่างที่ต้องรู้ (Response Excellence!)
-
-## Signature Command
-
-```
-/toh-vibe [app description]
-/toh-v [app description]
-```
-
-## 🤖 Sub-Agent Orchestration (v4.1)
-
-> **Vibe Mode** is an orchestration pattern that coordinates multiple sub-agents
-
-### Sub-Agents Used
-
-| Phase | Agent | File | Task |
-|-------|-------|------|------|
-| 1 | 🧠 Plan | `plan-orchestrator.md` | Analyze & plan |
-| 2 | 🎨 UI | `ui-builder.md` | Create 5-7 pages |
-| 3 | ⚙️ Dev | `dev-builder.md` | Add logic & state |
-| 4 | ✨ Design | `design-reviewer.md` | Polish & animate |
-| 5 | 🧪 Test | `test-runner.md` | Verify build |
-
-### Skills Required
-
-```yaml
+description: Type one line of intent → a complete, running, good-looking multi-page app
+trigger: /toh-vibe or /toh-v followed by an app description
 skills:
-  - design-mastery       # 🎨 Smart design ตาม business type
-  - premium-experience   # 🌟 Multi-page, animations, WOW factor
-  - business-context     # 💼 เข้าใจธุรกิจ
-  - smart-suggestions    # 💡 แนะนำขั้นตอน
-  - prompt-optimizer     # 🎯 สำหรับ AI SaaS projects
-```
+  - vibe-orchestrator
+  - orchestration-protocol
+  - engineer-harness
+---
+
+# /toh-vibe - Type Once, Have it all! ✨
+
+> **Version:** 5.1.0
+> **Command:** `/toh-vibe [app idea]` · alias `/toh-v`
+> **Philosophy:** สั่งบรรทัดเดียว → ได้แอปหลายหน้าที่รันได้จริงและสวยตั้งแต่แรกเห็น
+
+นี่คือคำสั่งเรือธง สำหรับ **โปรเจคใหม่ล้วน** (greenfield) พี่โตบอกไอเดียบรรทัดเดียว หนูตัดสินใจที่เหลือเองทั้งหมด — ไม่สัมภาษณ์ ไม่ถามกลับ ส่งมอบแอปที่ประทับใจกว่า Lovable ตั้งแต่ครั้งแรก
+
+ใช้แกนเดียวกับ `/toh`: **Intent → Route → Verify → Report** — และแผนเป็น *ไฟล์* เสมอ (`.toh/plan.md`) ไม่ใช่ chat state
 
 ---
 
-## 🔄 Workflow (Sub-Agent Orchestration)
+## 🧭 Moves
 
-### Phase 0: Memory Check (7 Files)
+### 0. Plan pre-flight — เช็คแผนค้างก่อนทุกครั้ง
+อ่าน `.toh/plan.md` ก่อนทำอย่างอื่น:
+- **Status: approved/building + มี task ยังไม่ติ๊ก** → ประกาศดังๆ: **"เจอแผนค้าง: <Goal> — ทำต่อที่ T0xx ค่ะ (พิมพ์ 'fresh start' ถ้าอยากทิ้งแผนเริ่มใหม่)"** แล้วเข้า THE TOH LOOP ทันที ข้าม Move 1-2 — ไม่วางแผนซ้ำ ไม่ scaffold ซ้ำ
+- **Guard:** ไอเดียใหม่ที่พิมพ์มาเป็นคนละ product กับ Goal ในแผนชัดเจน หรือ Status: done → archive แผนเก่าตาม orchestration-protocol แล้วเริ่มใหม่
+- ไม่มีแผน → ไป Move 1 ตามปกติ
 
-```text
-0. 🚨 READ MEMORY (MANDATORY - ALL 7 FILES!)
-   ├── .toh/memory/active.md      (current task)
-   ├── .toh/memory/summary.md     (project overview)
-   ├── .toh/memory/decisions.md   (past decisions)
-   ├── .toh/memory/changelog.md   (session changes)
-   ├── .toh/memory/agents-log.md  (agent activity)
-   ├── .toh/memory/architecture.md (project structure)
-   └── .toh/memory/components.md  (existing components)
-```
+### 1. Intent — อ่านให้ออกว่าจะสร้างอะไร
+จากไอเดียบรรทัดเดียว เดา: ธุรกิจประเภทไหน · กลุ่มผู้ใช้เป็นใคร · หน้าไหนที่ *สำคัญจริง* กับธุรกิจนี้ แล้ว **ตัดสินใจ default ที่สมเหตุผลเอง** — อย่าถามพี่โตว่าอยากได้ฟีเจอร์อะไร framework อะไร สีอะไร หนูเลือกให้
 
-### Phase 1: Plan (plan-orchestrator.md)
+### 1.5 Design Identity — สร้าง DESIGN.md ก่อนแตะ UI
+ให้ `design-reviewer` (Mode A) สร้าง root `DESIGN.md` ด้วย two-pass process ตาม design-craft **ก่อนงาน UI ใดๆ** — โชว์ design thesis หนึ่งบรรทัด + signature element ไว้ในแผนสั้นด้วย
 
-```
-📋 DELEGATE TO: plan-orchestrator.md
+### 2. Route — คิดสั้น แต่เขียนแผนลงไฟล์
+คิดรายชื่อหน้า + stack แบบกระชับเหมือนเดิม แต่ **materialize เป็น `.toh/plan.md`** (mini schema ตาม orchestration-protocol: 2-3 phases · `T000` = design identity · `Status: approved` อัตโนมัติ — vibe คือ No-Questions-Asked ไม่มี gate) ไฟล์นี้ทำให้ vibe ที่โดนขัดจังหวะ resume ได้ในทุก session ทุก IDE
+เลือกโหมดทำงาน (sequential / subagents / teams) ด้วย **2-step survey** ของ orchestration-protocol — ไม่มีรายชื่อ delegate ตายตัวอีกแล้ว
 
-Task: Analyze business requirements
-├── Identify business type (E-commerce? SaaS? Restaurant?)
-├── Define target audience (B2B? B2C? Gen Z?)
-├── Select Design Pattern (see design-mastery skill)
-├── Plan pages & features
-└── Create execution roadmap
+### 3. Verify — QC gate ของ THE TOH LOOP
+ทุก task ผ่าน QC gate ของ THE TOH LOOP (orchestration-protocol): รัน Checkpoint เองแล้ว **quote output จริง** · แดง = แก้จน green · fail ติดกัน 3 ครั้ง = `[!] BLOCKED` แล้วไปทำ task อิสระต่อ · **ห้ามถามระหว่าง task** — ส่งมอบได้เมื่อ Done When ทุกข้อผ่านแบบ quoted เท่านั้น
 
-Output: Execution plan with page list & design decisions
-```
+### 4. Report — ปิดตาม Section C
+ปิดงานตาม **engineer-harness Section C** (announce block + next actions 3 ข้อ stage-aware เช่น build เสร็จ + mock data → แนะนำ `/toh-connect`) — ผลลัพธ์ก่อน ศัพท์เทคนิคแปลเป็นภาษาคน · dev server รันอยู่แล้ว ไม่ต้องสั่ง `npm run dev` ซ้ำ
 
-### Phase 2: Build UI (ui-builder.md)
-
-```
-🎨 DELEGATE TO: ui-builder.md
-
-Task: Create complete UI
-├── Setup Next.js 14 project
-├── Install shadcn/ui components
-├── Create 5-7 pages (Dashboard, List, Detail, Form, Settings)
-├── Apply business-appropriate design pattern
-├── Add realistic Thai mock data
-└── Ensure mobile-first responsive
-
-Output: Working UI at localhost:3000
-```
-
-### Phase 3: Add Logic (dev-builder.md)
-
-```
-⚙️ DELEGATE TO: dev-builder.md
-
-Task: Add application logic
-├── Create TypeScript types (types/*.ts)
-├── Setup Zustand stores (stores/*.ts)
-├── Add form validation (Zod schemas)
-├── Implement mock CRUD operations
-└── Create utility functions
-
-Output: Fully functional app with state management
-```
-
-### Phase 4: Polish Design (design-reviewer.md)
-
-```
-✨ DELEGATE TO: design-reviewer.md
-
-Task: Polish to professional quality
-├── Remove AI red flags (generic gradients, etc.)
-├── Ensure color harmony
-├── Add micro-animations
-├── Check typography hierarchy
-└── Verify spacing consistency
-
-Output: Professional-looking app (no "AI-generated" feel)
-```
-
-### Phase 5: Verify (test-runner.md)
-
-```
-🧪 DELEGATE TO: test-runner.md
-
-Task: Verify everything works
-├── npm run build (MUST PASS!)
-├── Fix any TypeScript errors
-├── Check all pages load correctly
-└── Verify CRUD operations work
-
-Output: Build passes with zero errors
-```
-
-### Phase 6: Report & Save Memory (7 Files)
-
-```text
-📝 ORCHESTRATOR TASK (Not delegated)
-
-├── Update memory files (all 7):
-│   ├── active.md       - Current state & next steps
-│   ├── summary.md      - Project overview
-│   ├── decisions.md    - Design decisions made
-│   ├── changelog.md    - What was created this session
-│   ├── agents-log.md   - Agent activity log
-│   ├── architecture.md - Project structure
-│   └── components.md   - Components created
-│
-└── Report using Response Excellence format
-```
+**ก่อนเริ่ม build ใหญ่:** รัน THE TOH LOOP แบบ sequential ในเซสชันนี้เอง — ถ้าโดนขัดจังหวะ checkbox-resume ใน `.toh/plan.md` ให้เซสชันใหม่ทำต่อจาก task แรกที่ยังไม่ติ๊กได้ทันที
 
 ---
 
-## 📋 Execution Plan Display (MUST SHOW BEFORE WORK!)
+## 🎨 หลักการที่ต้องคงไว้ (lean)
 
-Before starting any work, display the execution plan:
-
-```markdown
-## 📋 Execution Plan: [App Name]
-
-**Business Type:** [E-commerce / SaaS / Restaurant / etc.]
-**Design Pattern:** [Pattern A/B/C/D/E]
-
-### 🔄 Agent Workflow
-
-┌─────────────────────────────────────────────────────────────┐
-│ [Phase 1] 🧠 Plan Orchestrator         ← ANALYZE           │
-│ [Phase 2] 🎨 UI Builder                ← BUILD PAGES       │
-│ [Phase 3] ⚙️ Dev Builder               ← ADD LOGIC         │
-│ [Phase 4] ✨ Design Reviewer           ← POLISH            │
-│ [Phase 5] 🧪 Test Runner               ← VERIFY            │
-└─────────────────────────────────────────────────────────────┘
-
-### 📄 Pages to Create
-
-| # | Page | Route | Components |
-|---|------|-------|------------|
-| 1 | Dashboard | `/` | StatsCard, Chart |
-| 2 | [Feature] List | `/[feature]` | Table, Filter |
-| 3 | [Feature] Detail | `/[feature]/[id]` | Card, Actions |
-| 4 | Create [Feature] | `/[feature]/new` | Form |
-| 5 | Settings | `/settings` | Tabs, Form |
-| 6 | Profile | `/profile` | Avatar, Form |
-
-### ⏳ Estimated: 6 pages, 5 agents, ~5 minutes
-
-**Starting execution...**
-```
-
-### During Execution (Status Updates)
-
-Show agent progress during work:
-
-```markdown
-## 🤖 Agent Progress
-
-| Phase | Agent | Task | Status |
-|-------|-------|------|--------|
-| 1 | 🧠 Plan | Business analysis | ✅ Done |
-| 2 | 🎨 UI | Creating 6 pages | 🔄 Working (3/6)... |
-| 3 | ⚙️ Dev | Add logic & state | ⏳ Pending |
-| 4 | ✨ Design | Polish & animate | ⏳ Pending |
-| 5 | 🧪 Test | Verify build | ⏳ Pending |
-
-[🎨 UI Builder] Creating Settings page... ✅ Done
-[🎨 UI Builder] Creating Profile page... 🔄 Working
-```
+- **หลายหน้า** 4-6 หน้าขึ้นไป ที่ใช้งานได้จริง ไม่ใช่ 1-2 หน้าโล่งๆ
+- **Mock data สมจริง** ข้อมูลไทยที่ดูจริง — ห้าม Lorem ipsum
+- **Responsive** สวยครบทุกขนาดจอ mobile-first
+- **Anti-AI-looking** ทุก agent อ่าน root `DESIGN.md` ก่อนแตะ UI + ผ่าน AVOID-LIST + usability floor (design-craft)
+- **No Questions Asked** ตัดสินใจ default เองทั้งหมด ไม่สัมภาษณ์ผู้ใช้
+- **First impression ต้องชนะ** — ดีกว่า Lovable ตั้งแต่แรกเห็น
 
 ---
 
-## 🎨 Design Patterns by Business Type
+## 💾 Memory & State
 
-### Pattern A: Modern SaaS (Dashboard apps)
-```yaml
-use_for:
-  - Expense tracker
-  - Project management
-  - Analytics tools
-  - Admin panels
-
-design:
-  colors:
-    primary: "#6366F1"  # Indigo
-    accent: "#8B5CF6"   # Purple
-    background: "#F8FAFC"
-    text: "#0F172A"
-  
-  layout:
-    - Sidebar navigation (collapsible)
-    - Top header with search
-    - Card-based content
-    - Data tables with actions
-  
-  components:
-    - Stats cards with icons
-    - Charts (line, bar, pie)
-    - Tables with sorting
-    - Modal forms
-  
-  animation: Moderate (hover, transitions)
-```
-
-### Pattern B: E-commerce (Shop apps)
-```yaml
-use_for:
-  - Online stores
-  - Product catalogs
-  - Marketplace
-
-design:
-  colors:
-    primary: "#2563EB"  # Trust blue
-    accent: "#F59E0B"   # Action orange
-    success: "#10B981"  # Buy green
-    background: "#FAFAFA"
-  
-  layout:
-    - Top navigation with cart
-    - Category sidebar/tabs
-    - Product grid (responsive)
-    - Filter panel
-  
-  components:
-    - Product cards (image, price, rating)
-    - Cart icon with badge
-    - Trust badges
-    - Review stars
-  
-  animation: Purposeful (cart, add button)
-```
-
-### Pattern C: AI Chatbot / AI Tools
-```yaml
-use_for:
-  - Chatbots
-  - AI assistants
-  - Chat apps
-  - AI SaaS
-
-design:
-  colors:
-    primary: "#14B8A6"  # Teal (friendly)
-    accent: "#F472B6"   # Pink
-    background: "#F0FDFA"
-    text: "#134E4A"
-  
-  ⚠️ NOT: Purple-blue gradient! (ทุก AI ใช้!)
-  
-  layout:
-    - Chat-centric (wide chat area)
-    - History sidebar
-    - Settings accessible
-  
-  components:
-    - Chat bubbles (user vs bot)
-    - Typing indicator
-    - Copy button
-    - Code blocks (if needed)
-    - Quick actions
-  
-  animation: Smooth (typing, fade in)
-```
-
-### Pattern D: Food & Restaurant
-```yaml
-use_for:
-  - Restaurant apps
-  - Food delivery
-  - Menu systems
-  - F&B
-
-design:
-  colors:
-    primary: "#DC2626"  # Appetizing red
-    accent: "#F59E0B"   # Warm orange
-    background: "#FEF2F2"
-    text: "#1F2937"
-  
-  layout:
-    - Hero with food imagery
-    - Menu categories
-    - Item cards with images
-    - Cart sidebar
-  
-  components:
-    - Menu item cards (large images!)
-    - Category pills
-    - Price display
-    - Quantity selectors
-  
-  animation: Appetizing (subtle zoom on hover)
-```
-
-### Pattern E: Corporate / Enterprise
-```yaml
-use_for:
-  - CRM
-  - B2B tools
-  - Enterprise software
-  - Financial apps
-
-design:
-  colors:
-    primary: "#1E40AF"  # Deep blue (trust)
-    accent: "#0369A1"   # Secondary blue
-    background: "#F8FAFC"
-    text: "#1E293B"
-  
-  layout:
-    - Professional sidebar
-    - Dense information display
-    - Multi-level navigation
-    - Data-heavy tables
-  
-  components:
-    - Data grids
-    - Filters & search
-    - Bulk actions
-    - Status badges
-  
-  animation: Minimal (functional only)
-```
+- **State ของ loop:** `.toh/plan.md` (checkboxes) + `.toh/progress.md` (ledger) — แผนอยู่บนดิสก์เสมอ
+- **เริ่ม:** อ่าน `.toh/memory/active.md` + `summary.md` · **จบ:** อัพเดท pointer ใน `active.md` (status + task ถัดไป) + `summary.md` (โปรเจคใหม่ = รูปร่างเปลี่ยนเสมอ)
 
 ---
 
-## 📝 Output Format (MANDATORY - Response Excellence!)
+## 📌 Example
 
-```markdown
-## ✅ สร้าง [App Name] เสร็จแล้วค่ะ!
+**สั่ง:** `/toh-vibe ระบบจัดการร้านกาแฟ`
 
-### 🎯 สิ่งที่ทำ
-- สร้าง Next.js 14 project: `[project-name]`
-- วิเคราะห์ Business Type: **[Type]** → Design Pattern: **[Pattern Name]**
-- สร้าง **6 หน้า** พร้อมใช้งาน
-- เพิ่ม **15 mock data items** ที่ realistic
-- ตั้งค่า Tailwind + shadcn/ui + Zustand
-
-### 🎁 สิ่งที่คุณได้
-- 🌐 **เว็บไซต์พร้อมใช้:** http://localhost:3000
-- 📊 Dashboard พร้อม stats และ charts
-- 📝 ฟอร์ม CRUD พร้อม validation
-- 📱 Responsive ทุกขนาดหน้าจอ
-- 🎨 Design แบบ **[Pattern Name]** (เหมาะกับ [Business Type])
-
-### 👉 สิ่งที่คุณต้องทำ
-- [ ] เปิด http://localhost:3000 ดูผลลัพธ์
-- [ ] ลองคลิกดูทุกหน้า ทดสอบ flow
-
-⚠️ **Dev server รันอยู่แล้ว** ไม่ต้อง npm run dev อีก
+**Intent:** ร้านกาแฟ → เจ้าของร้าน/พนักงาน → หน้าที่สำคัญ: หน้าขาย, เมนู, สต็อก, ยอดขาย, ตั้งค่า
+**Design Identity:** `DESIGN.md` — thesis: "slow-bar อบอุ่น โทนดินเผา-กาแฟคั่วเข้ม" · signature: ตั๋วออเดอร์สไตล์ใบสั่งกาแฟ
+**Route:** เขียน `.toh/plan.md` (Status: approved · T000 design identity → Phase 1 โครง+หน้าหลัก → Phase 2 POS/สต็อก) → เข้า loop
+**Verify:** ทุก phase ผ่าน Checkpoint แบบ quoted · Done When ครบทุกข้อ
+**Report:** "สร้างระบบร้านกาแฟ 5 หน้าเสร็จแล้วค่ะ เปิดที่ `http://localhost:3000` — ลองหน้า POS กดสั่งเมนูดู" + next actions 3 ข้อตาม Section C
 
 ---
 
-### 📄 หน้าที่สร้าง (6 หน้า)
+## ❌ ห้าม
 
-| หน้า | URL | Description |
-|------|-----|-------------|
-| Dashboard | `/` | Overview พร้อม stats |
-| [Feature] List | `/[feature]` | รายการทั้งหมด + filter |
-| Create [Feature] | `/[feature]/new` | ฟอร์มสร้างใหม่ |
-| [Feature] Detail | `/[feature]/[id]` | ดูรายละเอียด + แก้ไข |
-| Settings | `/settings` | ตั้งค่าระบบ |
-| Profile | `/profile` | โปรไฟล์ผู้ใช้ |
+- ห้ามถามว่าอยากได้ฟีเจอร์/framework/สีอะไร — ตัดสินใจเอง
+- ห้ามเขียน UI ก่อนมี root `DESIGN.md` · ห้ามสร้างแค่ 1-2 หน้า · ห้าม Lorem ipsum
+- ห้ามส่งมอบทั้งที่ Done When ยังไม่ผ่านแบบ quoted — ห้ามให้ผู้ใช้ไปแก้ error เอง
+- ห้ามถาม "ทำต่อไหม?" ระหว่าง task — loop วิ่งจนจบหรือ blocked เท่านั้น
 
-### 🎨 Design Decisions
-
-| Element | Choice | Why |
-|---------|--------|-----|
-| Color Palette | [Colors] | เหมาะกับ [Business Type] |
-| Layout | [Sidebar/Top Nav] | [Reason] |
-| Animation | [Level] | [Reason] |
-
-### 💡 ขั้นตอนถัดไป (เลือกทำได้เลย)
-1. `/toh เพิ่มหน้า [feature]` - เพิ่มหน้าใหม่
-2. `/toh เชื่อม Supabase` - เชื่อม database จริง
-3. `/toh ปรับ design [ต้องการอะไร]` - ปรับ design
-
----
-📁 **Project Location:** `[full path]`
-```
-
----
-
-## ❌ Rules (NEVER DO!)
-
-1. **NEVER** ask "what features do you want?" - Decide yourself!
-2. **NEVER** ask "which framework?" - Use Next.js 14!
-3. **NEVER** create only 1-2 pages - Must have 5-7 pages!
-4. **NEVER** use generic purple-blue gradient - Anti AI-looking!
-5. **NEVER** use Lorem ipsum - Use realistic mock data!
-6. **NEVER** skip business analysis - Analyze before building!
-7. **NEVER** forget to tell user what to do next - Response Excellence!
-8. **NEVER** deliver with build errors - `npm run build` must pass first!
-9. **NEVER** tell user to fix errors themselves - Fix everything before delivery!
-
-## ✅ Rules (ALWAYS DO!)
-
-1. **ALWAYS** analyze business type first
-2. **ALWAYS** select appropriate design pattern
-3. **ALWAYS** create 5-7 pages minimum
-4. **ALWAYS** use realistic mock data
-5. **ALWAYS** apply Anti AI-Looking rules
-6. **ALWAYS** run `npm run build` and fix ALL errors before deliver
-7. **ALWAYS** run dev server and verify
-8. **ALWAYS** use Response Excellence format
-9. **ALWAYS** tell user exactly what they got and what to do
-
----
-
-## 🎯 Success Criteria
-
-- [ ] User เห็น working app ใน 1 คำสั่ง
-- [ ] มี 5-7 หน้าพร้อมใช้
-- [ ] Design สวย ไม่ดู "AI-looking"
-- [ ] Design เหมาะกับประเภทธุรกิจ (ไม่ใช่ template เดียว)
-- [ ] Mock data realistic (ไม่ใช่ Lorem ipsum)
-- [ ] **`npm run build` ผ่าน 100% ไม่มี error** 🚨
-- [ ] User รู้ว่าได้อะไร ต้องทำอะไร ไม่ต้องถามซ้ำ
-- [ ] ดีกว่า Lovable ตั้งแต่แรก! 🎉
+*Type Once, Have it all! — v5.1.0*

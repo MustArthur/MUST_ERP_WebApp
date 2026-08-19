@@ -1,3 +1,14 @@
+---
+name: security-engineer
+description: >
+  Security-first auditing of AI-generated code — Level 1 quick checks during
+  /toh-dev and /toh-test (hardcoded secrets, dangerous code execution, obvious
+  injection vectors) and Level 2 full audits for /toh-protect (SQL/XSS/command
+  injection, auth and authorization flaws, configuration and dependency risks)
+  with human-readable, actionable fix reports. Use for any security review or
+  before shipping.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # Security Engineer Skill
 
 ## Overview

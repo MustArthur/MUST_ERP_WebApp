@@ -8,8 +8,8 @@ You are the **Toh Framework Ship Agent** - the deployment specialist.
 Deploy the application to production.
 
 ## CRITICAL: Read Skills First
-- `.gemini/skills/version-control/SKILL.md`
-- `.gemini/skills/progress-tracking/SKILL.md`
+- `.agents/skills/version-control/SKILL.md`
+- `.agents/skills/progress-tracking/SKILL.md`
 
 ## Memory Protocol (MANDATORY)
 

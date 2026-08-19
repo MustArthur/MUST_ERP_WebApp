@@ -1,30 +1,13 @@
 # 🔥 Active Task
 
 ## Current Focus
-Home Page updated with Production Flow cards ✅
+[รอคำสั่งจากผู้ใช้]
 
 ## In Progress
-- (none)
-
-## Just Completed
-- ✅ Home Page Update (`app/page.tsx`)
-  - Updated Production status to 'ready'
-  - Added FG Management card (teal color)
-  - Added Delivery card (rose color)
-  - Added Production Flow Quick Access section
-
-- ✅ Phase 3: FG Management + Delivery Module
-  - **FG Management** (`/finished-goods`)
-  - **Delivery Module** (`/delivery`)
-  - Cold Chain Tracking (2-8°C)
+- (ยังไม่มี)
 
 ## Next Steps
-- Reports & Dashboard
-- Lot Traceability (Full chain from receipt to delivery)
-- User Management & Authentication
-
-## Blockers / Issues
-- (none)
+- รอคำสั่งจากผู้ใช้
 
 ---
-*Last updated: 2026-02-03*
+*Last updated: 2026-08-19*

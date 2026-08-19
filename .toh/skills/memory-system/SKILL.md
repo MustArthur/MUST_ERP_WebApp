@@ -1,421 +1,203 @@
+---
+name: memory-system
+description: >
+  Tiered, low-token project memory protocol for .toh/memory/ — 7 files across
+  3 tiers (Tier 1 active.md + summary.md always read, ~800 tokens; Tier 2
+  architecture/components for build work and changelog for debug work; Tier 3
+  decisions/agents-log only on demand). Auto-saves after task completion with
+  zero user effort; delegated agents receive context from the orchestrator
+  instead of re-reading. Use at every session start and whenever loading or
+  saving project memory or resuming context across sessions and IDEs.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 🧠 Memory System Skill
 
-> Toh Framework Auto Memory - Zero Config, Seamless Context
-> **CRITICAL:** Every Agent MUST use this Memory System!
+> **Purpose:** Tiered, low-token memory — load only what the task needs, save what matters
+> **Version:** 2.0.0
+> **For:** Toh Framework v2.0.0+
+> **Updated:** 2026-07-14
 
 ---
 
 ## Overview
 
-Automatic memory system that enables AI to maintain context throughout, requiring zero user effort. Includes **Architecture Tracking** for understanding project structure without scanning codebase every time.
+Automatic memory that keeps AI in context across sessions with **zero user effort**. v2 replaces the old "read all files every time" mandate with **tiered loading**: Tier 1 is always read (~800 tokens), Tier 2 is read only for the relevant task type, Tier 3 only when explicitly referenced.
 
-### Key Principles
-- ✅ **Zero Config** - No setup required
-- ✅ **Auto Save** - Automatically saves after every task completion
-- ✅ **Auto Load** - Automatically loads at session start
-- ✅ **Low Token** - Uses only ~3,000 tokens
-- ✅ **Selective Read** - Reads only essential files
-- ✅ **IDE Agnostic** - Works with any IDE
-- ✅ **Model Agnostic** - Portable across AI models
-- ✅ **Architecture Aware** - Understands project structure instantly
+### Key principles
+- ✅ **Zero config** — no setup required
+- ✅ **Tiered** — Tier 1 always; Tier 2/3 on demand (no more ~3,000 tokens every time)
+- ✅ **Auto save** — saves after task completion, never asks the user
+- ✅ **Delegated agents don't re-read** — they receive context from the orchestrator
+- ✅ **IDE & model agnostic**
 
 ---
 
-## ⚠️ ENFORCEMENT RULES
+## 📚 The Tiered Model (use this everywhere)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  🚨 RULE 1: MUST READ before working                            │
-│     - Never start work without reading Memory + Architecture    │
-│     - Read 5 main files (selective read)                        │
-└─────────────────────────────────────────────────────────────────┘
+There are **7 memory files** across 3 tiers. Read by tier, not all at once.
 
-┌─────────────────────────────────────────────────────────────────┐
-│  🚨 RULE 2: MUST SAVE after completing work                     │
-│     - Never finish without saving                               │
-│     - Don't ask User → Do it automatically                      │
-│     - Update architecture/components if structure changed!      │
-└─────────────────────────────────────────────────────────────────┘
+| Tier | Files | When to read | Budget |
+|------|-------|--------------|--------|
+| **Tier 1** | `active.md` + `summary.md` | **ALWAYS**, at every session start | **~800 tokens** |
+| **Tier 2** | `architecture.md` + `components.md` | Build / code work (creating pages, components, logic) | ~600 tokens |
+| **Tier 2** | `changelog.md` | Debug work (to see previous attempts) | ~400 tokens |
+| **Tier 3** | `decisions.md` + `agents-log.md` | Only when explicitly referenced / asked about | on demand |
 
-┌─────────────────────────────────────────────────────────────────┐
-│  🚨 RULE 3: Token Budget = ~3,000 tokens                        │
-│     - active.md (~500) + summary.md (~1,000) + decisions (~500) │
-│     - architecture.md (~500) + components.md (~500)             │
-│     - archive/ = on-demand only                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+> **This replaces the old "read ALL files (MANDATORY)" rule.** Never bulk-read all 7. Read Tier 1 always, add the Tier 2 files that match the task type, and touch Tier 3 only when needed.
+
+**Delegated agents:** an agent invoked by the orchestrator **receives context from the orchestrator** and does NOT re-read memory itself. This avoids every agent re-reading the same files.
 
 ---
 
-## Directory Structure
+## 📁 Directory Structure
 
 ```
 .toh/
 ├── config.json              # Toh configuration
 └── memory/
-    ├── active.md            # 🔥 Current task (~500 tokens) - Always load
-    ├── summary.md           # 📋 Project summary (~1,000 tokens) - Always load
-    ├── decisions.md         # 🧠 Key decisions (~500 tokens) - Always load
-    ├── architecture.md      # 🏗️ Project structure (~500 tokens) - Always load
-    ├── components.md        # 📦 Component registry (~500 tokens) - Always load
-    └── archive/             # 📦 Historical data - Load only when needed
-        ├── 2024-11-27.md
-        └── ...
+    ├── active.md            # 🔥 Tier 1 — current task (~300 tokens)
+    ├── summary.md           # 📋 Tier 1 — project shape (~500 tokens)
+    ├── architecture.md      # 🏗️ Tier 2 — structure (build/code work)
+    ├── components.md        # 📦 Tier 2 — component registry (build/code work)
+    ├── changelog.md         # 📝 Tier 2 — change/attempt log (debug work)
+    ├── decisions.md         # 🧠 Tier 3 — key decisions (when referenced)
+    ├── agents-log.md        # 🤖 Tier 3 — agent activity (when referenced)
+    └── archive/             # 📦 Historical — load only when asked
 ```
+
+`agents-log.md` stays a **separate** file — it is NOT merged into `changelog.md`.
 
 ---
 
-## 🔄 Selective Read Protocol
-
-### At Session Start (MANDATORY)
+## 🔄 Read Protocol (session start)
 
 ```
-STEP 1: Check Memory
-        ├── .toh/memory/ exists? → Continue reading
-        └── Doesn't exist? → Create new
+STEP 1 — Ensure memory exists
+        .toh/memory/ exists? → continue · missing? → create from templates
 
-STEP 2: Selective Read (parallel - 5 files)
-        ├── Read active.md       → Current task
-        ├── Read summary.md      → Project overview
-        ├── Read decisions.md    → Past decisions
-        ├── Read architecture.md → Project structure
-        └── Read components.md   → Component registry
+STEP 2 — Read Tier 1 (ALWAYS, in parallel)
+        ├── active.md    → what we're working on
+        └── summary.md   → what this project is
+        Budget: ~800 tokens.
 
-        ⚠️ DO NOT read archive/ at this step!
+STEP 3 — Add Tier 2 by task type
+        ├── Build / code (create page, component, logic)
+        │     → also read architecture.md + components.md
+        └── Debug (fix a bug)
+              → also read changelog.md (see prior attempts)
 
-STEP 3: Build Context
-        ├── What is this project?
-        ├── What are we working on?
-        ├── What's been completed?
-        ├── What's the project structure?  ← NEW
-        ├── What components exist?          ← NEW
-        └── What's next?
+STEP 4 — Tier 3 only if referenced
+        User asks "why did we decide X?"  → read decisions.md
+        User asks about past agent runs    → read agents-log.md
 
-STEP 4: Acknowledge (brief message to User)
-        "Memory + Architecture loaded! 📚
-         Working on [X]. Structure: [pages/components count].
-         Just completed [Y]. Ready to continue!"
+STEP 5 — Acknowledge briefly
+        "Memory loaded 📚 — working on [X]. Just completed [Y]. Ready to continue."
 ```
 
-### When to Read archive/?
-
-```
-✅ Read when:
-   - User asks about past work
-   - Need additional context
-   - Debugging previously solved issues
-   - User runs /toh-memory history
-
-❌ Don't read when:
-   - Normal work
-   - Creating new features
-   - Have sufficient context from 3 main files
-```
+Do **not** read `archive/` during normal work — only when the user asks about past work or runs a history command.
 
 ---
 
-## 💾 Auto-Save Protocol
-
-### After Completing Work (MANDATORY)
+## 💾 Save Protocol (after completing work)
 
 ```
-STEP 1: Update active.md (always!)
-        ├── Current Focus → Task just worked on
-        ├── In Progress → What's done/pending
-        └── Next Steps → What should be done next
-
-STEP 2: Add to decisions.md (if decisions made)
-        └── | Date | Decision | Reason |
-
-STEP 3: Update summary.md (if feature complete)
-        └── Completed Features: + [new feature]
-
-STEP 4: Update architecture.md (if structure changed)
-        ├── New page/route added → Update Entry Points
-        ├── New module/folder created → Update Core Modules
-        ├── New service integrated → Update External Services
-        └── Data flow changed → Update Data Flow Pattern
-
-STEP 5: Update components.md (if components changed)
-        ├── New page created → Add to Pages table
-        ├── New component created → Add to Components table
-        ├── New hook created → Add to Hooks table
-        ├── New store created → Add to Stores table
-        ├── New utility created → Add to Utils table
-        └── Update Component Statistics count
-
-STEP 6: Auto-Archive (if active.md > 50 lines)
-        ├── Move to archive/YYYY-MM-DD.md
-        └── Clear active.md
-
-STEP 7: Confirm
-        └── "✅ Memory + Architecture saved"
+STEP 1 — active.md            → ALWAYS update (current focus, in-progress, next steps)
+STEP 2 — summary.md           → update when the PROJECT SHAPE changes
+                                 (feature completed, tech/stack change, new major area)
+STEP 3 — architecture.md      → update if structure changed (new route/module/service, data flow)
+STEP 4 — components.md         → update if components/hooks/stores/utils changed
+STEP 5 — changelog.md         → append what changed / what was attempted (esp. debug work)
+STEP 6 — decisions.md         → add row only if a real decision was made
+STEP 7 — agents-log.md        → append if agents were delegated
+STEP 8 — Confirm: "✅ Memory saved"
 ```
 
-### When to Update architecture.md?
-
-```
-✅ Update when:
-   - Created new page/route (app/**/page.tsx)
-   - Created new folder/module
-   - Changed data flow pattern
-   - Added external service (Stripe, LINE, etc.)
-   - Changed design system
-
-❌ Don't update when:
-   - Small code changes within existing files
-   - Bug fixes
-   - Styling changes
-```
-
-### When to Update components.md?
-
-```text
-✅ Update when:
-   - Created new component (components/**)
-   - Created new hook (hooks/**)
-   - Created new store (stores/**)
-   - Created new utility function (lib/**)
-   - Created new type/interface (types/**)
-   - Component props changed significantly
-
-❌ Don't update when:
-   - Small changes within component
-   - Styling only changes
-   - Bug fixes in existing code
-```
+**Write rules:** always update `active.md`; update `summary.md` when the project shape changes; update the rest **only when relevant** to what actually happened. Keep entries concise (1-2 lines). If `active.md` grows past ~50 lines, roll older content into `archive/YYYY-MM-DD.md`.
 
 ---
 
-## 📊 Token Budget
+## 🗂️ File Reference
 
-| File | Max Lines | Est. Tokens | Load When |
-|------|-----------|-------------|-----------|
-| active.md | 30 | ~500 | **Always** |
-| summary.md | 60 | ~1,000 | **Always** |
-| decisions.md | 30 | ~500 | **Always** |
-| architecture.md | 40 | ~500 | **Always** |
-| components.md | 50 | ~500 | **Always** |
-| archive/ | Unlimited | varies | **On-demand** |
-| **Total** | 210 | **~3,000** | - |
+| File | Tier | Holds | Update when |
+|------|------|-------|-------------|
+| `active.md` | 1 | Current focus, in-progress, next steps | **Always** |
+| `summary.md` | 1 | Project name, stack, completed features | Project shape changes |
+| `architecture.md` | 2 | Entry points, modules, data flow, services | Structure changes |
+| `components.md` | 2 | Pages, components, hooks, stores, utils registry | Components change |
+| `changelog.md` | 2 | Chronological change & debug-attempt log | Every notable change |
+| `decisions.md` | 3 | Date · Decision · Reason table | A real decision is made |
+| `agents-log.md` | 3 | Which agent did what, when | Agents are delegated |
 
 ---
 
-## 📝 File Templates
+## 📝 Templates
 
-### active.md
+### active.md (Tier 1)
 ```markdown
 # 🔥 Active Task
-
 ## Current Focus
 [Awaiting user instructions]
-
 ## In Progress
-- (None yet)
-
+- (none)
 ## Next Steps
-- Awaiting user instructions
-
+- (awaiting)
 ---
 *Last updated: YYYY-MM-DD*
 ```
 
-### summary.md
+### summary.md (Tier 1)
 ```markdown
 # 📋 Project Summary
-
-## Project Overview
-- Name: [Project Name]
-- Tech Stack: Next.js 14, Tailwind, shadcn/ui, Zustand, Supabase
-
+## Overview
+- Name: [Project]
+- Stack: Next.js 16, Tailwind, shadcn/ui, Zustand, Supabase
 ## Completed Features
-- (None yet)
-
-## Important Notes
-- Using Toh Framework v1.2.x
-
+- (none yet)
 ---
 *Last updated: YYYY-MM-DD*
 ```
 
-### decisions.md
+### changelog.md (Tier 2 — debug)
 ```markdown
-# 🧠 Key Decisions
-
-## Architecture Decisions
-| Date | Decision | Reason |
-|------|----------|--------|
-| YYYY-MM-DD | Use Toh Framework | AI-Orchestration Driven Development |
-
+# 📝 Changelog
+| Date | Change / Attempt | Result |
+|------|------------------|--------|
+| YYYY-MM-DD | [what changed or was tried] | [worked / failed because …] |
 ---
 *Last updated: YYYY-MM-DD*
 ```
 
-### architecture.md
+### agents-log.md (Tier 3)
 ```markdown
-# 🏗️ Project Architecture
-
-## 📁 Entry Points
-| Type | Path | Purpose |
-|------|------|---------|
-| Main | `app/page.tsx` | Landing/Home page |
-| Layout | `app/layout.tsx` | Root layout |
-
-## 🗂️ Core Modules
-### `/app` - Pages & Routes
-| Route | File | Description | Key Functions |
-|-------|------|-------------|---------------|
-| `/` | `app/page.tsx` | Landing page | - |
-
-### `/components` - UI Components
-| Folder | Purpose | Key Files |
-|--------|---------|-----------|
-| `ui/` | shadcn/ui | button, card, input |
-
-### `/lib` - Utilities
-| File | Purpose | Key Functions |
-|------|---------|---------------|
-| `utils.ts` | Utilities | cn(), formatDate() |
-
-## 🔄 Data Flow Pattern
-User → Component → Zustand → API → Database
-
-## 🔌 External Services
-| Service | Purpose | Config |
-|---------|---------|--------|
-| Supabase | Backend | `lib/supabase/` |
-
+# 🤖 Agents Log
+| Date | Agent | Task | Outcome |
+|------|-------|------|---------|
+| YYYY-MM-DD | [agent] | [task] | [result] |
 ---
 *Last updated: YYYY-MM-DD*
 ```
 
-### components.md
-```markdown
-# 📦 Component Registry
-
-## 📄 Pages
-| Route | File | Description |
-|-------|------|-------------|
-| `/` | `app/page.tsx` | Landing page |
-
-## 🧩 Components
-| Component | Location | Key Props | Used By |
-|-----------|----------|-----------|---------|
-| Button | `ui/button.tsx` | variant, size | Many |
-
-## 🪝 Custom Hooks
-| Hook | Location | Purpose |
-|------|----------|---------|
-| (none) | - | - |
-
-## 🏪 Zustand Stores
-| Store | Location | Key Actions |
-|-------|----------|-------------|
-| (none) | - | - |
-
-## 🛠️ Utilities
-| Function | Location | Purpose |
-|----------|----------|---------|
-| cn | `lib/utils.ts` | Class merge |
-
-## 📊 Statistics
-| Category | Count |
-|----------|-------|
-| Pages | 0 |
-| Components | 0 |
-| Hooks | 0 |
-
----
-*Last updated: YYYY-MM-DD*
-```
-
----
-
-## 🔗 Agent Integration
-
-### Every Agent MUST:
-
-```typescript
-// Pseudo-code for all Agents
-
-async function executeTask(userRequest) {
-  // 1. 🚨 MANDATORY: Read Memory + Architecture First
-  const memory = await selectiveReadMemory()
-  // Read: active.md, summary.md, decisions.md, architecture.md, components.md
-
-  // 2. Build Context
-  const context = buildContext(memory)
-  // Now AI knows: project structure, existing components, past decisions
-
-  // 3. Do Work
-  const result = await doWork(userRequest, context)
-
-  // 4. 🚨 MANDATORY: Save Memory + Update Architecture
-  await saveMemory({
-    active: updateActiveTask(result),
-    decisions: extractDecisions(result),
-    summary: updateSummaryIfFeatureComplete(result),
-    architecture: updateIfStructureChanged(result),    // NEW
-    components: updateIfComponentsChanged(result)      // NEW
-  })
-
-  // 5. Report with Memory Status
-  return report(result, "✅ Memory + Architecture saved")
-}
-```
+> `architecture.md`, `components.md`, and `decisions.md` keep their existing table structures (entry points/modules, component registry, decision log).
 
 ---
 
 ## ⚠️ Anti-Patterns
 
-| ❌ Don't | ✅ Do This |
-|----------|-----------|
-| Read archive/ every time | Read only 5 main files |
-| Forget to save memory | Save after every task |
-| Ask User whether to save | Do it automatically |
-| Write verbose content | Write concise 1-2 lines |
-| Store sensitive data | Store only project context |
-| Skip architecture update | Update when structure changes |
-| Forget component registry | Add new components to registry |
-| Scan codebase every time | Use architecture.md + components.md |
+| ❌ Don't | ✅ Do |
+|----------|-------|
+| Bulk-read all 7 files every time | Read Tier 1 always; Tier 2/3 by need |
+| Make delegated agents re-read memory | Pass context from the orchestrator |
+| Read `archive/` during normal work | Only when the user asks about the past |
+| Forget to save | Always update `active.md` after a task |
+| Ask the user whether to save | Save automatically |
+| Merge `agents-log` into `changelog` | Keep the 7 files distinct |
 
 ---
 
-## 📌 Quick Reference
+## 🔗 Integration
 
-### Selective Read (Start)
+Every command applies this protocol: read Tier 1 at start, add Tier 2 for the task type, save `active.md` (+ relevant files) at the end. Delegated agents receive context and skip the re-read.
 
-```text
-Read in parallel (5 files):
-- .toh/memory/active.md        → Current task
-- .toh/memory/summary.md       → Project overview
-- .toh/memory/decisions.md     → Past decisions
-- .toh/memory/architecture.md  → Project structure
-- .toh/memory/components.md    → Component registry
-```
+---
 
-### Auto-Save (End)
-
-```text
-Update:
-1. active.md       ← Always
-2. decisions.md    ← If decisions made
-3. summary.md      ← If feature complete
-4. architecture.md ← If structure changed
-5. components.md   ← If components changed
-```
-
-### Acknowledge Format
-
-```text
-"Memory + Architecture loaded! 📚
-Working on [project]. [X pages, Y components].
-Just completed [last task].
-Next up: [next step]"
-```
-
-### Save Confirm Format
-
-```text
-"✅ Memory + Architecture saved"
-```
+*Memory System v2.0.0 — tiered loading, ~800-token Tier 1, 7 files across 3 tiers*

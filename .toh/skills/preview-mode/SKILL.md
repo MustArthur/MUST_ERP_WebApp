@@ -1,3 +1,12 @@
+---
+name: preview-mode
+description: >
+  Show-before-commit previews — after completing work, present what changed as
+  a live dev-server URL or a concise plain-language description so the user can
+  confirm or request changes with confidence. Use when delivering visible
+  changes (pages, components, styling) to a running project.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 👁️ Preview Mode Skill
 
 > **Purpose:** Show users what will change before applying

@@ -1,13 +1,14 @@
 # Next.js Pro Template
 
-> 🚀 Production-ready Next.js 14 starter template optimized for /toh- workflow
+> 🚀 Production-ready Next.js 16 starter template optimized for /toh- workflow
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
-- **Styling:** Tailwind CSS + shadcn/ui
-- **State:** Zustand
-- **Forms:** React Hook Form + Zod
+- **Framework:** Next.js 16 (App Router)
+- **UI:** React 19 (ref-as-prop pattern)
+- **Styling:** Tailwind CSS v4 + shadcn/ui
+- **State:** Zustand 5
+- **Forms:** React Hook Form + Zod 4
 - **Backend Ready:** Supabase patterns
 - **Language:** TypeScript (strict mode)
 
@@ -25,23 +26,26 @@
 ## Quick Start
 
 ```bash
-# 1. Create new project
-npx create-next-app@latest my-app --typescript --tailwind --eslint --app --src-dir=false
+# 1. Create new project (Next.js 16 + React 19 + Tailwind v4)
+npx create-next-app@latest my-app --typescript --tailwind --eslint --app --no-src-dir --import-alias "@/*"
 
-# 2. Copy template files
+# 2. Copy template files (overwrites package.json + app/globals.css — intended)
 cp -r ~/.claude/templates/nextjs-pro/* my-app/
 
-# 3. Install dependencies
+# 3. Install dependencies (versions come from the template package.json)
 cd my-app
-npm install zustand @supabase/supabase-js zod react-hook-form @hookform/resolvers
+npm install
 
-# 4. Install shadcn/ui
-npx shadcn@latest init
+# 4. Install shadcn/ui primitives
 npx shadcn@latest add button card input label badge avatar dropdown-menu dialog sheet table tabs
 
 # 5. Start development
 npm run dev
 ```
+
+> The template ships its own `app/globals.css` written for **Tailwind CSS v4**
+> (`@import "tailwindcss"` + `@theme inline` + `@custom-variant dark`), so you
+> do NOT need to run `npx shadcn init` — just add the primitives in step 4.
 
 ## Project Structure
 
@@ -89,16 +93,20 @@ my-app/
 
 ### Colors (Professional, No AI Red Flags)
 
+Tokens are CSS variables (in `app/globals.css`) exposed to Tailwind utilities
+via `@theme inline`, so `bg-primary`, `text-muted-foreground`, `border-border`
+all resolve — and `.dark` overrides apply automatically.
+
 ```css
 /* Primary: Blue (trustworthy, professional) */
---primary: 221.2 83.2% 53.3%;
+--primary: hsl(221.2 83.2% 53.3%);
 
 /* Neutrals: Slate (soft, readable) */
---foreground: 222.2 84% 4.9%;
---muted-foreground: 215.4 16.3% 46.9%;
+--foreground: hsl(222.2 84% 4.9%);
+--muted-foreground: hsl(215.4 16.3% 46.9%);
 
 /* Accent: Subtle, purposeful */
---accent: 210 40% 96.1%;
+--accent: hsl(210 40% 96.1%);
 ```
 
 ### Typography

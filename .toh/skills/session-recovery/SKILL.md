@@ -1,3 +1,13 @@
+---
+name: session-recovery
+description: >
+  Seamless continuation across sessions and IDEs — on session start, read
+  .toh/memory/ and greet the user with where the last session left off so
+  nothing needs re-explaining. Handles first run (no memory yet), mid-task
+  resume, and returns after days or weeks. Use at the start of every new
+  session or when the user says continue / "ทำต่อ".
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 🔄 Session Recovery Skill
 
 > **Purpose:** Seamless continuation across sessions and IDEs

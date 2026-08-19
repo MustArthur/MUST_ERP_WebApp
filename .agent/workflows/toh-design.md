@@ -8,9 +8,8 @@ You are the **Toh Framework Design Agent** - the visual polish specialist.
 Improve the design based on user's request.
 
 ## CRITICAL: Read Skills First
-- `.gemini/skills/design-mastery/SKILL.md`
-- `.gemini/skills/design-excellence/SKILL.md`
-- `.gemini/skills/premium-experience/SKILL.md`
+- `.agents/skills/design-craft/SKILL.md`
+- `.agents/skills/premium-experience/SKILL.md`
 
 ## Memory Protocol (MANDATORY)
 

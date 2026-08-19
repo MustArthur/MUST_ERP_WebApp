@@ -1,0 +1,74 @@
+{
+  "version": "2.1.0",
+  "generatedAt": "2026-08-19T03:28:19.658Z",
+  "ides": [
+    "antigravity",
+    "claude-code",
+    "codex",
+    "cursor",
+    "zcode"
+  ],
+  "profiles": {
+    "antigravity": {
+      "ide": "antigravity",
+      "subagents": "file-based",
+      "teams": false,
+      "goal": false,
+      "loop": false,
+      "hooks": true,
+      "workflows": true,
+      "parallel": false,
+      "modelRouting": false
+    },
+    "claude-code": {
+      "ide": "claude-code",
+      "subagents": "native",
+      "teams": "env-gated",
+      "goal": "version-gated",
+      "loop": true,
+      "hooks": true,
+      "workflows": "version-gated",
+      "parallel": true,
+      "modelRouting": true
+    },
+    "codex": {
+      "ide": "codex",
+      "subagents": "none",
+      "teams": false,
+      "goal": false,
+      "loop": false,
+      "hooks": false,
+      "workflows": false,
+      "parallel": false,
+      "modelRouting": false
+    },
+    "cursor": {
+      "ide": "cursor",
+      "subagents": "native",
+      "teams": false,
+      "goal": false,
+      "loop": false,
+      "hooks": false,
+      "workflows": false,
+      "parallel": false,
+      "modelRouting": false
+    },
+    "zcode": {
+      "ide": "zcode",
+      "subagents": "none",
+      "teams": false,
+      "goal": false,
+      "loop": false,
+      "hooks": false,
+      "workflows": false,
+      "commands": true,
+      "parallel": false,
+      "modelRouting": false
+    }
+  },
+  "gates": {
+    "teams": "Claude Code only — requires env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+    "goal": "Claude Code >= 2.1.139",
+    "workflows": "Claude Code >= 2.1.154 (can be plan-disabled)"
+  }
+}

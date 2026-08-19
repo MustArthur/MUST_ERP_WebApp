@@ -55,8 +55,8 @@ User Action → Component → Zustand Store → API/Lib → Database (Supabase)
 
 ## 📝 Notes
 
-- Using Toh Framework v1.8.1
+- Using Toh Framework v2.1.0
 - Architecture tracking enabled
 
 ---
-*Last updated: 2026-01-30*
+*Last updated: 2026-08-19*

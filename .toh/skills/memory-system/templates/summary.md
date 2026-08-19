@@ -3,7 +3,7 @@
 ## Project Info
 - **Name:** {{PROJECT_NAME}}
 - **Type:** {{PROJECT_TYPE}}
-- **Stack:** Next.js 14 + Tailwind + shadcn/ui + Zustand + Supabase
+- **Stack:** Next.js 16 + Tailwind + shadcn/ui + Zustand + Supabase
 - **Language:** {{LANGUAGE}}
 - **Created:** {{TIMESTAMP}}
 
@@ -30,7 +30,7 @@
 ```
 
 ## Key Dependencies
-- Next.js 14 (App Router)
+- Next.js 16 (App Router)
 - Tailwind CSS
 - shadcn/ui
 - Zustand

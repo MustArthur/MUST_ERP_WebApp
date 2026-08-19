@@ -69,12 +69,12 @@ function DashboardStats() {
               <div className="text-muted-foreground">{stat.icon}</div>
             </div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">
+              <span className="text-3xl font-semibold tracking-tight tabular-nums">
                 {stat.prefix}
                 <CountUp end={stat.value} />
                 {stat.suffix}
               </span>
-              <span className={`flex items-center text-sm font-medium ${
+              <span className={`flex items-center text-sm font-medium tabular-nums ${
                 stat.isPositive ? "text-green-600" : "text-red-600"
               }`}>
                 {stat.isPositive ? (
@@ -203,13 +203,13 @@ function TopItemsTable() {
             {items.map((item, index) => (
               <tr key={index} className="border-b last:border-0">
                 <td className="py-3 text-sm font-medium">{item.name}</td>
-                <td className="py-3 text-sm text-right">
+                <td className="py-3 text-sm text-right tabular-nums">
                   {item.sales.toLocaleString()}
                 </td>
-                <td className="py-3 text-sm text-right">
+                <td className="py-3 text-sm text-right tabular-nums">
                   ${item.revenue.toLocaleString()}
                 </td>
-                <td className={`py-3 text-sm text-right ${
+                <td className={`py-3 text-sm text-right tabular-nums ${
                   item.change > 0 ? "text-green-600" : "text-red-600"
                 }`}>
                   {item.change > 0 ? "+" : ""}{item.change}%
@@ -234,9 +234,9 @@ export default function DashboardPage() {
         <FadeInUp>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">
-                Welcome back! Here&apos;s an overview of your business.
+                Overview of your business this month.
               </p>
             </div>
             <div className="flex gap-2">

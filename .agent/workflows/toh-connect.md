@@ -8,8 +8,8 @@ You are the **Toh Framework Connect Agent** - the backend integration specialist
 Connect to Supabase based on user's request.
 
 ## CRITICAL: Read Skills First
-- `.gemini/skills/backend-engineer/SKILL.md`
-- `.gemini/skills/integrations/SKILL.md`
+- `.agents/skills/backend-engineer/SKILL.md`
+- `.agents/skills/integrations/SKILL.md`
 
 ## Memory Protocol (MANDATORY)
 

@@ -1,667 +1,184 @@
 ---
 name: platform-specialist
 description: >
-  Platform-specific integration expert for LINE Mini App (LIFF), Expo (React Native),
-  and Tauri (Desktop). Handles platform APIs, native features, and deployment.
-  Called when app needs platform-specific features beyond standard web.
-  Triggers: "LINE Mini App", "LIFF", "LINE OA", "mobile app", "Expo", "React Native",
-  "desktop app", "Tauri", platform integration, native features.
+  Doc-driven platform integration expert. Converts a web app to LINE MINI App (LIFF SDK),
+  PWA (Next.js 16), and Capacitor (iOS/Android). Expo & Tauri are secondary/legacy.
+  ปรัชญาหลัก: ดึง docs จริงล่าสุดก่อนเขียนโค้ดเสมอ — ไม่ freeze snippet ที่จะ rot.
+  Triggers: "LINE MINI App", "LIFF", "LINE OA", "convert to app", "PWA",
+  "add to home screen", "install to phone", "mobile app", "app store", "Capacitor",
+  "iOS", "Android", "native features", "camera", "push notification",
+  "desktop app", "Expo", "Tauri", platform integration.
 ---
 
 # Platform Specialist
 
-Make web apps native. LINE, Mobile, Desktop - same quality, platform-optimized.
+Make one web app run everywhere — LINE, phone home screen, App Store, desktop —
+โดย **adapt ไม่ rewrite**. Core logic เดิมอยู่ครบ, เพิ่มแค่ชั้น platform.
 
 <core_principle>
-## The Platform Promise
+## 🥇 Golden Rule: Docs First, Code Second
 
-Same beautiful UI → Platform-specific magic → Native-feeling experience
+SDK เหล่านี้ (LIFF, Capacitor, Serwist, Tauri) **ออกเวอร์ชันใหม่บ่อยมาก** — snippet ที่ hardcode ไว้จะเน่า (rot) ภายในไม่กี่เดือน. ก่อนเขียนโค้ด platform ทุกครั้ง:
 
-We adapt, not rebuild. Core logic stays the same.
+1. **ดึง docs ปัจจุบันก่อน** — ผ่าน Context7 (`resolve-library-id` → `query-docs`) หรือ WebFetch หน้า official
+2. **เช็ค version ล่าสุดจริง** — `npm view @line/liff version`, `npm view @capacitor/core version` ฯลฯ — อย่าจำเลข
+3. **แล้วค่อย implement** ตาม API ที่ docs ปัจจุบันบอก
+
+หลักการนี้สำคัญกว่าโค้ดตัวอย่างใดๆ ในไฟล์นี้. ตัวอย่างด้านล่างคือ **โครง + จุดพลาด** ไม่ใช่โค้ดที่ copy ได้เลย.
 </core_principle>
 
+---
+
 <line_mini_app>
-## LINE Mini App (LIFF)
+## 📱 LINE MINI App (LIFF SDK)
 
-### What is LIFF?
-LINE Front-end Framework - run web apps inside LINE app with access to LINE APIs.
+### สองคำที่ต้องแยกให้ออก
+- **LINE MINI App channel** = channel *ชนิดใหม่* (แนะนำให้สร้างแอปใหม่เป็นชนิดนี้) มาแทนวิธีเดิม (LINE Login channel + ผูก LIFF app เอง). 🇹🇭 **ไทยสร้างได้แล้วตั้งแต่ มี.ค. 2026**
+- **LIFF SDK** (`@line/liff`) = ตัว SDK ที่ยังใช้เหมือนเดิม รันแอป web ข้างใน LINE + เรียก LINE APIs. LINE MINI App **ก็ยังใช้ LIFF SDK นี้**
 
-### Setup
-```bash
-npm install @line/liff
-```
+### 📚 Pull docs first
+- LINE MINI App overview: `developers.line.biz/en/docs/line-mini-app/`
+- LIFF API reference: `developers.line.biz/en/reference/liff/`
+- Release notes (เช็ค version ล่าสุด): `developers.line.biz/en/docs/liff/release-notes/`
+- Context7: `/line/line-developers-docs-source` หรือ `/websites/developers_line_biz_en_reference_liff`
 
-```typescript
-// src/lib/liff.ts
+### Convert checklist
+- [ ] สร้าง **LINE MINI App channel** ใน LINE Developers Console (region = Thailand)
+- [ ] คัดลอก **LIFF ID** จาก channel → ใส่เป็น env `NEXT_PUBLIC_LIFF_ID`
+- [ ] ติดตั้ง SDK เวอร์ชันล่าสุด: `npm install @line/liff` (เช็ค version จาก release notes ก่อน)
+- [ ] Wrap แอปด้วย provider ที่เรียก `liff.init()` **แล้ว gate การ render จนกว่าจะ resolve**
+- [ ] Set **endpoint URL** ใน channel = URL ที่ deploy จริง (ต้อง **HTTPS**)
+- [ ] Adapt UX: safe-area, ปุ่ม action เต็มความกว้าง, ไม่ต้องมีหน้า login แยก (ใช้ LINE profile)
+- [ ] Test ใน LINE app จริง + ทดสอบ fallback ตอนเปิดนอก LINE
+- [ ] (ถ้าจะ publish เป็น verified) request review — ไทยต้องผ่าน certified provider
+
+### Init outline (โครง ไม่ใช่ไฟล์แช่แข็ง)
+```ts
+// lib/liff.ts — ยืนยัน signature ปัจจุบันกับ LIFF API reference ก่อน
 import liff from '@line/liff'
-
-const LIFF_ID = process.env.NEXT_PUBLIC_LIFF_ID!
-
-export async function initializeLiff() {
-  try {
-    await liff.init({ liffId: LIFF_ID })
-    return true
-  } catch (error) {
-    console.error('LIFF init failed:', error)
-    return false
-  }
-}
-
-export function isInLiff(): boolean {
-  return liff.isInClient()
-}
-
-export function isLoggedIn(): boolean {
-  return liff.isLoggedIn()
-}
-
-export async function login() {
-  if (!liff.isLoggedIn()) {
-    liff.login()
-  }
-}
-
-export async function logout() {
-  if (liff.isLoggedIn()) {
-    liff.logout()
-  }
-}
-
-export async function getProfile() {
-  if (!liff.isLoggedIn()) return null
-  return await liff.getProfile()
-}
-
-export async function getAccessToken() {
-  return liff.getAccessToken()
-}
-
-// Send message to LINE chat
-export async function sendMessage(text: string) {
-  if (!liff.isInClient()) return
-  
-  await liff.sendMessages([
-    { type: 'text', text }
-  ])
-}
-
-// Share to LINE
-export async function shareMessage(text: string) {
-  if (!liff.isApiAvailable('shareTargetPicker')) return
-  
-  await liff.shareTargetPicker([
-    { type: 'text', text }
-  ])
-}
-
-// Close LIFF window
-export function closeLiff() {
-  if (liff.isInClient()) {
-    liff.closeWindow()
-  }
-}
+export const initLiff = () => liff.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID! })
+// liff.isInClient() / liff.isLoggedIn() / liff.getProfile() / liff.getAccessToken()
+// liff.login() / liff.shareTargetPicker() / liff.sendMessages() / liff.closeWindow()
 ```
 
-### LIFF Provider
-```tsx
-// src/providers/liff-provider.tsx
-'use client'
+**Provider pattern** (`providers/liff-provider.tsx`): `useEffect` → `await initLiff()` → set `ready=true` → เก็บ `isInClient`, `profile` ใน context. **สำคัญ: อย่า render feature ที่เรียก LIFF API ก่อน `ready`**. รองรับกรณี init fail (เปิดนอก LINE / SDK error) ด้วย UI fallback ไม่ใช่หน้าขาว.
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { initializeLiff, getProfile, isLoggedIn, isInLiff } from '@/lib/liff'
-
-interface LiffProfile {
-  userId: string
-  displayName: string
-  pictureUrl?: string
-  statusMessage?: string
-}
-
-interface LiffContextType {
-  isReady: boolean
-  isInLiff: boolean
-  isLoggedIn: boolean
-  profile: LiffProfile | null
-  error: string | null
-}
-
-const LiffContext = createContext<LiffContextType>({
-  isReady: false,
-  isInLiff: false,
-  isLoggedIn: false,
-  profile: null,
-  error: null,
-})
-
-export function LiffProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<LiffContextType>({
-    isReady: false,
-    isInLiff: false,
-    isLoggedIn: false,
-    profile: null,
-    error: null,
-  })
-
-  useEffect(() => {
-    async function init() {
-      const success = await initializeLiff()
-      
-      if (!success) {
-        setState(prev => ({ ...prev, isReady: true, error: 'LIFF init failed' }))
-        return
-      }
-
-      const inLiff = isInLiff()
-      const loggedIn = isLoggedIn()
-      let profile = null
-
-      if (loggedIn) {
-        profile = await getProfile()
-      }
-
-      setState({
-        isReady: true,
-        isInLiff: inLiff,
-        isLoggedIn: loggedIn,
-        profile,
-        error: null,
-      })
-    }
-
-    init()
-  }, [])
-
-  return (
-    <LiffContext.Provider value={state}>
-      {children}
-    </LiffContext.Provider>
-  )
-}
-
-export const useLiff = () => useContext(LiffContext)
-```
-
-### Connect LIFF to Supabase Auth
-```typescript
-// src/lib/liff-auth.ts
-import { supabase } from './supabase'
-import { getAccessToken, getProfile } from './liff'
-
-export async function signInWithLiff() {
-  const accessToken = getAccessToken()
-  const profile = await getProfile()
-  
-  if (!accessToken || !profile) {
-    throw new Error('LIFF not logged in')
-  }
-
-  // Create or sign in user via Supabase Edge Function
-  const { data, error } = await supabase.functions.invoke('liff-auth', {
-    body: {
-      accessToken,
-      userId: profile.userId,
-      displayName: profile.displayName,
-      pictureUrl: profile.pictureUrl,
-    }
-  })
-
-  if (error) throw error
-  
-  // Set Supabase session
-  await supabase.auth.setSession({
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-  })
-
-  return data.user
-}
-```
-
-### LINE-Specific UI Components
-```tsx
-// LINE-style button
-export function LineButton({ onClick, children }: { 
-  onClick: () => void
-  children: React.ReactNode 
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full bg-[#06C755] hover:bg-[#05B34D] text-white 
-                 font-medium py-3 px-4 rounded-lg transition-colors"
-    >
-      {children}
-    </button>
-  )
-}
-
-// LINE profile card
-export function LineProfileCard({ profile }: { profile: LiffProfile }) {
-  return (
-    <div className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm">
-      <img 
-        src={profile.pictureUrl || '/default-avatar.png'} 
-        alt={profile.displayName}
-        className="w-12 h-12 rounded-full"
-      />
-      <div>
-        <p className="font-medium">{profile.displayName}</p>
-        {profile.statusMessage && (
-          <p className="text-sm text-slate-500">{profile.statusMessage}</p>
-        )}
-      </div>
-    </div>
-  )
-}
-```
-
-### LIFF Deployment Checklist
-- [ ] Create LIFF app in LINE Developers Console
-- [ ] Set LIFF endpoint URL (your deployed URL)
-- [ ] Configure LIFF scope (profile, openid, etc.)
-- [ ] Set NEXT_PUBLIC_LIFF_ID in environment
-- [ ] Test in LINE app (not browser)
+### 🩹 Common mistakes (เจอบ่อยจริง)
+1. **เรียก LIFF API ก่อน `liff.init()` resolve** → error `"liff.xxx() was not called"`. ทุกอย่างต้องรอ init เสร็จก่อน (await/gate render)
+2. **ไม่ handle `isInClient()`** → แอปพังตอนเปิดใน browser ธรรมดา. เช็คก่อนเรียก in-client-only API (`sendMessages`, `closeWindow`, `scanCodeV2`) และมี fallback. ถ้าต้องรองรับ login นอก LINE ใช้ `withLoginOnExternalBrowser`
+3. **Endpoint URL / HTTPS** — LIFF บังคับ HTTPS; endpoint ใน console ไม่ตรง URL จริง = init fail. localhost ต้อง tunnel (เช่น ngrok) หรือใช้ LIFF Inspector
+4. **`liff.getProfile()` โดยยังไม่ login / ไม่มี scope `profile`** → เช็ค `isLoggedIn()` + scope ใน channel ก่อน
 </line_mini_app>
 
-<expo_react_native>
-## Expo (React Native)
+---
 
-### Project Setup
-```bash
-# Create new Expo project
-npx create-expo-app my-app --template tabs
+<pwa>
+## 🌐 PWA (Next.js 16) — default ของ /toh-mobile
 
-# Or with our stack
-npx create-expo-app my-app
-cd my-app
-npx expo install nativewind
-npx expo install react-native-reanimated
-npm install zustand @supabase/supabase-js
-```
+เป้าหมาย: ผู้ใช้ **Add to Home Screen** ได้ใน ~1 นาที ไม่ต้องลงอะไรจาก store.
 
-### NativeWind Setup (Tailwind for RN)
-```javascript
-// tailwind.config.js
-module.exports = {
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}"
-  ],
-  presets: [require("nativewind/preset")],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
-```
+### 📚 Pull docs first
+- Next.js PWA guide: `nextjs.org/docs/app/guides/progressive-web-apps`
+- Serwist (next-pwa successor): `serwist.pages.dev/docs/next/getting-started` — **เช็ค setup ปัจจุบัน** เพราะ config เปลี่ยนบ่อย
 
-```javascript
-// babel.config.js
-module.exports = function (api) {
-  api.cache(true);
-  return {
-    presets: [
-      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
-      "nativewind/babel",
-    ],
-  };
-};
-```
+### Checklist
+- [ ] **Web app manifest** → `app/manifest.ts` (Next.js Metadata API): `name`, `short_name`, `start_url`, `display: "standalone"`, `theme_color`, `background_color`, `icons`
+- [ ] **Icons** — อย่างน้อย 192×192 + 512×512 (มี maskable ด้วยยิ่งดี). generate จาก source เดียว
+- [ ] **Service worker** — เลือกทางใดทางหนึ่ง:
+  - **Serwist** (`@serwist/next`) — จัดการ precache manifest + gen `public/sw.js` ให้ (config `swSrc: 'app/sw.ts'`, `swDest: 'public/sw.js'` ผ่าน `withSerwist` ใน next config) — เช็ค getting-started ปัจจุบันก่อน
+  - **Native** — เขียน `sw.js` เอง (fetch handler + cache) ถ้าอยากคุม 100% ไม่พึ่ง lib
+- [ ] **Offline พื้นฐาน** — cache app shell + offline fallback page; runtime cache สำหรับ API/รูป
+- [ ] **Install prompt** — ดัก`beforeinstallprompt` (Android/desktop) เก็บ event ไว้ trigger ปุ่ม "ติดตั้ง"; **iOS Safari ไม่มี event นี้** → ต้องสอนผู้ใช้ manual (Share → Add to Home Screen)
+- [ ] **A2HS UX** — บอกวิธีเพิ่มลงหน้าจอแบบภาษาคน แยกคำแนะนำ iOS vs Android
 
-### File Structure
-```
-my-app/
-├── app/                    # Expo Router (file-based routing)
-│   ├── (tabs)/            # Tab navigation group
-│   │   ├── index.tsx      # Home tab
-│   │   ├── explore.tsx    # Explore tab
-│   │   └── _layout.tsx    # Tab layout
-│   ├── _layout.tsx        # Root layout
-│   └── +not-found.tsx     # 404 page
-├── components/
-│   ├── ui/                # Reusable UI components
-│   └── features/          # Feature-specific components
-├── lib/
-│   ├── supabase.ts       # Supabase client
-│   └── utils.ts          # Utilities
-├── stores/               # Zustand stores
-└── types/                # TypeScript types
-```
+### 🩹 Common mistakes
+1. **Service worker ต้อง served จาก origin + HTTPS** (localhost ยกเว้นได้). path/scope ผิด = ไม่ลง
+2. **Manifest ขาด icon 512 หรือ `display:standalone`** → เบราว์เซอร์ไม่เสนอ install
+3. คาดหวัง iOS มี auto install prompt — ไม่มี ต้อง manual เสมอ
+4. SW cache เก่าค้าง → วาง strategy update (skipWaiting/clientsClaim) + แจ้งผู้ใช้ reload
+</pwa>
 
-### Common Components Translation
+---
 
-**Web (shadcn) → React Native**
-```tsx
-// Web: Button
-<Button variant="default">Click me</Button>
+<capacitor>
+## 🏪 Capacitor (iOS/Android) — track "ขึ้น store" ของ /toh-mobile
 
-// React Native equivalent
-import { Pressable, Text } from 'react-native'
+Wrap Next.js เดิมทั้งก้อนเป็น native app + เข้าถึง native APIs. **pattern เดียวกับ LINE convert** — codebase เดียว แปลงร่างได้.
 
-export function Button({ children, onPress, variant = 'default' }) {
-  return (
-    <Pressable 
-      onPress={onPress}
-      className={`px-4 py-3 rounded-lg ${
-        variant === 'default' 
-          ? 'bg-blue-600 active:bg-blue-700' 
-          : 'bg-slate-100 active:bg-slate-200'
-      }`}
-    >
-      <Text className={`text-center font-medium ${
-        variant === 'default' ? 'text-white' : 'text-slate-900'
-      }`}>
-        {children}
-      </Text>
-    </Pressable>
-  )
-}
-```
+### 📚 Pull docs first
+- `capacitorjs.com/docs` — Capacitor ขยับเวอร์ชันเร็ว (7 → 8…) เช็ค `npm view @capacitor/core version` + docs ก่อนทำ
+- Context7: `/websites/capacitorjs` หรือ `/ionic-team/capacitor-docs`
 
-```tsx
-// Web: Card
-<Card><CardContent>...</CardContent></Card>
+### Next build strategy
+- **Static export (แนะนำ default)** — `next.config`: `output: 'export'`, `images: { unoptimized: true }` → build ได้โฟลเดอร์ `out/` → `webDir: 'out'`. เหมาะกับแอปที่ไม่พึ่ง server runtime
+- **Server (SSR/route handlers)** — Capacitor ไม่รัน Node ในเครื่อง → ต้อง host backend แยกแล้วชี้ `server.url` ไปที่ deployment (แอปกลายเป็น native shell ครอบ remote). ใช้เมื่อจำเป็นต้องมี SSR จริง
 
-// React Native equivalent
-import { View } from 'react-native'
+### Setup checklist
+- [ ] `npm i @capacitor/core` + `npm i -D @capacitor/cli`
+- [ ] `npx cap init` (app name + bundle id เช่น `com.company.app`)
+- [ ] ตั้ง `webDir: 'out'` ใน `capacitor.config.ts`
+- [ ] `npx cap add ios` / `npx cap add android`
+- [ ] ทุกครั้งหลัง `next build`: **`npx cap sync`** (copy web assets + update native deps)
+- [ ] เปิด native project: `npx cap open ios` / `npx cap open android`
 
-export function Card({ children, className = '' }) {
-  return (
-    <View className={`bg-white rounded-xl shadow-sm p-4 ${className}`}>
-      {children}
-    </View>
-  )
-}
-```
+### Live-reload dev flow
+ตั้ง `server.url` ใน capacitor config → dev server ของ Next (`http://<LAN-IP>:3000`) + `cleartext: true` (**dev เท่านั้น** — ห้ามค้างไว้ตอน production). แก้ web code แล้วแอปบนเครื่อง reload เอง (เฉพาะ web change, native change ต้อง rebuild)
 
-```tsx
-// Web: Input
-<Input placeholder="Enter text" />
+### Native plugins
+`@capacitor/camera`, `@capacitor/push-notifications`, `@capacitor/geolocation`, `@capacitor/share`… — ติดตั้ง plugin → `npx cap sync` → เพิ่ม native permission (Info.plist / AndroidManifest.xml) ตาม docs ของ plugin นั้น
 
-// React Native equivalent
-import { TextInput } from 'react-native'
+### Store submission path (บอกผู้ใช้ภาษาคน)
+- **iOS**: ต้องมี **Apple Developer account ($99/ปี)** → build/archive ใน Xcode → App Store Connect → review
+- **Android**: **Google Play Console ($25 ครั้งเดียว)** → build signed AAB ใน Android Studio → Play Console → review
 
-export function Input({ placeholder, value, onChangeText, ...props }) {
-  return (
-    <TextInput
-      placeholder={placeholder}
-      value={value}
-      onChangeText={onChangeText}
-      className="border border-slate-200 rounded-lg px-4 py-3 text-base"
-      placeholderTextColor="#94a3b8"
-      {...props}
-    />
-  )
-}
-```
+### 🩹 Common mistakes
+1. ลืม `npx cap sync` หลัง build → native เห็น web version เก่า
+2. เหลือ `cleartext`/`server.url` ไว้ตอน production → แอป reject/ไม่ปลอดภัย
+3. `output: 'export'` แต่โค้ดใช้ SSR/route handler → build fail (ต้องเลือก strategy ให้ตรง)
+4. ลืมประกาศ native permission ของ plugin → camera/push เงียบ ไม่มี error ชัด
+</capacitor>
 
-### Navigation (Expo Router)
-```tsx
-// app/(tabs)/_layout.tsx
-import { Tabs } from 'expo-router'
-import { Home, Search, User } from 'lucide-react-native'
+---
 
-export default function TabLayout() {
-  return (
-    <Tabs screenOptions={{
-      tabBarActiveTintColor: '#2563eb',
-      headerShown: false,
-    }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Home size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => (
-            <Search size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <User size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-  )
-}
-```
+<expo_legacy>
+## Expo (React Native) — LEGACY note เท่านั้น
 
-### Supabase in Expo
-```typescript
-// lib/supabase.ts
-import 'react-native-url-polyfill/auto'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createClient } from '@supabase/supabase-js'
+Expo = **คนละ codebase** (React Native, ไม่ reuse Next.js DOM) → ขัดหลัก "Type Once". **default ของงาน mobile คือ PWA → Capacitor** ไม่ใช่ Expo.
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
+ใช้ Expo เฉพาะเมื่อ **จำเป็นต้องเป็น bare React Native จริงๆ** — เช่น ต้องการ native performance/animation ระดับสูง, native module ที่ web wrapper ทำไม่ได้, หรือทีมมี RN codebase อยู่แล้ว. ถ้าไปทางนี้: pull docs ปัจจุบันจาก `docs.expo.dev` (Expo Router, EAS Build) — ไม่ reuse component DOM เดิม ต้อง port เป็น RN primitives.
+</expo_legacy>
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-})
-```
-
-### Expo Deployment
-```bash
-# Development build
-npx expo start
-
-# Build for testing
-eas build --profile development --platform ios
-eas build --profile development --platform android
-
-# Production build
-eas build --profile production --platform all
-
-# Submit to stores
-eas submit --platform ios
-eas submit --platform android
-```
-</expo_react_native>
+---
 
 <tauri_desktop>
-## Tauri (Desktop App)
+## Tauri (Desktop) — doc-pull note
 
-### Why Tauri?
-- Reuse Next.js/React web code
-- Native performance (Rust backend)
-- Small bundle size (~10MB vs Electron's 100MB+)
-- Cross-platform (macOS, Windows, Linux)
+Wrap web เป็น desktop app (macOS/Windows/Linux) — bundle เล็กกว่า Electron มาก, backend Rust. ใช้เมื่อผู้ใช้ต้องการ **desktop app จริง / offline-first / เข้าถึง filesystem-ระบบ**.
 
-### Setup (Add to existing Next.js)
-```bash
-# Install Tauri CLI
-npm install -D @tauri-apps/cli
-
-# Initialize Tauri in existing project
-npx tauri init
-```
-
-### Configuration
-```json
-// src-tauri/tauri.conf.json
-{
-  "build": {
-    "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run dev",
-    "devPath": "http://localhost:3000",
-    "distDir": "../out"
-  },
-  "package": {
-    "productName": "My App",
-    "version": "1.0.0"
-  },
-  "tauri": {
-    "bundle": {
-      "active": true,
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.myapp.app",
-      "targets": "all"
-    },
-    "windows": [
-      {
-        "title": "My App",
-        "width": 1200,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ]
-  }
-}
-```
-
-### Next.js Config for Tauri
-```javascript
-// next.config.js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',  // Static export for Tauri
-  images: {
-    unoptimized: true  // Required for static export
-  }
-}
-
-module.exports = nextConfig
-```
-
-### Tauri Commands (Rust ↔ JavaScript)
-```rust
-// src-tauri/src/main.rs
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}!", name)
-}
-
-#[tauri::command]
-async fn read_file(path: String) -> Result<String, String> {
-    std::fs::read_to_string(path)
-        .map_err(|e| e.to_string())
-}
-
-fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, read_file])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-```
-
-```typescript
-// Call from React
-import { invoke } from '@tauri-apps/api/tauri'
-
-async function greetUser() {
-  const message = await invoke('greet', { name: 'Wasin' })
-  console.log(message) // "Hello, Wasin!"
-}
-
-async function readLocalFile() {
-  const content = await invoke('read_file', { 
-    path: '/path/to/file.txt' 
-  })
-  console.log(content)
-}
-```
-
-### Desktop-Specific Features
-```typescript
-// Window controls
-import { appWindow } from '@tauri-apps/api/window'
-
-await appWindow.minimize()
-await appWindow.maximize()
-await appWindow.close()
-
-// System tray
-import { TrayIcon } from '@tauri-apps/api/tray'
-
-// File dialogs
-import { open, save } from '@tauri-apps/api/dialog'
-
-const selected = await open({
-  multiple: false,
-  filters: [{ name: 'Images', extensions: ['png', 'jpg'] }]
-})
-
-// Notifications
-import { sendNotification } from '@tauri-apps/api/notification'
-
-await sendNotification({
-  title: 'My App',
-  body: 'Operation completed!'
-})
-```
-
-### Build & Distribute
-```bash
-# Development
-npm run tauri dev
-
-# Build for current platform
-npm run tauri build
-
-# Build for all platforms (requires cross-compilation setup)
-npm run tauri build -- --target universal-apple-darwin  # macOS
-npm run tauri build -- --target x86_64-pc-windows-msvc  # Windows
-npm run tauri build -- --target x86_64-unknown-linux-gnu  # Linux
-```
+⚠️ **Tauri v2 เปลี่ยน schema จาก v1 เยอะ** (`tauri.conf.json` ใช้ `devUrl`/`frontendDist` แทน v1 `devPath`/`distDir`; plugin system ใหม่). อย่าใช้ snippet v1 เก่า — **pull current Tauri v2 docs ก่อนเสมอ**:
+- `v2.tauri.app/start/frontend/nextjs/` (integration กับ Next.js)
+- Next.js ต้อง `output: 'export'` + `images: { unoptimized: true }` (Tauri ไม่รัน SSR)
+- เริ่มด้วย `npm create tauri-app` หรือเพิ่ม CLI เข้าโปรเจคเดิม แล้วอ่าน config keys ปัจจุบันจาก docs
 </tauri_desktop>
 
+---
+
 <platform_decision_tree>
-## When to Use Which Platform
+## 🌳 When to use which
 
 ```
-User Request
+User request
     │
-    ▼
-┌─────────────────────────────────────┐
-│ Has "LINE" or "LIFF" keywords?      │
-│ Or targets LINE users specifically? │
-└─────────────────────────────────────┘
-    │ YES → LINE Mini App
-    │ NO ↓
-┌─────────────────────────────────────┐
-│ Has "mobile", "iOS", "Android",     │
-│ "app store", or "native" keywords?  │
-└─────────────────────────────────────┘
-    │ YES → Expo (React Native)
-    │ NO ↓
-┌─────────────────────────────────────┐
-│ Has "desktop", "mac", "windows",    │
-│ "offline", or "native" keywords?    │
-└─────────────────────────────────────┘
-    │ YES → Tauri
-    │ NO ↓
-┌─────────────────────────────────────┐
-│ Default: Next.js Web App            │
-│ (Works everywhere via browser)      │
-└─────────────────────────────────────┘
+    ├─ "LINE" / "LIFF" / targets LINE users ─────────→ LINE MINI App (LIFF SDK)
+    │
+    ├─ "อยากได้แอปบนมือถือ" / "add to home screen" ──→ PWA (default, เร็วสุด)
+    │        └─ ต้องขึ้น App Store / Play Store? ────→ + Capacitor
+    │        └─ ต้อง bare React Native จริงๆ? ───────→ Expo (legacy path)
+    │
+    ├─ "desktop" / mac / windows / offline-first ────→ Tauri (v2 docs)
+    │
+    └─ default ─────────────────────────────────────→ Next.js web (รันทุกที่ผ่าน browser)
 ```
+
+**หลักตัดสินใจ:** เริ่มจาก web/PWA เสมอ (friction ต่ำสุด) → ยกระดับเป็น native track (Capacitor/Tauri) เมื่อมีเหตุผลจริง (store, native API, desktop). ทุก track = codebase เดียว + "pull docs first".
 </platform_decision_tree>

@@ -1,3 +1,13 @@
+---
+name: business-context
+description: >
+  Maps a business type the user mentions (coffee shop, restaurant, e-commerce,
+  clinic, gym, hotel, school and more) to its industry-standard feature set —
+  POS, inventory, orders, booking, reports, staff — and auto-includes those
+  features with no questions asked. Fuels zero-question planning for /toh-vibe
+  and /toh-plan whenever a request names a business or industry.
+user-invocable: false  # internal — model-invoked via toh-* commands, not a user /command
+---
 # 🏢 Business Context Skill
 
 > **Purpose:** AI understands business domains and auto-includes standard features
@@ -223,7 +233,7 @@ AI should adapt the template based on user's additional input.
 
 This skill works with:
 - `ui-first-builder` - Creates UI based on business template
-- `smart-suggestions` - Suggests next steps based on business type
+- `engineer-harness` - Suggests next steps based on business type
 - `integrations` - Recommends relevant integrations (e.g., payment for e-commerce)
 
 ---

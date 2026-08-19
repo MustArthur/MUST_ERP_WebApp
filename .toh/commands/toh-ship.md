@@ -3,6 +3,8 @@ command: /toh-ship
 aliases: ["/toh-s"]
 description: Deploy app to production (Vercel, Netlify, and more)
 trigger: /toh-ship or /toh-s
+skills:
+  - engineer-harness
 ---
 
 # /toh-ship - Deploy to Production
@@ -17,14 +19,17 @@ trigger: /toh-ship or /toh-s
 ## What Happens
 
 ```
-0. 🚨 READ MEMORY (MANDATORY - ALL 7 FILES!)
-   ├── .toh/memory/active.md      (current task)
-   ├── .toh/memory/summary.md     (project overview)
-   ├── .toh/memory/decisions.md   (past decisions)
-   ├── .toh/memory/changelog.md   (session changes)
-   ├── .toh/memory/agents-log.md  (agent activity)
-   ├── .toh/memory/architecture.md (project structure)
-   └── .toh/memory/components.md  (existing components)
+0. 🚨 READ MEMORY (Tiered Loading — don't blind-read all 7)
+   ├── Tier 1 · ALWAYS at start (~800 tokens)
+   │   ├── .toh/memory/active.md   (current task)
+   │   └── .toh/memory/summary.md  (project overview)
+   ├── Tier 2 · read per task type
+   │   ├── .toh/memory/architecture.md (structure — build/code work)
+   │   ├── .toh/memory/components.md   (existing components — build/code work)
+   │   └── .toh/memory/changelog.md    (recent changes — debug/release notes)
+   └── Tier 3 · read ONLY when referenced
+       ├── .toh/memory/decisions.md    (past decisions)
+       └── .toh/memory/agents-log.md   (agent activity)
 
 1. PRE-FLIGHT Checks
    ├── npm run build (must pass)
@@ -47,12 +52,12 @@ trigger: /toh-ship or /toh-s
    ├── Check environment variables are set
    └── Test critical flows
 
-5. 🚨 SAVE MEMORY (MANDATORY!)
-   ├── Update active.md (deployed URL)
+5. 🚨 SAVE MEMORY
+   ├── Update active.md (ALWAYS — deployed URL)
+   ├── Update summary.md (production URL — project shape changed)
    ├── Update changelog.md (deployment)
-   ├── Update agents-log.md (agent activity)
    ├── Update decisions.md (deployment config)
-   └── Update summary.md (production URL)
+   └── Update agents-log.md (if agents delegated)
 ```
 
 ## Example Prompts
@@ -89,20 +94,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=xxx
 NEXT_PUBLIC_LIFF_ID=xxx (if using LINE)
 ```
 
-### Next Steps:
+### Closing:
 
-1. **Set Environment Variables**
-   - Go to Vercel Dashboard → Settings → Environment Variables
-   - Add the variables above
+Close per **engineer-harness Section C** (announce block: Status / Result / Evidence + exactly 3 next actions). Default trio for the shipped stage:
 
-2. **Custom Domain (optional)**
-   - Go to Settings → Domains
-   - Add your domain
-
-3. **Test**
-   - Open production URL
-   - Test main features
-   - Check mobile view
+1. `/toh-test` — regression safety net ← recommended
+2. `/toh-plan <new feature>` — next feature
+3. business-type fit (F&B → payments, receipts · E-commerce → Stripe, order emails · Booking → calendar sync · SaaS → user roles, billing)
 ```
 
 ## Supported Platforms

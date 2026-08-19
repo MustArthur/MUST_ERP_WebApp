@@ -1,189 +1,100 @@
 ---
 command: /toh-fix
 aliases: ["/toh-f"]
-description: Fix bugs systematically with Debug Protocol - no guess & retry
-trigger: /toh-fix or /toh-f followed by error or problem
+description: Evidence-first debugging — find the root cause with proof before touching code
+trigger: /toh-fix or /toh-f followed by an error or problem
 skills:
   - debug-protocol
   - error-handling
-  - response-excellence    # 📝 ตอบครบ 3 ส่วน (MANDATORY!)
+  - engineer-harness
 ---
 
-# /toh-fix - Systematic Bug Fixing
-
-## Signature Command 🔧
+# /toh-fix — Evidence-First Bug Fixing 🔧
 
 ```
 /toh-fix [error or problem]
-/toh-f [error or problem]
+/toh-f  [error or problem]
 ```
 
-## 🚨 The 3-5-Rewrite Rule (CRITICAL!)
+## 🧭 IRON RULE
+
+> **อย่าแตะโค้ดจนกว่าจะบอก root cause ได้พร้อมหลักฐาน.**
+> ห้ามเดา ห้ามกดอาการ (`undefined` → ใส่ `?.`) แล้วเรียกว่าแก้แล้ว
+> ถ้ายังบอกไม่ได้ว่า "พังเพราะอะไร" = ยังไม่ถึงเวลาแก้ ให้ไปหาหลักฐานต่อ
+
+**เมื่อร่องรอยตัน / ยังไม่รู้สาเหตุ** → delegate การสืบสวนให้ agent `root-cause-debugger`
+(agent สาย investigate อย่างเดียว: อ่าน log / git / data flow แล้วรายงานสาเหตุกลับมา — ไม่แก้โค้ดเอง)
+
+---
+
+## Protocol: REPRODUCE → EVIDENCE → DIAGNOSE → FIX → PROVE
+
+### 1. REPRODUCE — ทำให้พังซ้ำก่อน
+ทำให้ bug เกิดขึ้นบนเจตนา ก่อนคิดแก้เสมอ. รู้ path/URL/action ที่ทำให้พัง แล้วเห็นมันพังกับตา
+**ถ้าทำซ้ำไม่ได้ = ยังแก้ไม่ได้** — บอกตรงๆ แล้วขอข้อมูลเพิ่ม (steps, env, ข้อมูลที่ใช้, screenshot)
+
+### 2. EVIDENCE — เก็บหลักฐาน (ห้ามเดา)
+- **อ่าน error + stack trace เต็มๆ** — ไฟล์ไหน บรรทัดไหน เรียกมาจากไหน
+- **`git log` / `git diff`** — อะไรเพิ่งเปลี่ยน (bug ใหม่ = โค้ดใหม่ ~80%)
+- **ตาม data flow ด้วย log/debugger จริง** — ค่ามาจากไหน, ตอนถึงจุดพังค่าเป็นอะไรจริงๆ, มันหายที่ step ไหน
+
+### 3. DIAGNOSE — differential diagnosis
+เขียนสมมุติฐาน 2–3 ข้อ แต่ละข้อมี **หลักฐานสนับสนุน + หักล้าง**
+→ เลือกข้อที่ **หลักฐานชี้** ไม่ใช่ข้อที่แก้ง่ายสุด
+→ ถาม "ทำไม" ต่อจนถึงต้นตอ (ทำไม undefined? → API ตอบช้า → ทำไมไม่มี loading state?)
+
+### 4. FIX — แก้ที่ต้นตอ
+แก้ root cause ที่จุดเดียว. จะเสริม defensive guard ตรงจุดที่อาการโผล่ก็ได้ **แต่ guard ไม่ใช่การแก้** — ต้นตอต้องหาย
+
+### 5. PROVE — พิสูจน์ว่าหาย
+รันเส้นทางเดิมที่พังซ้ำ + เส้นทางข้างเคียงที่อาจโดนกระทบ **แล้วค่อยรายงาน** (ไม่ใช่ "น่าจะได้แล้ว")
+
+---
+
+## 🔁 Rewrite Rule
+
+เสนอเขียนใหม่เมื่อ **พิสูจน์ได้ว่า design ผิด** เท่านั้น — ไม่ใช่นับจำนวนรอบที่ลอง
+"ลองมาหลายรอบแล้วเลยลบทิ้ง" = ยอมแพ้ ไม่ใช่วิศวกรรม. ถ้าหา evidence เป็นระบบ ส่วนใหญ่จบใน 1–2 attempt
+
+---
+
+## 🔍 Common Root Causes
+
+หาสาเหตุจริง แล้ว **พิสูจน์** — ไม่ใช่แปะ fix สำเร็จรูป
+
+| Symptom | สาเหตุจริงที่พบบ่อย | วิธี PROVE |
+|---------|--------------------|-----------|
+| `Cannot read property X of undefined` | ไม่มี loading state / API response shape เปลี่ยน / race condition | ตอน render มีข้อมูลจริงไหม? log ค่า + shape ของ API response จริง; พังเฉพาะ network ช้า (หรือเร็ว) ไหม? |
+| `Type X is not assignable to Y` | type ที่ประกาศไว้ **โกหก** runtime shape จริง | log/inspect ค่า runtime จริง เทียบกับ type ที่ประกาศ — อันไหนตรงความจริง |
+| Hydration mismatch | server กับ client render ต่างกัน (`Date.now`/`Math.random`/`window`/locale) | หาให้เจอว่า **อะไร** ที่ต่างระหว่าง server render กับ client render |
+| `Module not found` | path ผิด / ยังไม่ได้ install / case-sensitivity | เช็ค path ไฟล์จริงกับ `package.json` — ชื่อ/ตัวพิมพ์ตรงกันไหม |
+| ทำงานบนเครื่อง แต่ build พัง | type-check เข้มกว่า / env var หาย / dynamic import | อ่าน error ตอน build จริง **อย่าเดา** ว่าเป็นอะไร |
+
+---
+
+## 📋 Report Format (ภาษาคน)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  ATTEMPT 1-3: Normal Debug                                  │
-│  - Try different approaches systematically                  │
-│  - Track every attempt in debug-log.md                      │
-├─────────────────────────────────────────────────────────────┤
-│  ATTEMPT 4-5: Escalate                                      │
-│  - Binary search (remove half the code)                     │
-│  - Create minimal reproduction                              │
-├─────────────────────────────────────────────────────────────┤
-│  AFTER 5 ATTEMPTS: Recommend Rewrite                        │
-│  - "ลองแก้มา 5 รอบแล้วครับ แนะนำให้ลบแล้วเขียนใหม่"          │
-│  - Clean slate = no legacy issues                           │
-└─────────────────────────────────────────────────────────────┘
-
-❌ ห้ามวน guess & retry ไปเรื่อยๆ!
+Problem     — อาการที่เจอ (ผู้ใช้เห็นอะไร)
+Root cause  — สาเหตุจริง + หลักฐานที่ยืนยัน
+Fix         — แก้อะไร ที่ไฟล์ไหน ทำไม
+Proof       — รันอะไรซ้ำแล้วผ่าน (เส้นทางเดิม + ข้างเคียง)
+Prevention  — กันไม่ให้กลับมาอีกยังไง
 ```
 
-## What Happens
+---
 
-```
-0. 🚨 READ MEMORY (MANDATORY - ALL 7 FILES!)
-   ├── .toh/memory/active.md      (current task)
-   ├── .toh/memory/summary.md     (project overview)
-   ├── .toh/memory/decisions.md   (past decisions)
-   ├── .toh/memory/changelog.md   (session changes - check debug attempts)
-   ├── .toh/memory/agents-log.md  (agent activity)
-   ├── .toh/memory/architecture.md (project structure)
-   └── .toh/memory/components.md  (existing components)
+## 🧠 Memory (สั้นๆ)
 
-1. REPRODUCE (ทำซ้ำปัญหา)
-   ├── ถาม URL / หน้าที่เกิดปัญหา
-   ├── ดูว่าเห็นปัญหาจริงไหม
-   └── ถ้าไม่เห็น → ถาม User เพิ่ม
+- **เริ่มงาน:** อ่าน `.toh/memory/active.md` + `.toh/memory/changelog.md` (debugging อยากรู้ว่าอะไรเพิ่งเปลี่ยน)
+- **จบงาน:** log การแก้ลง `.toh/memory/changelog.md`
 
-2. ISOLATE (แยกส่วนที่มีปัญหา)
-   ├── หาว่าปัญหาอยู่ไฟล์ไหน
-   ├── หาว่าอยู่ function/component ไหน
-   └── Narrow down ให้เล็กที่สุด
+---
 
-3. IDENTIFY (ระบุ Root Cause)
-   ├── ต้องบอกได้ว่า "ปัญหาคือ X เพราะ Y"
-   └── ❌ ห้ามแก้ถ้ายังบอกไม่ได้!
-
-4. FIX (แก้ไข - 1 อย่างต่อ 1 attempt)
-   ├── แก้ทีละจุด ไม่แก้หลายอย่างพร้อมกัน
-   ├── บันทึกลง changelog.md
-   └── อธิบายว่าแก้อะไร ทำไม
-
-5. VERIFY (ตรวจสอบ)
-   ├── รอ hot reload 3 วินาที
-   ├── ถ้าไม่เห็นผล → restart server
-   ├── ถาม User ว่ายังมีปัญหาไหม
-   └── ถ้ายังมี → กลับไป Step 2 (Attempt +1)
-
-6. 🚨 SAVE MEMORY (MANDATORY!)
-   ├── Update active.md (current state)
-   ├── Update changelog.md (debug attempts + results)
-   ├── Update agents-log.md (agent activity)
-   └── Update decisions.md (if important fix)
-```
-
-## Example Prompts
+## Example
 
 ```bash
-# With error message
 /toh-fix TypeError: Cannot read property 'map' of undefined
-
-# With screenshot/description
-/toh-f dashboard page broken, not loading
-
-# Vague problem
-/toh-fix form submit does nothing
-
-# Build error
-/toh-f npm run build error
-
-# Type error
-/toh-fix TypeScript error in product-form.tsx
-```
-
-## Output Format
-
-```markdown
-## ✅ Fixed!
-
-### Problem:
-`Cannot read property 'map' of undefined` at `ProductList.tsx:15`
-
-### Cause:
-`products` was `undefined` before data finished loading
-
-### Fix:
-```tsx
-// Before
-{products.map(p => ...)}
-
-// After  
-{products?.map(p => ...) ?? <EmptyState />}
-```
-
-### Files modified:
-- `components/features/product-list.tsx`
-
-### Test:
-- Refresh page - should load now
-- Loading state shows before data ready
-```
-
-## Common Fixes
-
-| Error Type | Typical Fix |
-|------------|-------------|
-| `Cannot read property X of undefined` | Add optional chaining `?.` |
-| `Type X is not assignable to Y` | Fix type or add assertion |
-| `Module not found` | Check import path, install package |
-| `Hydration error` | Add `use client` or fix server/client mismatch |
-| `Build error` | Usually type errors, fix one by one |
-
-## Rules
-
-1. **ALWAYS** explain root cause before fixing
-2. **ALWAYS** track attempts in changelog.md
-3. **ALWAYS** verify fix works before reporting
-4. **ALWAYS** follow 3-5-Rewrite Rule
-5. **NEVER** guess & retry in loops
-6. **NEVER** change unrelated code
-7. **NEVER** suppress errors without fixing root cause
-
-## Multi-AI Handoff
-
-เมื่อ User สลับ AI ใน IDE:
-
-```markdown
-1. อ่าน .toh/memory/changelog.md ก่อน!
-
-2. บอก User:
-   "เห็นว่าลองแก้ [ปัญหา] มา [N] รอบแล้ว
-    ลองวิธี [X, Y, Z] ไปแล้ว ยังไม่สำเร็จ
-    จะลองวิธีใหม่คือ [A] ได้ไหมครับ?"
-
-3. ถ้า attempts >= 5:
-   "ลองมา 5 รอบแล้วครับ แนะนำให้ลบแล้วเขียนใหม่"
-```
-
-## Debug Tracking in changelog.md
-
-Track debug attempts in `.toh/memory/changelog.md`:
-
-```markdown
-## [Debug Session] - YYYY-MM-DD
-
-### 🐛 Issue: [Problem description]
-**Page:** /settings/chatbot
-**Status:** 🔴 In Progress
-
-### Debug Attempts
-
-| # | Agent | Hypothesis | Action | Result |
-|---|-------|------------|--------|--------|
-| 1 | Claude Code | h-screen + padding issue | Changed to min-h-screen | ❌ Still broken |
-| 2 | Cursor | flex container overflow | Added overflow-hidden | ❌ Still broken |
-| 3 | Gemini | ... | ... | ✅ Fixed! |
-
-### Resolution
-[What finally fixed it and why]
+/toh-f  dashboard ไม่โหลด หน้าเปล่า
+/toh-fix ทำงานบนเครื่อง แต่ npm run build พัง
 ```
