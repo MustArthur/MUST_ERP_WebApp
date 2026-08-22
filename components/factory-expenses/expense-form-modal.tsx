@@ -56,6 +56,7 @@ const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; 
     LOGISTICS: [
         { value: 'FUEL', label: 'ค่าน้ำมันรถขนส่ง' },
         { value: 'VEHICLE_GENERAL', label: 'ค่าใช้จ่ายทั่วไป (ทางด่วน/บำรุงรักษารถ/ภาษี)' },
+        { value: 'FRESH_LOGISTICS', label: 'Fresh Logistics' },
     ],
     MAINTENANCE: [
         { value: 'SPARE_PARTS', label: 'ค่าอะไหล่' },
@@ -67,6 +68,7 @@ const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; 
     ],
     PROJECT: [
         { value: 'MACHINE_INSTALLATION', label: 'ติดตั้งเครื่องจักร' },
+        { value: 'STAFF_MEALS', label: 'ค่าอาหารพนักงาน' },
     ],
 }
 
@@ -74,9 +76,9 @@ const expenseFormSchema = z.object({
     code: z.string().min(1, 'กรุณาระบุรหัส'),
     category: z.enum(['LOGISTICS', 'MAINTENANCE', 'FACTORY_SUPPLIES', 'PROJECT']),
     subcategory: z.enum([
-        'FUEL', 'VEHICLE_GENERAL', 'SPARE_PARTS',
+        'FUEL', 'VEHICLE_GENERAL', 'FRESH_LOGISTICS', 'SPARE_PARTS',
         'CORRECTIVE_MAINTENANCE', 'PREVENTIVE_MAINTENANCE', 'FACTORY_SUPPLIES',
-        'MACHINE_INSTALLATION',
+        'MACHINE_INSTALLATION', 'STAFF_MEALS',
     ]),
     expenseDate: z.string().min(1, 'กรุณาระบุวันที่'),
     amount: z.number().min(0, 'จำนวนเงินต้องไม่ติดลบ'),

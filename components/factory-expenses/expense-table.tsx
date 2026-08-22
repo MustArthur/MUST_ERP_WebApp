@@ -29,11 +29,13 @@ const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
 const SUBCATEGORY_LABELS: Record<ExpenseSubcategory, string> = {
     FUEL: 'ค่าน้ำมัน',
     VEHICLE_GENERAL: 'ค่าใช้จ่ายทั่วไป (รถ)',
+    FRESH_LOGISTICS: 'Fresh Logistics',
     SPARE_PARTS: 'ค่าอะไหล่',
     CORRECTIVE_MAINTENANCE: 'ซ่อมเครื่องจักร',
     PREVENTIVE_MAINTENANCE: 'บำรุงรักษาตามรอบ',
     FACTORY_SUPPLIES: 'วัสดุสิ้นเปลือง',
     MACHINE_INSTALLATION: 'ติดตั้งเครื่องจักร',
+    STAFF_MEALS: 'ค่าอาหารพนักงาน',
 }
 
 const getCategoryBadge = (category: ExpenseCategory) => {

@@ -5,11 +5,13 @@ export type ExpenseCategory = 'LOGISTICS' | 'MAINTENANCE' | 'FACTORY_SUPPLIES' |
 export type ExpenseSubcategory =
     | 'FUEL'                     // Logistics: ค่าน้ำมันรถขนส่ง
     | 'VEHICLE_GENERAL'          // Logistics: ค่าใช้จ่ายทั่วไป (ทางด่วน/บำรุงรักษารถ/ภาษี)
+    | 'FRESH_LOGISTICS'          // Logistics: ค่าขนส่ง Fresh Logistics (ระบุจำนวนเงินอย่างเดียว)
     | 'SPARE_PARTS'              // Maintenance: ค่าอะไหล่
     | 'CORRECTIVE_MAINTENANCE'   // Maintenance: ค่าซ่อมเครื่องจักร
     | 'PREVENTIVE_MAINTENANCE'   // Maintenance: ค่าบำรุงรักษาเครื่องจักรตามรอบ
     | 'FACTORY_SUPPLIES'         // Factory Supplies: วัสดุของใช้สิ้นเปลืองในโรงงาน
     | 'MACHINE_INSTALLATION'     // Project: ค่าติดตั้งเครื่องจักร
+    | 'STAFF_MEALS'              // Project: ค่าอาหารพนักงาน
 
 export interface FactoryExpense {
     id: string
