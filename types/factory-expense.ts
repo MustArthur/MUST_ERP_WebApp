@@ -12,7 +12,8 @@ export type ExpenseSubcategory =
     | 'FACTORY_SUPPLIES'         // Factory Supplies: วัสดุของใช้สิ้นเปลืองในโรงงาน
     | 'MACHINE_INSTALLATION'     // Project: ค่าติดตั้งเครื่องจักร
     | 'STAFF_MEALS'              // Project: ค่าอาหารพนักงาน
-    | 'PROJECT_CUSTOM'           // Project: ประเภทที่ผู้ใช้พิมพ์เพิ่มเอง (ดูชื่อจริงใน projectTypeName)
+    | 'PROJECT_CUSTOM'           // Project: ประเภทที่ผู้ใช้พิมพ์เพิ่มเอง (ดูชื่อจริงใน customSubcategoryName)
+    | 'LOGISTICS_CUSTOM'         // Logistics: ประเภทที่ผู้ใช้พิมพ์เพิ่มเอง (ดูชื่อจริงใน customSubcategoryName)
 
 export interface FactoryExpense {
     id: string
@@ -29,7 +30,7 @@ export interface FactoryExpense {
     fuelPricePerLiter: number | null
     machineId: string | null
     machineName?: string
-    projectTypeName: string | null
+    customSubcategoryName: string | null
     recordedBy: string | null
     createdAt: string
     updatedAt: string
@@ -47,7 +48,7 @@ export interface CreateFactoryExpenseInput {
     fuelQuantityLiters?: number
     fuelPricePerLiter?: number
     machineId?: string
-    projectTypeName?: string | null
+    customSubcategoryName?: string | null
     recordedBy?: string
 }
 
@@ -62,7 +63,7 @@ export interface UpdateFactoryExpenseInput {
     fuelQuantityLiters?: number
     fuelPricePerLiter?: number
     machineId?: string | null
-    projectTypeName?: string | null
+    customSubcategoryName?: string | null
     recordedBy?: string
 }
 

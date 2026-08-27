@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { FactoryExpense, CreateFactoryExpenseInput, UpdateFactoryExpenseInput } from '@/types/factory-expense'
+import { FactoryExpense, CreateFactoryExpenseInput, UpdateFactoryExpenseInput, ExpenseCategory } from '@/types/factory-expense'
 
 function mapExpense(e: any): FactoryExpense {
     return {
@@ -17,7 +17,7 @@ function mapExpense(e: any): FactoryExpense {
         fuelPricePerLiter: e.fuel_price_per_liter,
         machineId: e.machine_id,
         machineName: e.machines?.name,
-        projectTypeName: e.project_type_name,
+        customSubcategoryName: e.custom_subcategory_name,
         recordedBy: e.recorded_by,
         createdAt: e.created_at,
         updatedAt: e.updated_at,
@@ -83,7 +83,7 @@ export async function createExpense(input: CreateFactoryExpenseInput): Promise<F
             fuel_quantity_liters: input.fuelQuantityLiters ?? null,
             fuel_price_per_liter: input.fuelPricePerLiter ?? null,
             machine_id: input.machineId || null,
-            project_type_name: input.projectTypeName || null,
+            custom_subcategory_name: input.customSubcategoryName || null,
             recorded_by: input.recordedBy || null,
         })
         .select()
@@ -112,7 +112,7 @@ export async function updateExpense(id: string, input: UpdateFactoryExpenseInput
     if (input.fuelQuantityLiters !== undefined) updateData.fuel_quantity_liters = input.fuelQuantityLiters
     if (input.fuelPricePerLiter !== undefined) updateData.fuel_price_per_liter = input.fuelPricePerLiter
     if (input.machineId !== undefined) updateData.machine_id = input.machineId
-    if (input.projectTypeName !== undefined) updateData.project_type_name = input.projectTypeName
+    if (input.customSubcategoryName !== undefined) updateData.custom_subcategory_name = input.customSubcategoryName
     if (input.recordedBy !== undefined) updateData.recorded_by = input.recordedBy
 
     const { error } = await supabase
@@ -146,17 +146,19 @@ export async function deleteExpense(id: string): Promise<boolean> {
 }
 
 /**
- * Get all active custom Project types (user-typed subcategories, remembered for reuse)
+ * Get all active custom subcategories for a category
+ * (user-typed "ประเภท" values, remembered for reuse)
  */
-export async function getProjectTypes(): Promise<{ id: string; name: string }[]> {
+export async function getCustomSubcategories(category: ExpenseCategory): Promise<{ id: string; name: string }[]> {
     const { data, error } = await supabase
-        .from('factory_expense_project_types')
+        .from('factory_expense_custom_subcategories')
         .select('id, name')
+        .eq('category', category)
         .eq('is_active', true)
         .order('name')
 
     if (error) {
-        console.error('Error fetching project types:', error)
+        console.error('Error fetching custom subcategories:', error)
         return []
     }
 
@@ -164,13 +166,14 @@ export async function getProjectTypes(): Promise<{ id: string; name: string }[]>
 }
 
 /**
- * Create a new custom Project type, or return the existing one if the name
- * was already typed before (case-sensitive match on the unique name column)
+ * Create a new custom subcategory for a category, or return the existing one
+ * if the same name was already typed before (unique on category + name)
  */
-export async function createProjectType(name: string): Promise<{ id: string; name: string }> {
+export async function createCustomSubcategory(category: ExpenseCategory, name: string): Promise<{ id: string; name: string }> {
     const { data: existing } = await supabase
-        .from('factory_expense_project_types')
+        .from('factory_expense_custom_subcategories')
         .select('id, name')
+        .eq('category', category)
         .eq('name', name)
         .maybeSingle()
 
@@ -179,13 +182,13 @@ export async function createProjectType(name: string): Promise<{ id: string; nam
     }
 
     const { data, error } = await supabase
-        .from('factory_expense_project_types')
-        .insert({ name })
+        .from('factory_expense_custom_subcategories')
+        .insert({ category, name })
         .select('id, name')
         .single()
 
     if (error) {
-        console.error('Error creating project type:', error)
+        console.error('Error creating custom subcategory:', error)
         throw new Error(error.message)
     }
 

@@ -46,14 +46,14 @@ export default function FactoryExpensesPage() {
         expenses,
         vehicles,
         machines,
-        projectTypes,
+        customSubcategories,
         isLoading,
         filters,
         fetchExpenses,
         fetchVehicles,
         fetchMachines,
-        fetchProjectTypes,
-        createProjectType,
+        fetchCustomSubcategories,
+        createCustomSubcategory,
         createExpense,
         updateExpense,
         deleteExpense,
@@ -68,8 +68,9 @@ export default function FactoryExpensesPage() {
         fetchExpenses()
         fetchVehicles()
         fetchMachines()
-        fetchProjectTypes()
-    }, [fetchExpenses, fetchVehicles, fetchMachines, fetchProjectTypes])
+        fetchCustomSubcategories('PROJECT')
+        fetchCustomSubcategories('LOGISTICS')
+    }, [fetchExpenses, fetchVehicles, fetchMachines, fetchCustomSubcategories])
 
     const filteredExpenses = useMemo(() => {
         return expenses.filter(expense => {
@@ -298,14 +299,14 @@ export default function FactoryExpensesPage() {
                 expense={selectedExpense}
                 vehicles={vehicles}
                 machines={machines}
-                projectTypes={projectTypes}
+                customSubcategories={customSubcategories}
                 isOpen={showFormModal}
                 onClose={() => {
                     setShowFormModal(false)
                     setSelectedExpense(null)
                 }}
                 onSave={handleSaveExpense}
-                onCreateProjectType={createProjectType}
+                onCreateCustomSubcategory={createCustomSubcategory}
             />
 
             <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>

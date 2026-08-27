@@ -4,14 +4,15 @@ import {
     CreateFactoryExpenseInput,
     UpdateFactoryExpenseInput,
     FactoryExpenseFilters,
+    ExpenseCategory,
 } from '@/types/factory-expense'
 import {
     getAllExpenses,
     createExpense,
     updateExpense,
     deleteExpense,
-    getProjectTypes,
-    createProjectType,
+    getCustomSubcategories,
+    createCustomSubcategory,
 } from '@/lib/api/factory-expenses'
 import { supabase } from '@/lib/supabase'
 
@@ -26,7 +27,7 @@ export interface ExpenseMachineOption {
     name: string
 }
 
-export interface ExpenseProjectTypeOption {
+export interface ExpenseCustomSubcategoryOption {
     id: string
     name: string
 }
@@ -36,7 +37,7 @@ interface FactoryExpensesState {
     expenses: FactoryExpense[]
     vehicles: ExpenseVehicleOption[]
     machines: ExpenseMachineOption[]
-    projectTypes: ExpenseProjectTypeOption[]
+    customSubcategories: Partial<Record<ExpenseCategory, ExpenseCustomSubcategoryOption[]>>
 
     // UI State
     isLoading: boolean
@@ -47,8 +48,8 @@ interface FactoryExpensesState {
     fetchExpenses: () => Promise<void>
     fetchVehicles: () => Promise<void>
     fetchMachines: () => Promise<void>
-    fetchProjectTypes: () => Promise<void>
-    createProjectType: (name: string) => Promise<ExpenseProjectTypeOption | null>
+    fetchCustomSubcategories: (category: ExpenseCategory) => Promise<void>
+    createCustomSubcategory: (category: ExpenseCategory, name: string) => Promise<ExpenseCustomSubcategoryOption | null>
     createExpense: (input: CreateFactoryExpenseInput) => Promise<FactoryExpense | null>
     updateExpense: (id: string, input: UpdateFactoryExpenseInput) => Promise<FactoryExpense | null>
     deleteExpense: (id: string) => Promise<boolean>
@@ -67,7 +68,7 @@ export const useFactoryExpensesStore = create<FactoryExpensesState>((set, get) =
     expenses: [],
     vehicles: [],
     machines: [],
-    projectTypes: [],
+    customSubcategories: {},
     isLoading: false,
     error: null,
     filters: defaultFilters,
@@ -119,24 +120,29 @@ export const useFactoryExpensesStore = create<FactoryExpensesState>((set, get) =
         set({ machines: data || [] })
     },
 
-    // Fetch custom Project types (previously user-typed, for the creatable dropdown)
-    fetchProjectTypes: async () => {
-        const projectTypes = await getProjectTypes()
-        set({ projectTypes })
+    // Fetch a category's custom subcategories (previously user-typed, for the creatable dropdown)
+    fetchCustomSubcategories: async (category: ExpenseCategory) => {
+        const list = await getCustomSubcategories(category)
+        set(state => ({
+            customSubcategories: { ...state.customSubcategories, [category]: list },
+        }))
     },
 
-    // Create a new custom Project type (or reuse an existing one with the same name)
-    createProjectType: async (name: string) => {
+    // Create a new custom subcategory for a category (or reuse an existing one with the same name)
+    createCustomSubcategory: async (category: ExpenseCategory, name: string) => {
         try {
-            const projectType = await createProjectType(name)
+            const created = await createCustomSubcategory(category, name)
             set(state => {
-                const exists = state.projectTypes.some(pt => pt.id === projectType.id)
-                if (exists) return state
+                const current = state.customSubcategories[category] ?? []
+                if (current.some(c => c.id === created.id)) return state
                 return {
-                    projectTypes: [...state.projectTypes, projectType].sort((a, b) => a.name.localeCompare(b.name)),
+                    customSubcategories: {
+                        ...state.customSubcategories,
+                        [category]: [...current, created].sort((a, b) => a.name.localeCompare(b.name)),
+                    },
                 }
             })
-            return projectType
+            return created
         } catch (error) {
             set({ error: (error as Error).message })
             throw error

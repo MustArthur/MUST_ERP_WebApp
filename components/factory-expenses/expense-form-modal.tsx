@@ -12,7 +12,7 @@ import {
     ExpenseSubcategory,
 } from '@/types/factory-expense'
 import { generateExpenseCode } from '@/lib/api/factory-expenses'
-import { ExpenseVehicleOption, ExpenseMachineOption, ExpenseProjectTypeOption } from '@/stores/factory-expenses-store'
+import { ExpenseVehicleOption, ExpenseMachineOption, ExpenseCustomSubcategoryOption } from '@/stores/factory-expenses-store'
 import {
     Dialog,
     DialogContent,
@@ -57,6 +57,7 @@ const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; 
         { value: 'FUEL', label: 'ค่าน้ำมันรถขนส่ง' },
         { value: 'VEHICLE_GENERAL', label: 'ค่าใช้จ่ายทั่วไป (ทางด่วน/บำรุงรักษารถ/ภาษี)' },
         { value: 'FRESH_LOGISTICS', label: 'Fresh Logistics' },
+        { value: 'LOGISTICS_CUSTOM', label: 'อื่นๆ (พิมพ์เอง)' },
     ],
     MAINTENANCE: [
         { value: 'SPARE_PARTS', label: 'ค่าอะไหล่' },
@@ -73,13 +74,20 @@ const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; 
     ],
 }
 
+// Categories whose "ประเภท" field is a creatable combobox; maps to the
+// enum value that flags "the real name lives in customSubcategoryName".
+const CUSTOM_VALUE_BY_CATEGORY: Partial<Record<ExpenseCategory, ExpenseSubcategory>> = {
+    PROJECT: 'PROJECT_CUSTOM',
+    LOGISTICS: 'LOGISTICS_CUSTOM',
+}
+
 const expenseFormSchema = z.object({
     code: z.string().min(1, 'กรุณาระบุรหัส'),
     category: z.enum(['LOGISTICS', 'MAINTENANCE', 'FACTORY_SUPPLIES', 'PROJECT']),
     subcategory: z.enum([
         'FUEL', 'VEHICLE_GENERAL', 'FRESH_LOGISTICS', 'SPARE_PARTS',
         'CORRECTIVE_MAINTENANCE', 'PREVENTIVE_MAINTENANCE', 'FACTORY_SUPPLIES',
-        'MACHINE_INSTALLATION', 'STAFF_MEALS', 'PROJECT_CUSTOM',
+        'MACHINE_INSTALLATION', 'STAFF_MEALS', 'PROJECT_CUSTOM', 'LOGISTICS_CUSTOM',
     ]),
     expenseDate: z.string().min(1, 'กรุณาระบุวันที่'),
     amount: z.number().min(0, 'จำนวนเงินต้องไม่ติดลบ'),
@@ -89,7 +97,7 @@ const expenseFormSchema = z.object({
     fuelQuantityLiters: z.number().optional(),
     fuelPricePerLiter: z.number().optional(),
     machineId: z.string().optional(),
-    projectTypeName: z.string().optional(),
+    customSubcategoryName: z.string().optional(),
     recordedBy: z.string().optional(),
 })
 
@@ -107,7 +115,7 @@ const emptyDefaults: ExpenseFormValues = {
     fuelQuantityLiters: 0,
     fuelPricePerLiter: 0,
     machineId: '',
-    projectTypeName: '',
+    customSubcategoryName: '',
     recordedBy: 'กิตติชัย (ตั้ม)',
 }
 
@@ -115,25 +123,25 @@ interface ExpenseFormModalProps {
     expense?: FactoryExpense | null
     vehicles: ExpenseVehicleOption[]
     machines: ExpenseMachineOption[]
-    projectTypes: ExpenseProjectTypeOption[]
+    customSubcategories: Partial<Record<ExpenseCategory, ExpenseCustomSubcategoryOption[]>>
     isOpen: boolean
     onClose: () => void
     onSave: (data: CreateFactoryExpenseInput | UpdateFactoryExpenseInput, isNew: boolean) => Promise<void>
-    onCreateProjectType: (name: string) => Promise<ExpenseProjectTypeOption | null>
+    onCreateCustomSubcategory: (category: ExpenseCategory, name: string) => Promise<ExpenseCustomSubcategoryOption | null>
 }
 
 export function ExpenseFormModal({
     expense,
     vehicles,
     machines,
-    projectTypes,
+    customSubcategories,
     isOpen,
     onClose,
     onSave,
-    onCreateProjectType,
+    onCreateCustomSubcategory,
 }: ExpenseFormModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [isCreatingProjectType, setIsCreatingProjectType] = useState(false)
+    const [isCreatingCustomSubcategory, setIsCreatingCustomSubcategory] = useState(false)
     const isEditing = !!expense
 
     const form = useForm<ExpenseFormValues>({
@@ -143,7 +151,7 @@ export function ExpenseFormModal({
 
     const watchedCategory = useWatch({ control: form.control, name: 'category' })
     const watchedSubcategory = useWatch({ control: form.control, name: 'subcategory' })
-    const watchedProjectTypeName = useWatch({ control: form.control, name: 'projectTypeName' })
+    const watchedCustomSubcategoryName = useWatch({ control: form.control, name: 'customSubcategoryName' })
     const watchedLiters = useWatch({ control: form.control, name: 'fuelQuantityLiters' })
     const watchedPricePerLiter = useWatch({ control: form.control, name: 'fuelPricePerLiter' })
 
@@ -179,7 +187,7 @@ export function ExpenseFormModal({
                     fuelQuantityLiters: expense.fuelQuantityLiters || 0,
                     fuelPricePerLiter: expense.fuelPricePerLiter || 0,
                     machineId: expense.machineId || '',
-                    projectTypeName: expense.projectTypeName || '',
+                    customSubcategoryName: expense.customSubcategoryName || '',
                     recordedBy: expense.recordedBy || '',
                 })
             } else {
@@ -212,7 +220,10 @@ export function ExpenseFormModal({
                 fuelQuantityLiters: data.fuelQuantityLiters || undefined,
                 fuelPricePerLiter: data.fuelPricePerLiter || undefined,
                 machineId: data.machineId || undefined,
-                projectTypeName: data.subcategory === 'PROJECT_CUSTOM' ? (data.projectTypeName || undefined) : null,
+                customSubcategoryName:
+                    data.subcategory === 'PROJECT_CUSTOM' || data.subcategory === 'LOGISTICS_CUSTOM'
+                        ? (data.customSubcategoryName || undefined)
+                        : null,
                 recordedBy: data.recordedBy || undefined,
             }
             if (isEditing) {
@@ -228,6 +239,10 @@ export function ExpenseFormModal({
         }
     }
 
+    // For PROJECT / LOGISTICS the "ประเภท" field is a creatable combobox;
+    // customValue is the enum flag its user-typed entries map to.
+    const customValue = CUSTOM_VALUE_BY_CATEGORY[watchedCategory]
+    const categoryCustomTypes = customSubcategories[watchedCategory] ?? []
     const isFuel = watchedSubcategory === 'FUEL'
     const isVehicleGeneral = watchedSubcategory === 'VEHICLE_GENERAL'
     const isMaintenance = ['SPARE_PARTS', 'CORRECTIVE_MAINTENANCE', 'PREVENTIVE_MAINTENANCE'].includes(watchedSubcategory)
@@ -314,40 +329,40 @@ export function ExpenseFormModal({
                                     )}
                                 />
 
-                                {watchedCategory === 'PROJECT' ? (
+                                {customValue ? (
                                     <FormItem>
                                         <FormLabel>ประเภท *</FormLabel>
                                         <FormControl>
                                             <SearchableSelect
                                                 options={[
-                                                    ...SUBCATEGORY_OPTIONS.PROJECT.filter(o => o.value !== 'PROJECT_CUSTOM'),
-                                                    ...projectTypes.map(pt => ({ value: `custom:${pt.name}`, label: pt.name })),
+                                                    ...SUBCATEGORY_OPTIONS[watchedCategory].filter(o => o.value !== customValue),
+                                                    ...categoryCustomTypes.map(ct => ({ value: `custom:${ct.name}`, label: ct.name })),
                                                 ]}
-                                                value={watchedSubcategory === 'PROJECT_CUSTOM' ? `custom:${watchedProjectTypeName || ''}` : watchedSubcategory}
+                                                value={watchedSubcategory === customValue ? `custom:${watchedCustomSubcategoryName || ''}` : watchedSubcategory}
                                                 onValueChange={(val) => {
                                                     if (val.startsWith('custom:')) {
-                                                        form.setValue('subcategory', 'PROJECT_CUSTOM', { shouldValidate: true })
-                                                        form.setValue('projectTypeName', val.slice('custom:'.length))
+                                                        form.setValue('subcategory', customValue, { shouldValidate: true })
+                                                        form.setValue('customSubcategoryName', val.slice('custom:'.length))
                                                     } else {
                                                         form.setValue('subcategory', val as ExpenseSubcategory, { shouldValidate: true })
-                                                        form.setValue('projectTypeName', undefined)
+                                                        form.setValue('customSubcategoryName', undefined)
                                                     }
                                                 }}
                                                 placeholder="เลือกหรือพิมพ์ประเภท"
                                                 searchPlaceholder="พิมพ์ประเภทใหม่..."
                                                 emptyMessage="ไม่พบประเภท พิมพ์เพื่อเพิ่มใหม่"
                                                 creatable
-                                                isCreating={isCreatingProjectType}
+                                                isCreating={isCreatingCustomSubcategory}
                                                 onCreateOption={async (label) => {
-                                                    setIsCreatingProjectType(true)
+                                                    setIsCreatingCustomSubcategory(true)
                                                     try {
-                                                        const created = await onCreateProjectType(label)
-                                                        form.setValue('subcategory', 'PROJECT_CUSTOM', { shouldValidate: true })
-                                                        form.setValue('projectTypeName', created?.name || label)
+                                                        const created = await onCreateCustomSubcategory(watchedCategory, label)
+                                                        form.setValue('subcategory', customValue, { shouldValidate: true })
+                                                        form.setValue('customSubcategoryName', created?.name || label)
                                                     } catch (error) {
-                                                        console.error('Error creating project type:', error)
+                                                        console.error('Error creating custom subcategory:', error)
                                                     } finally {
-                                                        setIsCreatingProjectType(false)
+                                                        setIsCreatingCustomSubcategory(false)
                                                     }
                                                 }}
                                             />

@@ -37,11 +37,14 @@ const SUBCATEGORY_LABELS: Record<ExpenseSubcategory, string> = {
     MACHINE_INSTALLATION: 'ติดตั้งเครื่องจักร',
     STAFF_MEALS: 'ค่าอาหารพนักงาน',
     PROJECT_CUSTOM: 'อื่นๆ',
+    LOGISTICS_CUSTOM: 'อื่นๆ',
 }
 
+const CUSTOM_SUBCATEGORIES: ExpenseSubcategory[] = ['PROJECT_CUSTOM', 'LOGISTICS_CUSTOM']
+
 const getSubcategoryLabel = (expense: FactoryExpense) =>
-    expense.subcategory === 'PROJECT_CUSTOM'
-        ? (expense.projectTypeName || SUBCATEGORY_LABELS.PROJECT_CUSTOM)
+    CUSTOM_SUBCATEGORIES.includes(expense.subcategory)
+        ? (expense.customSubcategoryName || SUBCATEGORY_LABELS[expense.subcategory])
         : SUBCATEGORY_LABELS[expense.subcategory]
 
 const getCategoryBadge = (category: ExpenseCategory) => {
