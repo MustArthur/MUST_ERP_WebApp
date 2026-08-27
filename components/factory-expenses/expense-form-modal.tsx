@@ -12,7 +12,7 @@ import {
     ExpenseSubcategory,
 } from '@/types/factory-expense'
 import { generateExpenseCode } from '@/lib/api/factory-expenses'
-import { ExpenseVehicleOption, ExpenseMachineOption } from '@/stores/factory-expenses-store'
+import { ExpenseVehicleOption, ExpenseMachineOption, ExpenseProjectTypeOption } from '@/stores/factory-expenses-store'
 import {
     Dialog,
     DialogContent,
@@ -69,6 +69,7 @@ const SUBCATEGORY_OPTIONS: Record<ExpenseCategory, { value: ExpenseSubcategory; 
     PROJECT: [
         { value: 'MACHINE_INSTALLATION', label: 'ติดตั้งเครื่องจักร' },
         { value: 'STAFF_MEALS', label: 'ค่าอาหารพนักงาน' },
+        { value: 'PROJECT_CUSTOM', label: 'อื่นๆ (พิมพ์เอง)' },
     ],
 }
 
@@ -78,7 +79,7 @@ const expenseFormSchema = z.object({
     subcategory: z.enum([
         'FUEL', 'VEHICLE_GENERAL', 'FRESH_LOGISTICS', 'SPARE_PARTS',
         'CORRECTIVE_MAINTENANCE', 'PREVENTIVE_MAINTENANCE', 'FACTORY_SUPPLIES',
-        'MACHINE_INSTALLATION', 'STAFF_MEALS',
+        'MACHINE_INSTALLATION', 'STAFF_MEALS', 'PROJECT_CUSTOM',
     ]),
     expenseDate: z.string().min(1, 'กรุณาระบุวันที่'),
     amount: z.number().min(0, 'จำนวนเงินต้องไม่ติดลบ'),
@@ -88,6 +89,7 @@ const expenseFormSchema = z.object({
     fuelQuantityLiters: z.number().optional(),
     fuelPricePerLiter: z.number().optional(),
     machineId: z.string().optional(),
+    projectTypeName: z.string().optional(),
     recordedBy: z.string().optional(),
 })
 
@@ -105,6 +107,7 @@ const emptyDefaults: ExpenseFormValues = {
     fuelQuantityLiters: 0,
     fuelPricePerLiter: 0,
     machineId: '',
+    projectTypeName: '',
     recordedBy: 'กิตติชัย (ตั้ม)',
 }
 
@@ -112,20 +115,25 @@ interface ExpenseFormModalProps {
     expense?: FactoryExpense | null
     vehicles: ExpenseVehicleOption[]
     machines: ExpenseMachineOption[]
+    projectTypes: ExpenseProjectTypeOption[]
     isOpen: boolean
     onClose: () => void
     onSave: (data: CreateFactoryExpenseInput | UpdateFactoryExpenseInput, isNew: boolean) => Promise<void>
+    onCreateProjectType: (name: string) => Promise<ExpenseProjectTypeOption | null>
 }
 
 export function ExpenseFormModal({
     expense,
     vehicles,
     machines,
+    projectTypes,
     isOpen,
     onClose,
     onSave,
+    onCreateProjectType,
 }: ExpenseFormModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isCreatingProjectType, setIsCreatingProjectType] = useState(false)
     const isEditing = !!expense
 
     const form = useForm<ExpenseFormValues>({
@@ -135,6 +143,7 @@ export function ExpenseFormModal({
 
     const watchedCategory = useWatch({ control: form.control, name: 'category' })
     const watchedSubcategory = useWatch({ control: form.control, name: 'subcategory' })
+    const watchedProjectTypeName = useWatch({ control: form.control, name: 'projectTypeName' })
     const watchedLiters = useWatch({ control: form.control, name: 'fuelQuantityLiters' })
     const watchedPricePerLiter = useWatch({ control: form.control, name: 'fuelPricePerLiter' })
 
@@ -170,6 +179,7 @@ export function ExpenseFormModal({
                     fuelQuantityLiters: expense.fuelQuantityLiters || 0,
                     fuelPricePerLiter: expense.fuelPricePerLiter || 0,
                     machineId: expense.machineId || '',
+                    projectTypeName: expense.projectTypeName || '',
                     recordedBy: expense.recordedBy || '',
                 })
             } else {
@@ -202,6 +212,7 @@ export function ExpenseFormModal({
                 fuelQuantityLiters: data.fuelQuantityLiters || undefined,
                 fuelPricePerLiter: data.fuelPricePerLiter || undefined,
                 machineId: data.machineId || undefined,
+                projectTypeName: data.subcategory === 'PROJECT_CUSTOM' ? (data.projectTypeName || undefined) : null,
                 recordedBy: data.recordedBy || undefined,
             }
             if (isEditing) {
@@ -303,28 +314,74 @@ export function ExpenseFormModal({
                                     )}
                                 />
 
-                                <FormField
-                                    control={form.control}
-                                    name="subcategory"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>ประเภท *</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="เลือกประเภท" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {SUBCATEGORY_OPTIONS[watchedCategory].map((opt) => (
-                                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                {watchedCategory === 'PROJECT' ? (
+                                    <FormItem>
+                                        <FormLabel>ประเภท *</FormLabel>
+                                        <FormControl>
+                                            <SearchableSelect
+                                                options={[
+                                                    ...SUBCATEGORY_OPTIONS.PROJECT.filter(o => o.value !== 'PROJECT_CUSTOM'),
+                                                    ...projectTypes.map(pt => ({ value: `custom:${pt.name}`, label: pt.name })),
+                                                ]}
+                                                value={watchedSubcategory === 'PROJECT_CUSTOM' ? `custom:${watchedProjectTypeName || ''}` : watchedSubcategory}
+                                                onValueChange={(val) => {
+                                                    if (val.startsWith('custom:')) {
+                                                        form.setValue('subcategory', 'PROJECT_CUSTOM', { shouldValidate: true })
+                                                        form.setValue('projectTypeName', val.slice('custom:'.length))
+                                                    } else {
+                                                        form.setValue('subcategory', val as ExpenseSubcategory, { shouldValidate: true })
+                                                        form.setValue('projectTypeName', undefined)
+                                                    }
+                                                }}
+                                                placeholder="เลือกหรือพิมพ์ประเภท"
+                                                searchPlaceholder="พิมพ์ประเภทใหม่..."
+                                                emptyMessage="ไม่พบประเภท พิมพ์เพื่อเพิ่มใหม่"
+                                                creatable
+                                                isCreating={isCreatingProjectType}
+                                                onCreateOption={async (label) => {
+                                                    setIsCreatingProjectType(true)
+                                                    try {
+                                                        const created = await onCreateProjectType(label)
+                                                        form.setValue('subcategory', 'PROJECT_CUSTOM', { shouldValidate: true })
+                                                        form.setValue('projectTypeName', created?.name || label)
+                                                    } catch (error) {
+                                                        console.error('Error creating project type:', error)
+                                                    } finally {
+                                                        setIsCreatingProjectType(false)
+                                                    }
+                                                }}
+                                            />
+                                        </FormControl>
+                                        {form.formState.errors.subcategory && (
+                                            <p className="text-sm font-medium text-destructive">
+                                                {form.formState.errors.subcategory.message}
+                                            </p>
+                                        )}
+                                    </FormItem>
+                                ) : (
+                                    <FormField
+                                        control={form.control}
+                                        name="subcategory"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>ประเภท *</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="เลือกประเภท" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {SUBCATEGORY_OPTIONS[watchedCategory].map((opt) => (
+                                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
                             </div>
 
                             {isFuel && (

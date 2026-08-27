@@ -5,7 +5,14 @@ import {
     UpdateFactoryExpenseInput,
     FactoryExpenseFilters,
 } from '@/types/factory-expense'
-import { getAllExpenses, createExpense, updateExpense, deleteExpense } from '@/lib/api/factory-expenses'
+import {
+    getAllExpenses,
+    createExpense,
+    updateExpense,
+    deleteExpense,
+    getProjectTypes,
+    createProjectType,
+} from '@/lib/api/factory-expenses'
 import { supabase } from '@/lib/supabase'
 
 export interface ExpenseVehicleOption {
@@ -19,11 +26,17 @@ export interface ExpenseMachineOption {
     name: string
 }
 
+export interface ExpenseProjectTypeOption {
+    id: string
+    name: string
+}
+
 interface FactoryExpensesState {
     // Data
     expenses: FactoryExpense[]
     vehicles: ExpenseVehicleOption[]
     machines: ExpenseMachineOption[]
+    projectTypes: ExpenseProjectTypeOption[]
 
     // UI State
     isLoading: boolean
@@ -34,6 +47,8 @@ interface FactoryExpensesState {
     fetchExpenses: () => Promise<void>
     fetchVehicles: () => Promise<void>
     fetchMachines: () => Promise<void>
+    fetchProjectTypes: () => Promise<void>
+    createProjectType: (name: string) => Promise<ExpenseProjectTypeOption | null>
     createExpense: (input: CreateFactoryExpenseInput) => Promise<FactoryExpense | null>
     updateExpense: (id: string, input: UpdateFactoryExpenseInput) => Promise<FactoryExpense | null>
     deleteExpense: (id: string) => Promise<boolean>
@@ -52,6 +67,7 @@ export const useFactoryExpensesStore = create<FactoryExpensesState>((set, get) =
     expenses: [],
     vehicles: [],
     machines: [],
+    projectTypes: [],
     isLoading: false,
     error: null,
     filters: defaultFilters,
@@ -101,6 +117,30 @@ export const useFactoryExpensesStore = create<FactoryExpensesState>((set, get) =
             return
         }
         set({ machines: data || [] })
+    },
+
+    // Fetch custom Project types (previously user-typed, for the creatable dropdown)
+    fetchProjectTypes: async () => {
+        const projectTypes = await getProjectTypes()
+        set({ projectTypes })
+    },
+
+    // Create a new custom Project type (or reuse an existing one with the same name)
+    createProjectType: async (name: string) => {
+        try {
+            const projectType = await createProjectType(name)
+            set(state => {
+                const exists = state.projectTypes.some(pt => pt.id === projectType.id)
+                if (exists) return state
+                return {
+                    projectTypes: [...state.projectTypes, projectType].sort((a, b) => a.name.localeCompare(b.name)),
+                }
+            })
+            return projectType
+        } catch (error) {
+            set({ error: (error as Error).message })
+            throw error
+        }
     },
 
     // Create expense

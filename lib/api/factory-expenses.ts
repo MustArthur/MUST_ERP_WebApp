@@ -17,6 +17,7 @@ function mapExpense(e: any): FactoryExpense {
         fuelPricePerLiter: e.fuel_price_per_liter,
         machineId: e.machine_id,
         machineName: e.machines?.name,
+        projectTypeName: e.project_type_name,
         recordedBy: e.recorded_by,
         createdAt: e.created_at,
         updatedAt: e.updated_at,
@@ -82,6 +83,7 @@ export async function createExpense(input: CreateFactoryExpenseInput): Promise<F
             fuel_quantity_liters: input.fuelQuantityLiters ?? null,
             fuel_price_per_liter: input.fuelPricePerLiter ?? null,
             machine_id: input.machineId || null,
+            project_type_name: input.projectTypeName || null,
             recorded_by: input.recordedBy || null,
         })
         .select()
@@ -110,6 +112,7 @@ export async function updateExpense(id: string, input: UpdateFactoryExpenseInput
     if (input.fuelQuantityLiters !== undefined) updateData.fuel_quantity_liters = input.fuelQuantityLiters
     if (input.fuelPricePerLiter !== undefined) updateData.fuel_price_per_liter = input.fuelPricePerLiter
     if (input.machineId !== undefined) updateData.machine_id = input.machineId
+    if (input.projectTypeName !== undefined) updateData.project_type_name = input.projectTypeName
     if (input.recordedBy !== undefined) updateData.recorded_by = input.recordedBy
 
     const { error } = await supabase
@@ -140,6 +143,53 @@ export async function deleteExpense(id: string): Promise<boolean> {
     }
 
     return true
+}
+
+/**
+ * Get all active custom Project types (user-typed subcategories, remembered for reuse)
+ */
+export async function getProjectTypes(): Promise<{ id: string; name: string }[]> {
+    const { data, error } = await supabase
+        .from('factory_expense_project_types')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name')
+
+    if (error) {
+        console.error('Error fetching project types:', error)
+        return []
+    }
+
+    return data || []
+}
+
+/**
+ * Create a new custom Project type, or return the existing one if the name
+ * was already typed before (case-sensitive match on the unique name column)
+ */
+export async function createProjectType(name: string): Promise<{ id: string; name: string }> {
+    const { data: existing } = await supabase
+        .from('factory_expense_project_types')
+        .select('id, name')
+        .eq('name', name)
+        .maybeSingle()
+
+    if (existing) {
+        return existing
+    }
+
+    const { data, error } = await supabase
+        .from('factory_expense_project_types')
+        .insert({ name })
+        .select('id, name')
+        .single()
+
+    if (error) {
+        console.error('Error creating project type:', error)
+        throw new Error(error.message)
+    }
+
+    return data
 }
 
 /**

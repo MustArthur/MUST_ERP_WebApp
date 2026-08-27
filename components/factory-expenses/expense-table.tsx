@@ -36,7 +36,13 @@ const SUBCATEGORY_LABELS: Record<ExpenseSubcategory, string> = {
     FACTORY_SUPPLIES: 'วัสดุสิ้นเปลือง',
     MACHINE_INSTALLATION: 'ติดตั้งเครื่องจักร',
     STAFF_MEALS: 'ค่าอาหารพนักงาน',
+    PROJECT_CUSTOM: 'อื่นๆ',
 }
+
+const getSubcategoryLabel = (expense: FactoryExpense) =>
+    expense.subcategory === 'PROJECT_CUSTOM'
+        ? (expense.projectTypeName || SUBCATEGORY_LABELS.PROJECT_CUSTOM)
+        : SUBCATEGORY_LABELS[expense.subcategory]
 
 const getCategoryBadge = (category: ExpenseCategory) => {
     switch (category) {
@@ -81,7 +87,7 @@ export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) 
                                     {getCategoryBadge(expense.category)}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-700">
-                                    {SUBCATEGORY_LABELS[expense.subcategory]}
+                                    {getSubcategoryLabel(expense)}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-700">
                                     {expense.vehicleName || expense.machineName || '-'}

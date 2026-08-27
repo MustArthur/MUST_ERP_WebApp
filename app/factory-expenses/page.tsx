@@ -46,11 +46,14 @@ export default function FactoryExpensesPage() {
         expenses,
         vehicles,
         machines,
+        projectTypes,
         isLoading,
         filters,
         fetchExpenses,
         fetchVehicles,
         fetchMachines,
+        fetchProjectTypes,
+        createProjectType,
         createExpense,
         updateExpense,
         deleteExpense,
@@ -65,7 +68,8 @@ export default function FactoryExpensesPage() {
         fetchExpenses()
         fetchVehicles()
         fetchMachines()
-    }, [fetchExpenses, fetchVehicles, fetchMachines])
+        fetchProjectTypes()
+    }, [fetchExpenses, fetchVehicles, fetchMachines, fetchProjectTypes])
 
     const filteredExpenses = useMemo(() => {
         return expenses.filter(expense => {
@@ -294,12 +298,14 @@ export default function FactoryExpensesPage() {
                 expense={selectedExpense}
                 vehicles={vehicles}
                 machines={machines}
+                projectTypes={projectTypes}
                 isOpen={showFormModal}
                 onClose={() => {
                     setShowFormModal(false)
                     setSelectedExpense(null)
                 }}
                 onSave={handleSaveExpense}
+                onCreateProjectType={createProjectType}
             />
 
             <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>

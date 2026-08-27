@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Check, ChevronsUpDown, Search } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +26,12 @@ interface SearchableSelectProps {
   emptyMessage?: string
   disabled?: boolean
   className?: string
+  /** Allow typing a value that isn't in `options` yet and creating it inline */
+  creatable?: boolean
+  /** Called when the user picks the "+ เพิ่ม..." row for a typed value not in `options` */
+  onCreateOption?: (label: string) => void | Promise<void>
+  /** Disables the create row and shows a pending state while a create is in flight */
+  isCreating?: boolean
 }
 
 export function SearchableSelect({
@@ -37,6 +43,9 @@ export function SearchableSelect({
   emptyMessage = 'ไม่พบข้อมูล',
   disabled,
   className,
+  creatable = false,
+  onCreateOption,
+  isCreating = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
@@ -51,6 +60,20 @@ export function SearchableSelect({
         opt.description?.toLowerCase().includes(lower)
     )
   }, [options, search])
+
+  const trimmedSearch = search.trim()
+  const canCreate =
+    creatable &&
+    !!onCreateOption &&
+    trimmedSearch.length > 0 &&
+    !options.some(opt => opt.label.toLowerCase() === trimmedSearch.toLowerCase())
+
+  const handleCreate = async () => {
+    if (!onCreateOption || !trimmedSearch) return
+    await onCreateOption(trimmedSearch)
+    setSearch('')
+    setOpen(false)
+  }
 
   const selectedOption = options.find(opt => opt.value === value)
 
@@ -81,7 +104,7 @@ export function SearchableSelect({
           />
         </div>
         <div className="max-h-60 overflow-y-auto">
-          {filteredOptions.length === 0 ? (
+          {filteredOptions.length === 0 && !canCreate ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
               {emptyMessage}
             </div>
@@ -116,6 +139,18 @@ export function SearchableSelect({
                   </div>
                 </div>
               ))}
+              {canCreate && (
+                <div
+                  className={cn(
+                    'flex cursor-pointer items-center rounded-sm px-2 py-2 text-sm text-blue-600 hover:bg-accent',
+                    isCreating && 'pointer-events-none opacity-50'
+                  )}
+                  onClick={handleCreate}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>{isCreating ? 'กำลังเพิ่ม...' : `เพิ่ม "${trimmedSearch}"`}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
