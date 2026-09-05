@@ -240,6 +240,8 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
 
     if (input.name !== undefined) updateData.name = input.name
     if (input.code !== undefined) updateData.code = input.code
+    if (input.outputItemId !== undefined) updateData.output_item_id = input.outputItemId
+    if (input.outputUomId !== undefined) updateData.output_uom_id = input.outputUomId
     if (input.outputQty !== undefined) updateData.output_qty = input.outputQty
     if (input.batchSize !== undefined) updateData.standard_batch_size = input.batchSize
     if (input.expectedYield !== undefined) updateData.expected_yield_percent = input.expectedYield
