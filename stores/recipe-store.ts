@@ -355,6 +355,31 @@ export function calculateIngredientCost(qty: number, scrap: number, cost: number
   return { qtyWithScrap, totalCost }
 }
 
+export function calculateBottleCount(
+  ingredients: { qty: number; uom: string }[],
+  bottleSize: number,
+  expectedYield: number = 100
+): { totalML: number; theoreticalBottles: number; actualBottles: number } {
+  const toMilliliters = (qty: number, uom: string): number => {
+    switch (uom) {
+      case 'L': return qty * 1000
+      case 'ML': return qty
+      case 'G': return qty // 1g ≈ 1ml สำหรับของเหลว
+      default: return 0
+    }
+  }
+
+  const totalML = ingredients
+    .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
+    .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
+
+  const theoreticalBottles = bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
+  const yieldPercent = expectedYield > 0 ? expectedYield : 100
+  const actualBottles = bottleSize > 0 ? Math.floor((totalML * yieldPercent / 100) / bottleSize) : 0
+
+  return { totalML, theoreticalBottles, actualBottles }
+}
+
 export function calculateRecipeCost(recipe: Recipe): { totalMaterialCost: number; costPerUnit: number } {
   const totalMaterialCost = recipe.ingredients.reduce((sum, ing) => {
     const { totalCost } = calculateIngredientCost(ing.qty, ing.scrap, ing.cost)

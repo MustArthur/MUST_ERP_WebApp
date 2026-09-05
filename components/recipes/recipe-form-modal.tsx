@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Trash2, Check, Calculator, GripVertical, Eye, EyeOff } from 'lucide-react'
 import { getRecipeIngredients, getOutputProducts, getUnitsOfMeasure, Item } from '@/lib/api/items'
+import { calculateBottleCount } from '@/stores/recipe-store'
 import type { UnitOfMeasure as UOMType } from '@/types/item'
 import {
   DndContext,
@@ -284,27 +285,10 @@ export function RecipeFormModal({
     }
   }
 
-  const toMilliliters = (qty: number, uom: string): number => {
-    switch (uom) {
-      case 'L': return qty * 1000
-      case 'ML': return qty
-      case 'G': return qty
-      default: return 0
-    }
-  }
-
   // Only count non-excluded ingredients in calculations
   const activeIngredients = ingredients.filter(i => !i.isExcluded)
 
-  const calculateTotalML = (): number =>
-    activeIngredients
-      .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
-      .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
-
-  const calculateBottles = (): number => {
-    const totalML = calculateTotalML()
-    return bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
-  }
+  const bottleCalc = calculateBottleCount(activeIngredients, bottleSize, expectedYield)
 
   const calculateTotalCost = (): number =>
     activeIngredients.reduce((sum, ing) => {
@@ -313,9 +297,8 @@ export function RecipeFormModal({
     }, 0)
 
   const calculateCostPerBottle = (): number => {
-    const bottles = calculateBottles()
     const totalCost = calculateTotalCost()
-    return bottles > 0 ? totalCost / bottles : 0
+    return bottleCalc.actualBottles > 0 ? totalCost / bottleCalc.actualBottles : 0
   }
 
   useEffect(() => {
@@ -602,7 +585,7 @@ export function RecipeFormModal({
               <Calculator className="w-4 h-4 text-blue-600" />
               <Label className="text-blue-800 font-medium">คำนวณจำนวนขวด และต้นทุน</Label>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
               <div className="space-y-2">
                 <Label htmlFor="bottleSize" className="text-sm text-gray-600">ขนาดขวด (ML)</Label>
                 <Input
@@ -616,13 +599,19 @@ export function RecipeFormModal({
               <div className="text-center">
                 <div className="text-sm text-gray-500">ปริมาณรวม</div>
                 <div className="text-lg font-semibold text-gray-700">
-                  {calculateTotalML().toLocaleString()} ML
+                  {bottleCalc.totalML.toLocaleString()} ML
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-sm text-gray-500">จำนวนขวด</div>
+                <div className="text-sm text-gray-500">จำนวนขวด (ทฤษฎี)</div>
+                <div className="text-2xl font-bold text-gray-400">
+                  {bottleCalc.theoreticalBottles.toLocaleString()} ขวด
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-500">จำนวนผลิตจริง (Yield {expectedYield}%)</div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {calculateBottles().toLocaleString()} ขวด
+                  {bottleCalc.actualBottles.toLocaleString()} ขวด
                 </div>
               </div>
               <div className="text-center">

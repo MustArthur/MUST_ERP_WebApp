@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { Recipe, Ingredient } from '@/types/recipe'
+import { Recipe } from '@/types/recipe'
+import { calculateBottleCount } from '@/stores/recipe-store'
 import {
   Dialog,
   DialogContent,
@@ -53,26 +54,10 @@ export function RecipeDetailModal({
     }
   }, [recipe])
 
-  // Bottle calculation functions
-  const toMilliliters = (qty: number, uom: string): number => {
-    switch (uom) {
-      case 'L': return qty * 1000
-      case 'ML': return qty
-      case 'G': return qty  // 1g ≈ 1ml สำหรับของเหลว
-      default: return 0
-    }
-  }
-
-  const calculateBottleCount = (ingredients: Ingredient[]): number => {
-    const totalML = ingredients
-      .filter(ing => ['L', 'ML', 'G'].includes(ing.uom))
-      .reduce((sum, ing) => sum + toMilliliters(ing.qty, ing.uom), 0)
-    return bottleSize > 0 ? Math.floor(totalML / bottleSize) : 0
-  }
-
   if (!recipe) return null
 
-  const bottleCount = calculateBottleCount(recipe.ingredients)
+  const bottleCalc = calculateBottleCount(recipe.ingredients, bottleSize, recipe.expectedYield)
+  const bottleCount = bottleCalc.actualBottles
 
   const handleExportImage = async () => {
     if (!exportRef.current) return
@@ -190,6 +175,7 @@ export function RecipeDetailModal({
               <IngredientTable
                 ingredients={recipe.ingredients}
                 bottleCount={bottleCount}
+                yieldPercent={recipe.expectedYield}
               />
             </TabsContent>
 

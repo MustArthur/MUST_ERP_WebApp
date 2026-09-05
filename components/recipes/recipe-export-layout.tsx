@@ -59,7 +59,7 @@ export const RecipeExportLayout = forwardRef<HTMLDivElement, RecipeExportLayoutP
         {/* Ingredients */}
         <div className="py-4">
           <h2 className="font-medium text-gray-900 mb-3">ส่วนประกอบ ({recipe.ingredients.length})</h2>
-          <IngredientTable ingredients={recipe.ingredients} bottleCount={bottleCount} />
+          <IngredientTable ingredients={recipe.ingredients} bottleCount={bottleCount} yieldPercent={recipe.expectedYield} />
         </div>
 
         {/* Instructions */}
