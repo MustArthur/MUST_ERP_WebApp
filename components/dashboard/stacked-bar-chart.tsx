@@ -1,5 +1,6 @@
 'use client'
 
+import { ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     BarChart,
@@ -28,13 +29,18 @@ interface StackedBarChartProps {
         value: number
         label: string
     }
+    /** Rendered at the right edge of the card header, e.g. a target-line control */
+    headerAction?: ReactNode
 }
 
-export function StackedBarChart({ title, data, series, height = 200, referenceLine }: StackedBarChartProps) {
+export function StackedBarChart({ title, data, series, height = 200, referenceLine, headerAction }: StackedBarChartProps) {
     return (
         <Card>
             <CardHeader className="pb-2">
-                <CardTitle className="text-base font-medium">{title}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base font-medium">{title}</CardTitle>
+                    {headerAction}
+                </div>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={height}>

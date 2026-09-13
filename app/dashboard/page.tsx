@@ -22,9 +22,12 @@ import {
     SupplierQuantityTrend,
     VehicleFuelSummary,
 } from '@/lib/api/dashboard'
+import { TargetLineControl } from '@/components/dashboard/target-line-control'
+import {
+    useDashboardSettingsStore,
+    DEFAULT_FRESH_CHICKEN_DAILY_TARGET_KG,
+} from '@/stores/dashboard-settings-store'
 import { formatCurrency, formatNumber } from '@/lib/utils'
-
-const FRESH_CHICKEN_DAILY_TARGET_KG = 1600
 
 function pctChange(current: number, previous: number): number {
     if (previous === 0) return 0
@@ -65,6 +68,11 @@ export default function DashboardPage() {
     const [fuel, setFuel] = useState<DailyFuelCost[]>([])
     const [fuelByVehicle, setFuelByVehicle] = useState<VehicleFuelSummary[]>([])
     const [easyPass, setEasyPass] = useState<DailyFuelCost[]>([])
+
+    const freshChickenTargetKg = useDashboardSettingsStore(s => s.freshChickenDailyTargetKg)
+    const freshChickenTargetEnabled = useDashboardSettingsStore(s => s.freshChickenTargetEnabled)
+    const setFreshChickenTargetKg = useDashboardSettingsStore(s => s.setFreshChickenDailyTargetKg)
+    const setFreshChickenTargetEnabled = useDashboardSettingsStore(s => s.setFreshChickenTargetEnabled)
 
     useEffect(() => {
         async function load() {
@@ -189,7 +197,24 @@ export default function DashboardPage() {
                                                 name: s.supplierName,
                                                 color: chickenSupplierColors.get(s.supplierId) || '#3b82f6',
                                             }))}
-                                            referenceLine={{ value: FRESH_CHICKEN_DAILY_TARGET_KG, label: `เป้าหมาย ${FRESH_CHICKEN_DAILY_TARGET_KG.toLocaleString()} กก./วัน` }}
+                                            referenceLine={
+                                                freshChickenTargetEnabled
+                                                    ? {
+                                                        value: freshChickenTargetKg,
+                                                        label: `เป้าหมาย ${formatNumber(freshChickenTargetKg, 0)} กก./วัน`,
+                                                    }
+                                                    : undefined
+                                            }
+                                            headerAction={
+                                                <TargetLineControl
+                                                    value={freshChickenTargetKg}
+                                                    enabled={freshChickenTargetEnabled}
+                                                    unit="กก./วัน"
+                                                    defaultValue={DEFAULT_FRESH_CHICKEN_DAILY_TARGET_KG}
+                                                    onChange={setFreshChickenTargetKg}
+                                                    onEnabledChange={setFreshChickenTargetEnabled}
+                                                />
+                                            }
                                         />
                                     </div>
                                 ) : (
