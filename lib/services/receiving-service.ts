@@ -6,7 +6,8 @@ import {
     UpdatePurchaseReceiptInput,
     ReceiptStatus,
     QCStatusSummary,
-    ItemQCStatus
+    ItemQCStatus,
+    DuplicateInvoiceReceipt
 } from '@/types/receiving'
 import { generateId } from '@/lib/utils'
 
@@ -387,6 +388,51 @@ export class ReceivingService {
             createdAt: data.created_at,
             updatedAt: data.updated_at
         }
+    }
+
+    /**
+     * Find non-cancelled receipts from the same supplier that already use this
+     * invoice number, so the form can warn about an accidental double entry.
+     *
+     * Scoped to one supplier on purpose: different suppliers routinely issue
+     * invoices with colliding numbers, so a global match would be noise.
+     * Comparison happens in JS (trim + upper-case) rather than via .eq()/.ilike()
+     * so " inv-001 " matches "INV-001" without ilike's %/_ wildcards mangling
+     * invoice numbers that legitimately contain those characters. The supplier
+     * filter (indexed) keeps the fetched set small.
+     */
+    static async findReceiptsByInvoiceNumber(
+        invoiceNumber: string,
+        supplierId: string,
+        excludeReceiptId?: string
+    ): Promise<DuplicateInvoiceReceipt[]> {
+        const normalized = invoiceNumber.trim().toUpperCase()
+        if (!normalized || !supplierId) return []
+
+        const { data, error } = await this.supabase
+            .from('purchase_receipts')
+            .select('id, code, invoice_number, receipt_date, status')
+            .eq('supplier_id', supplierId)
+            .neq('status', 'CANCELLED')
+            .not('invoice_number', 'is', null)
+
+        // A failed duplicate lookup must never block saving a receipt
+        if (error) {
+            console.error('Error checking duplicate invoice number:', error)
+            return []
+        }
+
+        return (data || [])
+            .filter(row =>
+                row.id !== excludeReceiptId &&
+                String(row.invoice_number ?? '').trim().toUpperCase() === normalized
+            )
+            .map(row => ({
+                id: row.id,
+                code: row.code,
+                receiptDate: row.receipt_date,
+                status: row.status as ReceiptStatus,
+            }))
     }
 
     private static async generateReceiptCode(): Promise<string> {

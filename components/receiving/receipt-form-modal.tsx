@@ -9,9 +9,11 @@ import {
   PurchaseReceipt,
   CreatePurchaseReceiptInput,
   CreateReceiptItemInput,
+  DuplicateInvoiceReceipt,
 } from '@/types/receiving'
 import { UnitOfMeasure as UOM } from '@/types/item'
 import { useReceivingStore } from '@/stores/receiving-store'
+import { ReceivingService } from '@/lib/services/receiving-service'
 import { useInventoryStore } from '@/stores/inventory-store'
 import { getSupplierItems, getUnitsOfMeasure, Item } from '@/lib/api/items'
 import {
@@ -40,7 +42,17 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { SearchableSelect } from '@/components/ui/searchable-select'
-import { cn, formatCurrency } from '@/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { cn, formatCurrency, formatDateShort } from '@/lib/utils'
 import {
   Plus,
   Trash2,
@@ -48,6 +60,7 @@ import {
   Package,
   Truck,
   Calculator,
+  AlertTriangle,
 } from 'lucide-react'
 
 const receiptItemSchema = z.object({
@@ -89,6 +102,10 @@ export function ReceiptFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [rawMaterials, setRawMaterials] = useState<Item[]>([])
   const [uoms, setUoms] = useState<UOM[]>([])
+  // Duplicate invoice number warning (same supplier, non-cancelled receipts)
+  const [duplicateReceipts, setDuplicateReceipts] = useState<DuplicateInvoiceReceipt[]>([])
+  const [pendingSubmitData, setPendingSubmitData] = useState<CreatePurchaseReceiptInput | null>(null)
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const { suppliers, fetchSuppliers } = useReceivingStore()
   const { stockItems, warehouses, fetchStockItems, fetchWarehouses } = useInventoryStore()
 
@@ -130,6 +147,7 @@ export function ReceiptFormModal({
 
   // Watch supplier selection
   const selectedSupplierId = form.watch('supplierId')
+  const watchedInvoiceNumber = form.watch('invoiceNumber')
 
   // Load data on mount
   useEffect(() => {
@@ -159,6 +177,42 @@ export function ReceiptFormModal({
     loadItemsForSupplier()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSupplierId])
+
+  // Warn when the typed invoice number was already used by this supplier.
+  // Debounced so we don't query on every keystroke.
+  useEffect(() => {
+    const invoiceNumber = watchedInvoiceNumber?.trim() || ''
+
+    if (!invoiceNumber || !selectedSupplierId) {
+      setDuplicateReceipts([])
+      return
+    }
+
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      const matches = await ReceivingService.findReceiptsByInvoiceNumber(
+        invoiceNumber,
+        selectedSupplierId,
+        receipt?.id
+      )
+      // Ignore a stale response that resolved after the input changed again
+      if (!cancelled) setDuplicateReceipts(matches)
+    }, 400)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [watchedInvoiceNumber, selectedSupplierId, receipt?.id])
+
+  // Reset duplicate state whenever the modal opens or closes
+  useEffect(() => {
+    if (!isOpen) {
+      setDuplicateReceipts([])
+      setPendingSubmitData(null)
+      setShowDuplicateConfirm(false)
+    }
+  }, [isOpen])
 
   // Populate form when editing
   useEffect(() => {
@@ -224,33 +278,70 @@ export function ReceiptFormModal({
     }
   }
 
-  const onSubmit = async (data: ReceiptFormValues) => {
+  const submitReceipt = async (payload: CreatePurchaseReceiptInput) => {
     try {
       setIsSubmitting(true)
-      await onSave({
-        supplierId: data.supplierId,
-        receiptDate: data.receiptDate,
-        poNumber: data.poNumber || undefined,
-        invoiceNumber: data.invoiceNumber || undefined,
-        items: data.items.map(item => ({
-          itemId: item.itemId,
-          qtyReceived: item.qtyReceived,
-          uom: item.uom,
-          batchNo: item.batchNo || undefined,
-          mfgDate: item.mfgDate || undefined,
-          expDate: item.expDate || undefined,
-          unitPrice: item.unitPrice,
-          warehouseId: item.warehouseId,
-          remarks: item.remarks || undefined,
-        })),
-        remarks: data.remarks || undefined,
-      })
+      await onSave(payload)
       onClose()
     } catch (error) {
       console.error('Error saving receipt:', error)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const onSubmit = async (data: ReceiptFormValues) => {
+    const payload: CreatePurchaseReceiptInput = {
+      supplierId: data.supplierId,
+      receiptDate: data.receiptDate,
+      poNumber: data.poNumber || undefined,
+      invoiceNumber: data.invoiceNumber?.trim() || undefined,
+      items: data.items.map(item => ({
+        itemId: item.itemId,
+        qtyReceived: item.qtyReceived,
+        uom: item.uom,
+        batchNo: item.batchNo || undefined,
+        mfgDate: item.mfgDate || undefined,
+        expDate: item.expDate || undefined,
+        unitPrice: item.unitPrice,
+        warehouseId: item.warehouseId,
+        remarks: item.remarks || undefined,
+      })),
+      remarks: data.remarks || undefined,
+    }
+
+    // Re-check live instead of trusting the debounced state: the user may have
+    // hit save before the 400ms debounce fired.
+    if (payload.invoiceNumber) {
+      setIsSubmitting(true)
+      const matches = await ReceivingService.findReceiptsByInvoiceNumber(
+        payload.invoiceNumber,
+        payload.supplierId,
+        receipt?.id
+      )
+      setIsSubmitting(false)
+
+      if (matches.length > 0) {
+        setDuplicateReceipts(matches)
+        setPendingSubmitData(payload)
+        setShowDuplicateConfirm(true)
+        return
+      }
+    }
+
+    await submitReceipt(payload)
+  }
+
+  const confirmDuplicateSubmit = async () => {
+    const payload = pendingSubmitData
+    setShowDuplicateConfirm(false)
+    setPendingSubmitData(null)
+    if (payload) await submitReceipt(payload)
+  }
+
+  const cancelDuplicateSubmit = () => {
+    setShowDuplicateConfirm(false)
+    setPendingSubmitData(null)
   }
 
   // Get item name by ID
@@ -349,9 +440,33 @@ export function ReceiptFormModal({
                     <FormItem>
                       <FormLabel>เลข Invoice</FormLabel>
                       <FormControl>
-                        <Input placeholder="INV-2026-0001" {...field} />
+                        <Input
+                          placeholder="INV-2026-0001"
+                          className={cn(
+                            duplicateReceipts.length > 0 &&
+                              'border-yellow-400 focus-visible:ring-yellow-400'
+                          )}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
+                      {duplicateReceipts.length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
+                          <div className="text-sm text-yellow-800">
+                            <p className="font-medium">เลข Invoice นี้ถูกใช้ไปแล้ว</p>
+                            <p className="text-yellow-700">
+                              Supplier รายนี้มีใบรับที่ใช้เลขนี้อยู่แล้ว:{' '}
+                              {duplicateReceipts
+                                .slice(0, 3)
+                                .map(r => `${r.code} (${formatDateShort(r.receiptDate)})`)
+                                .join(', ')}
+                              {duplicateReceipts.length > 3 &&
+                                ` และอีก ${duplicateReceipts.length - 3} ใบ`}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -681,6 +796,49 @@ export function ReceiptFormModal({
           </form>
         </Form>
       </DialogContent>
+
+      {/* Duplicate invoice number — warn, but let the user proceed */}
+      <AlertDialog
+        open={showDuplicateConfirm}
+        onOpenChange={(open) => { if (!open) cancelDuplicateSubmit() }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+              เลข Invoice ซ้ำ
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  เลข Invoice{' '}
+                  <span className="font-medium text-foreground">
+                    {pendingSubmitData?.invoiceNumber}
+                  </span>{' '}
+                  ถูกใช้ไปแล้วกับ Supplier รายนี้ ในใบรับ:
+                </p>
+                <ul className="list-disc list-inside">
+                  {duplicateReceipts.map(r => (
+                    <li key={r.id}>
+                      <span className="font-medium text-foreground">{r.code}</span>{' '}
+                      — วันที่รับ {formatDateShort(r.receiptDate)}
+                    </li>
+                  ))}
+                </ul>
+                <p>กรุณาตรวจสอบว่าไม่ได้บันทึกซ้ำ — ต้องการบันทึกต่อหรือไม่?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDuplicateSubmit}>
+              ยกเลิก
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDuplicateSubmit}>
+              ยืนยันบันทึกต่อ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }

@@ -74,6 +74,12 @@ export interface PurchaseReceipt {
   updatedAt: string
 }
 
+/** Minimal receipt shape returned by the duplicate-invoice-number lookup */
+export type DuplicateInvoiceReceipt = Pick<
+  PurchaseReceipt,
+  'id' | 'code' | 'receiptDate' | 'status'
+>
+
 // ==========================================
 // Input Types (for forms)
 // ==========================================
