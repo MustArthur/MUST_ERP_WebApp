@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useMemo, useState } from 'react'
 import { useRecipeStore } from '@/stores/recipe-store'
 import { useItemsStore } from '@/stores/items-store'
 import { useProductionPlanningStore } from '@/stores/production-planning-store'
@@ -12,7 +12,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { CalendarDays, Printer, RotateCcw, AlertTriangle, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
-import { PlanningPeriod } from '@/types/production-planning'
+import { BatchPlanRow, PlanningPeriod } from '@/types/production-planning'
+import { buildCalcSignature, formatCalculatedAt, selectActiveRecipes } from '@/lib/production-planning'
 import { cn } from '@/lib/utils'
 import { updateItem } from '@/lib/api/items'
 
@@ -32,32 +33,42 @@ export default function ProductionPlanningPage() {
   const { recipes, fetchRecipes, isLoading: recipesLoading } = useRecipeStore()
   const { items, fetchItems, isLoading: itemsLoading } = useItemsStore()
   const {
-    batchPlan,
+    batchCounts,
     aggregated,
     period,
-    initPlan,
+    lastCalc,
+    hasHydrated,
     setBatchCount,
     calculate,
     setPeriod,
     reset,
   } = useProductionPlanningStore()
 
-  const isLoading = recipesLoading || itemsLoading
+  const isLoading = recipesLoading || itemsLoading || !hasHydrated
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [showSyncDialog, setShowSyncDialog] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
   const [syncResult, setSyncResult] = useState<{ success: number; error: number } | null>(null)
+
+  // The store persists with `skipHydration`, so the saved plan is only read
+  // here — after the first render matches the server HTML.
+  useEffect(() => {
+    // zustand skips the whole persist API when localStorage is unavailable
+    // (private mode, blocked site data). Carry on unsaved instead of hanging.
+    const persistApi: typeof useProductionPlanningStore.persist | undefined =
+      useProductionPlanningStore.persist
+    if (!persistApi) {
+      useProductionPlanningStore.getState().setHasHydrated(true)
+      return
+    }
+    void persistApi.rehydrate()
+  }, [])
 
   useEffect(() => {
     fetchRecipes()
     fetchItems()
   }, [fetchRecipes, fetchItems])
-
-  useEffect(() => {
-    if (recipes.length > 0) {
-      initPlan(recipes)
-    }
-  }, [recipes, initPlan])
 
   const handleCalculate = useCallback(() => {
     calculate(recipes, items)
@@ -83,8 +94,31 @@ export default function ProductionPlanningPage() {
     window.print()
   }
 
-  const activeRecipes = recipes.filter(r => r.status === 'ACTIVE')
-  const totalBatches = batchPlan.reduce((s, p) => s + (p.batchCounts?.[period] ?? 0), 0)
+  const activeRecipes = useMemo(() => selectActiveRecipes(recipes), [recipes])
+
+  // Rows are derived on every render from the recipes + the persisted counts,
+  // so loading recipes can never overwrite what the user typed.
+  const rows = useMemo<BatchPlanRow[]>(() => activeRecipes.map(r => ({
+    recipeId: r.id,
+    recipeCode: r.code,
+    recipeName: r.name,
+    outputItem: r.outputItem,
+    outputUom: r.outputUom,
+    outputQtyPerBatch: r.outputQty,
+    batchCount: batchCounts[r.code]?.[period] ?? 0,
+  })), [activeRecipes, batchCounts, period])
+
+  const totalBatches = useMemo(() => rows.reduce((s, r) => s + r.batchCount, 0), [rows])
+
+  const currentSignature = useMemo(
+    () => buildCalcSignature(period, batchCounts),
+    [period, batchCounts]
+  )
+  const isStale = aggregated.length > 0 && lastCalc !== null && lastCalc.signature !== currentSignature
+
+  // The results table describes the run that produced it, not the current inputs.
+  const calculatedPeriod = lastCalc?.period ?? period
+  const calculatedTotalBatches = lastCalc?.totalBatches ?? totalBatches
 
   const criticalCount = aggregated.filter(m => m.status === 'CRITICAL').length
   const lowCount = aggregated.filter(m => m.status === 'LOW').length
@@ -107,7 +141,7 @@ export default function ProductionPlanningPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={reset} disabled={isLoading}>
+                <Button variant="outline" onClick={() => setShowResetDialog(true)} disabled={isLoading}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   รีเซ็ต
                 </Button>
@@ -192,27 +226,27 @@ export default function ProductionPlanningPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {batchPlan.map(plan => (
-                      <tr key={plan.recipeId} className="hover:bg-gray-50">
+                    {rows.map(row => (
+                      <tr key={row.recipeCode} className="hover:bg-gray-50">
                         <td className="px-4 py-2.5">
-                          <span className="font-mono text-sm text-blue-600">{plan.recipeCode}</span>
+                          <span className="font-mono text-sm text-blue-600">{row.recipeCode}</span>
                         </td>
-                        <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{plan.recipeName}</td>
-                        <td className="px-4 py-2.5 text-sm text-gray-600">{plan.outputItem}</td>
+                        <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{row.recipeName}</td>
+                        <td className="px-4 py-2.5 text-sm text-gray-600">{row.outputItem}</td>
                         <td className="px-4 py-2.5">
                           <Input
                             type="number"
                             min="0"
                             step="1"
-                            value={plan.batchCounts?.[period] || ''}
+                            value={row.batchCount || ''}
                             placeholder="0"
                             className="text-center h-8 w-full"
-                            onChange={e => setBatchCount(plan.recipeId, period, parseInt(e.target.value) || 0)}
+                            onChange={e => setBatchCount(row.recipeCode, period, parseInt(e.target.value, 10) || 0)}
                           />
                         </td>
                         <td className="px-4 py-2.5 text-right text-sm text-gray-700">
-                          {(plan.batchCounts?.[period] ?? 0) > 0
-                            ? `${(plan.outputQtyPerBatch * (plan.batchCounts?.[period] ?? 0)).toLocaleString('th-TH', { maximumFractionDigits: 2 })} ${plan.outputUom}`
+                          {row.batchCount > 0
+                            ? `${(row.outputQtyPerBatch * row.batchCount).toLocaleString('th-TH', { maximumFractionDigits: 2 })} ${row.outputUom}`
                             : '—'}
                         </td>
                       </tr>
@@ -236,9 +270,21 @@ export default function ProductionPlanningPage() {
               <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
                 <div>
                   <h2 className="font-semibold text-gray-800">วัตถุดิบที่ต้องใช้</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">รวมจากทุกสูตร คำนวณรวม Scrap แล้ว</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    รวมจากทุกสูตร คำนวณรวม Scrap แล้ว
+                    {lastCalc && ` · คำนวณล่าสุด ${formatCalculatedAt(lastCalc.at)}`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
+                  {isStale && (
+                    <span
+                      title={'ข้อมูลจำนวน Batch เปลี่ยนไปหลังการคำนวณครั้งล่าสุด — กด "คำนวณวัตถุดิบ" อีกครั้ง'}
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full text-yellow-600 bg-yellow-50"
+                    >
+                      <AlertTriangle className="w-3 h-3" />
+                      ผลคำนวณอาจไม่ล่าสุด
+                    </span>
+                  )}
                   {criticalCount > 0 && (
                     <span className="flex items-center gap-1 text-red-600 font-medium">
                       <AlertCircle className="w-4 h-4" />
@@ -299,9 +345,9 @@ export default function ProductionPlanningPage() {
                               'inline-block text-sm font-semibold px-2 py-0.5 rounded',
                               m.coverageBatches === 0
                                 ? 'text-red-700 bg-red-100'
-                                : totalBatches > 0 && m.coverageBatches < totalBatches
+                                : calculatedTotalBatches > 0 && m.coverageBatches < calculatedTotalBatches
                                 ? 'text-yellow-700 bg-yellow-100'
-                                : totalBatches > 0 && m.coverageBatches >= totalBatches
+                                : calculatedTotalBatches > 0 && m.coverageBatches >= calculatedTotalBatches
                                 ? 'text-green-700 bg-green-100'
                                 : 'text-gray-700 bg-gray-100'
                             )}>
@@ -335,7 +381,7 @@ export default function ProductionPlanningPage() {
       </div>
 
       {/* Print-only stock check sheet */}
-      <StockCheckSheet materials={aggregated} period={period} />
+      <StockCheckSheet materials={aggregated} period={calculatedPeriod} />
 
       <AlertDialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
         <AlertDialogContent className="max-w-lg">
@@ -343,7 +389,7 @@ export default function ProductionPlanningPage() {
             <AlertDialogTitle>บันทึก Safety Stock ลงระบบ</AlertDialogTitle>
             <AlertDialogDescription>
               ระบบจะอัปเดต Safety Stock ของ {aggregated.length} รายการ
-              ตามค่าที่คำนวณจากรอบ{PERIODS.find(p => p.value === period)?.label}
+              ตามค่าที่คำนวณจากรอบ{PERIODS.find(p => p.value === calculatedPeriod)?.label}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="max-h-60 overflow-auto border rounded text-sm">
@@ -374,6 +420,29 @@ export default function ProductionPlanningPage() {
             <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
             <AlertDialogAction onClick={handleSyncSafetyStock} disabled={isSyncing}>
               {isSyncing ? 'กำลังบันทึก...' : `ยืนยัน (${aggregated.length} รายการ)`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ล้างข้อมูลแผนการผลิตทั้งหมด?</AlertDialogTitle>
+            <AlertDialogDescription>
+              จำนวน Batch ของทุกสูตร (ทุกรอบการผลิต) และผลคำนวณวัตถุดิบจะถูกลบทิ้ง
+              การกระทำนี้ย้อนกลับไม่ได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                reset()
+                setShowResetDialog(false)
+              }}
+            >
+              ล้างข้อมูล
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

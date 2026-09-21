@@ -73,6 +73,12 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
           return
         } catch (supabaseError) {
           console.warn('Supabase error, falling back to mock data:', supabaseError)
+          // Keep the real recipes already in memory rather than swapping in the
+          // mock set, whose codes/ids don't match anything the user planned against.
+          if (get().recipes.length > 0) {
+            set({ isLoading: false, error: 'ไม่สามารถโหลดข้อมูลสูตรล่าสุดได้ — แสดงข้อมูลที่โหลดไว้ล่าสุด' })
+            return
+          }
         }
       }
       // Fallback: use mock data
