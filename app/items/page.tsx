@@ -182,14 +182,14 @@ export default function ItemsPage() {
             {/* Header */}
             <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-4">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">จัดการรายการสินค้า</h1>
                                 <p className="text-sm text-gray-500">Master Data - วัตถุดิบ, สินค้าสำเร็จ, บรรจุภัณฑ์</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <Button variant="outline" onClick={() => fetchItems()}>
                                 <RefreshCw className="w-4 h-4 mr-2" />
                                 รีเฟรช

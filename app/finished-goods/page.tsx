@@ -193,7 +193,7 @@ export default function FinishedGoodsPage() {
 
             {/* Status Tabs */}
             <Tabs value={activeTab} onValueChange={(v) => handleStatusFilter(v as FGEntryStatus | 'all')}>
-              <TabsList className="bg-white border">
+              <TabsList className="bg-white border max-w-full overflow-x-auto justify-start">
                 <TabsTrigger value="all" className="gap-1">
                   <Package className="w-4 h-4" />
                   ทั้งหมด ({statusCounts.all})

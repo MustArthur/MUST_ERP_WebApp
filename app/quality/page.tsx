@@ -385,7 +385,7 @@ export default function QualityPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 max-w-full overflow-x-auto justify-start">
             <TabsTrigger value="inspections" className="flex items-center gap-2">
               <ClipboardCheck className="w-4 h-4" />
               การตรวจสอบ
