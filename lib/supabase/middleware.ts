@@ -35,27 +35,14 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // Protected routes - redirect to login if not authenticated
-    const protectedPaths = [
-        '/dashboard',
-        '/items',
-        '/suppliers',
-        '/recipes',
-        '/production',
-        '/quality',
-        '/receiving',
-        '/inventory',
-        '/transactions',
-        '/finished-goods',
-        '/delivery',
-        '/production-planning',
-    ]
+    // Every route requires login except these - new pages are protected by default
+    const publicPaths = ['/login']
 
-    const isProtectedPath = protectedPaths.some(path =>
+    const isPublicPath = publicPaths.some(path =>
         request.nextUrl.pathname.startsWith(path)
     )
 
-    if (!user && isProtectedPath) {
+    if (!user && !isPublicPath) {
         // Redirect to login page (always go to homepage after login)
         const url = request.nextUrl.clone()
         url.pathname = '/login'
