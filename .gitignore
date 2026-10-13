@@ -53,3 +53,8 @@ AGENTS.md
 # MCP config (contains access tokens)
 mcp_config.json
 .mcp.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/tests/.auth/
