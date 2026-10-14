@@ -5,7 +5,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { navGroups, type NavItem } from './nav-data'
+import { navGroups, type NavGroup, type NavItem } from './nav-data'
+import { canView, pageKeyForPath, type MyAccess } from '@/lib/permissions'
+import { useAccessStore } from '@/stores/access-store'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,7 +16,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Factory, User, LogOut, ChevronDown, ChevronsLeft, ChevronsRight, Menu, X } from 'lucide-react'
+import { Factory, User, LogOut, ChevronDown, ChevronsLeft, ChevronsRight, Menu, X, ShieldCheck } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { useUIStore } from '@/stores/ui-store'
 
@@ -22,13 +24,35 @@ function isActive(pathname: string, href: string) {
     return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolean; active: boolean }) {
+// Pages the user may see, plus the admin section for admins
+function visibleNavGroups(access: MyAccess | null): NavGroup[] {
+    const groups = navGroups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => {
+                const key = pageKeyForPath(item.href)
+                return key ? canView(access, key) : true
+            }),
+        }))
+        .filter((group) => group.items.length > 0)
+
+    if (access?.is_admin) {
+        groups.push({
+            id: 'admin',
+            label: 'ผู้ดูแลระบบ',
+            items: [{ name: 'ผู้ใช้งาน', href: '/admin/members', icon: ShieldCheck }],
+        })
+    }
+    return groups
+}
+
+function NavLink({ item, collapsed, active, badge }: { item: NavItem; collapsed: boolean; active: boolean; badge?: number }) {
     const Icon = item.icon
     const link = (
         <Link
             href={item.href}
             className={cn(
-                'flex items-center gap-3 rounded-md px-2.5 min-h-[44px] text-sm transition-colors',
+                'relative flex items-center gap-3 rounded-md px-2.5 min-h-[44px] text-sm transition-colors',
                 collapsed && 'justify-center px-0',
                 active
                     ? 'bg-primary/10 text-primary font-medium'
@@ -36,7 +60,14 @@ function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolea
             )}
         >
             <Icon className="w-[18px] h-[18px] shrink-0" />
-            {!collapsed && <span className="truncate">{item.name}</span>}
+            {!collapsed && <span className="truncate flex-1">{item.name}</span>}
+            {!!badge && (collapsed ? (
+                <span className="absolute top-2 right-3 w-2 h-2 rounded-full bg-amber-500" aria-label={`รออนุมัติ ${badge} คน`} />
+            ) : (
+                <span className="min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-[11px] font-semibold flex items-center justify-center">
+                    {badge}
+                </span>
+            ))}
         </Link>
     )
 
@@ -51,9 +82,25 @@ function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolea
 }
 
 function SidebarNav({ collapsed, pathname }: { collapsed: boolean; pathname: string }) {
+    const access = useAccessStore((s) => s.access)
+    const isLoading = useAccessStore((s) => s.isLoading)
+
+    // Avoid flashing links the user is not allowed to open
+    if (isLoading && !access) {
+        return (
+            <nav className="flex-1 py-3 px-2 space-y-1" aria-busy="true">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-10 rounded-md bg-gray-100 animate-pulse" />
+                ))}
+            </nav>
+        )
+    }
+
+    const pendingCount = access?.pending_count ?? 0
+
     return (
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-            {navGroups.map((group) => (
+            {visibleNavGroups(access).map((group) => (
                 <div key={group.id}>
                     {group.label && !collapsed && (
                         <p className="px-2.5 mb-1 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
@@ -62,7 +109,13 @@ function SidebarNav({ collapsed, pathname }: { collapsed: boolean; pathname: str
                     )}
                     <div className="space-y-0.5">
                         {group.items.map((item) => (
-                            <NavLink key={item.href} item={item} collapsed={collapsed} active={isActive(pathname, item.href)} />
+                            <NavLink
+                                key={item.href}
+                                item={item}
+                                collapsed={collapsed}
+                                active={isActive(pathname, item.href)}
+                                badge={item.href === '/admin/members' ? pendingCount : undefined}
+                            />
                         ))}
                     </div>
                 </div>
@@ -75,6 +128,8 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
     const router = useRouter()
     const [user, setUser] = useState<SupabaseUser | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const fullName = useAccessStore((s) => s.access?.full_name)
+    const clearAccess = useAccessStore((s) => s.clear)
 
     useEffect(() => {
         const supabase = createClient()
@@ -94,11 +149,12 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
     const handleSignOut = async () => {
         const supabase = createClient()
         await supabase.auth.signOut()
+        clearAccess()
         router.push('/login')
         router.refresh()
     }
 
-    const displayName = user?.email?.split('@')[0] || 'User'
+    const displayName = fullName || user?.email?.split('@')[0] || 'User'
 
     if (isLoading) {
         return <div className={cn('h-10 rounded-md bg-gray-100 animate-pulse', collapsed ? 'w-10 mx-auto' : 'w-full')} />
@@ -160,6 +216,12 @@ export function Sidebar() {
     const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed)
     const mobileNavOpen = useUIStore((s) => s.mobileNavOpen)
     const setMobileNavOpen = useUIStore((s) => s.setMobileNavOpen)
+    const fetchAccess = useAccessStore((s) => s.fetchAccess)
+
+    // Admins approve people while the app is open; refresh on navigation so the badge stays current
+    useEffect(() => {
+        fetchAccess()
+    }, [pathname, fetchAccess])
 
     // Close the mobile drawer whenever the route changes
     useEffect(() => {

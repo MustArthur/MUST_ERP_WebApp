@@ -6,6 +6,7 @@ test.describe('ไม่ได้ login', () => {
         '/', '/dashboard', '/items', '/suppliers', '/recipes', '/receiving', '/quality',
         '/production-planning', '/production', '/inventory', '/transactions',
         '/finished-goods', '/delivery', '/factory-expenses', '/vehicles', '/machines',
+        '/access', '/admin', '/admin/members',
     ]
 
     for (const route of protectedRoutes) {
@@ -30,5 +31,17 @@ test.describe('ไม่ได้ login', () => {
         await page.getByRole('button', { name: 'เข้าสู่ระบบ' }).click()
         await expect(page.getByText('อีเมลหรือรหัสผ่านไม่ถูกต้อง')).toBeVisible({ timeout: 15_000 })
         await expect(page).toHaveURL(/\/login$/)
+    })
+
+    test('หน้าสมัครเปิดได้และตรวจฟอร์มเป็นภาษาไทย', async ({ page }) => {
+        await page.goto('/login')
+        await page.getByRole('link', { name: 'สมัครและขอสิทธิ์ใช้งาน' }).click()
+        await expect(page).toHaveURL(/\/signup$/)
+        await page.getByRole('button', { name: 'สมัครและส่งคำขอ' }).click()
+        await expect(page.getByText('กรุณากรอกชื่อ-นามสกุล')).toBeVisible()
+        await page.getByLabel('รหัสผ่าน', { exact: true }).fill('12345678')
+        await page.getByLabel('ยืนยันรหัสผ่าน').fill('87654321')
+        await page.getByRole('button', { name: 'สมัครและส่งคำขอ' }).click()
+        await expect(page.getByText('รหัสผ่านไม่ตรงกัน')).toBeVisible()
     })
 })

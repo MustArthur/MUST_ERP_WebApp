@@ -1,20 +1,27 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { AuthFrame } from '@/components/layout/auth-frame'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Factory, Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 function LoginForm() {
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(
+        searchParams.get('error') === 'confirm'
+            ? 'ลิงก์ยืนยันอีเมลไม่ถูกต้องหรือหมดอายุ กรุณาเข้าสู่ระบบหรือสมัครใหม่อีกครั้ง'
+            : null
+    )
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -29,25 +36,28 @@ function LoginForm() {
         })
 
         if (error) {
-            setError(error.message === 'Invalid login credentials'
-                ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
-                : error.message
+            setError(
+                error.message === 'Invalid login credentials'
+                    ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+                    : error.message === 'Email not confirmed'
+                        ? 'ยังไม่ได้ยืนยันอีเมล กรุณากดลิงก์ในอีเมลที่ระบบส่งไปก่อน'
+                        : error.message
             )
             setIsLoading(false)
             return
         }
 
-        router.push('/dashboard')
+        // Middleware sends the user to the first page they are allowed to see
+        router.push('/')
         router.refresh()
     }
 
     return (
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+        <>
             <h2 className="text-xl font-semibold text-gray-900 mb-6">เข้าสู่ระบบ</h2>
 
-            {/* Error Message */}
             {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
                     <AlertCircle className="h-4 w-4 flex-shrink-0" />
                     <span className="text-sm">{error}</span>
                 </div>
@@ -59,6 +69,7 @@ function LoginForm() {
                     <Input
                         id="email"
                         type="email"
+                        autoComplete="email"
                         placeholder="email@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -73,6 +84,7 @@ function LoginForm() {
                     <Input
                         id="password"
                         type="password"
+                        autoComplete="current-password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -97,30 +109,25 @@ function LoginForm() {
                     )}
                 </Button>
             </form>
-        </div>
+        </>
     )
 }
 
 export default function LoginPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-            <div className="w-full max-w-md">
-                {/* Logo & Title */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-2xl mb-4 shadow-lg">
-                        <Factory className="h-8 w-8" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900">MUST ERP</h1>
-                    <p className="text-gray-500 mt-1">ระบบจัดการการผลิต</p>
-                </div>
-
+        <AuthFrame
+            footer={
+                <>
+                    ยังไม่มีบัญชี?{' '}
+                    <Link href="/signup" className="font-medium text-primary hover:underline">
+                        สมัครและขอสิทธิ์ใช้งาน
+                    </Link>
+                </>
+            }
+        >
+            <Suspense>
                 <LoginForm />
-
-                {/* Footer */}
-                <p className="text-center text-sm text-gray-500 mt-6">
-                    MUST ERP v1.0 - Food Manufacturing
-                </p>
-            </div>
-        </div>
+            </Suspense>
+        </AuthFrame>
     )
 }

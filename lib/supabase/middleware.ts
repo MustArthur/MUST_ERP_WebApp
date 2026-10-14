@@ -1,5 +1,15 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import {
+    ADMIN_PATH,
+    canView,
+    firstAllowedHref,
+    isActiveMember,
+    pageKeyForPath,
+    type MyAccess,
+} from '@/lib/permissions'
+
+const ACCESS_PATH = '/access'
 
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
@@ -35,25 +45,50 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // Every route requires login except these - new pages are protected by default
-    const publicPaths = ['/login']
+    const pathname = request.nextUrl.pathname
 
-    const isPublicPath = publicPaths.some(path =>
-        request.nextUrl.pathname.startsWith(path)
-    )
-
-    if (!user && !isPublicPath) {
-        // Redirect to login page (always go to homepage after login)
+    // Redirects must carry the refreshed auth cookies, or the session gets dropped
+    const redirectTo = (path: string) => {
         const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
+        url.pathname = path
+        url.search = ''
+        const response = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
+        return response
     }
 
-    // If user is logged in and trying to access login page, redirect to home
-    if (user && request.nextUrl.pathname === '/login') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/'
-        return NextResponse.redirect(url)
+    // Every route requires login except these - new pages are protected by default
+    const publicPaths = ['/login', '/signup', '/auth/']
+    const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+
+    if (!user) {
+        return isPublicPath ? supabaseResponse : redirectTo('/login')
+    }
+
+    if (pathname === '/login' || pathname === '/signup') {
+        return redirectTo('/')
+    }
+
+    // Logged in, but not necessarily an approved ERP member: /access explains where they stand
+    if (isPublicPath || pathname.startsWith(ACCESS_PATH)) {
+        return supabaseResponse
+    }
+
+    const { data, error } = await supabase.rpc('erp_my_access')
+    const access = error ? null : (data as MyAccess)
+
+    if (!isActiveMember(access)) {
+        return redirectTo(ACCESS_PATH)
+    }
+
+    if (pathname.startsWith(ADMIN_PATH)) {
+        return access!.is_admin ? supabaseResponse : redirectTo('/')
+    }
+
+    const pageKey = pageKeyForPath(pathname)
+    if (pathname === '/' || (pageKey && !canView(access, pageKey))) {
+        const target = firstAllowedHref(access) ?? ACCESS_PATH
+        if (target !== pathname) return redirectTo(target)
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
