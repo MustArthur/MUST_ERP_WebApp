@@ -20,7 +20,9 @@ function LoginForm() {
     const [error, setError] = useState<string | null>(
         searchParams.get('error') === 'confirm'
             ? 'ลิงก์ยืนยันอีเมลไม่ถูกต้องหรือหมดอายุ กรุณาเข้าสู่ระบบหรือสมัครใหม่อีกครั้ง'
-            : null
+            : searchParams.get('error') === 'recovery'
+                ? 'ลิงก์ตั้งรหัสผ่านใหม่ใช้ไม่ได้หรือหมดอายุ — ต้องเปิดลิงก์ด้วยเครื่องและเบราว์เซอร์เดียวกับที่กดขอ กรุณาขอลิงก์ใหม่'
+                : null
     )
 
     const handleSignIn = async (e: React.FormEvent) => {
@@ -38,7 +40,7 @@ function LoginForm() {
         if (error) {
             setError(
                 error.message === 'Invalid login credentials'
-                    ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+                    ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง — ถ้าจำรหัสผ่านไม่ได้ กด "ลืมรหัสผ่าน?"'
                     : error.message === 'Email not confirmed'
                         ? 'ยังไม่ได้ยืนยันอีเมล กรุณากดลิงก์ในอีเมลที่ระบบส่งไปก่อน'
                         : error.message
@@ -80,7 +82,12 @@ function LoginForm() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password">รหัสผ่าน</Label>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="password">รหัสผ่าน</Label>
+                        <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                            ลืมรหัสผ่าน?
+                        </Link>
+                    </div>
                     <Input
                         id="password"
                         type="password"

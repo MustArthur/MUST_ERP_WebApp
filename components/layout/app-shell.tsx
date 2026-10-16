@@ -8,7 +8,7 @@ import { useUIStore } from '@/stores/ui-store'
 import { useAccessStore } from '@/stores/access-store'
 import { canEdit, canView, pageKeyForPath } from '@/lib/permissions'
 
-const ROUTES_WITHOUT_SIDEBAR = ['/login', '/signup', '/access']
+const ROUTES_WITHOUT_SIDEBAR = ['/login', '/signup', '/access', '/forgot-password', '/reset-password']
 
 function ViewOnlyBanner({ pathname }: { pathname: string }) {
     const access = useAccessStore((s) => s.access)

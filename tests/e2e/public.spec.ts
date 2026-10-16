@@ -29,7 +29,7 @@ test.describe('ไม่ได้ login', () => {
         await page.getByLabel('อีเมล').fill('e2e-test@must-erp.test')
         await page.getByLabel('รหัสผ่าน').fill('wrong-password-123')
         await page.getByRole('button', { name: 'เข้าสู่ระบบ' }).click()
-        await expect(page.getByText('อีเมลหรือรหัสผ่านไม่ถูกต้อง')).toBeVisible({ timeout: 15_000 })
+        await expect(page.getByText(/อีเมลหรือรหัสผ่านไม่ถูกต้อง/)).toBeVisible({ timeout: 15_000 })
         await expect(page).toHaveURL(/\/login$/)
     })
 
@@ -43,5 +43,17 @@ test.describe('ไม่ได้ login', () => {
         await page.getByLabel('ยืนยันรหัสผ่าน').fill('87654321')
         await page.getByRole('button', { name: 'สมัครและส่งคำขอ' }).click()
         await expect(page.getByText('รหัสผ่านไม่ตรงกัน')).toBeVisible()
+    })
+
+    test('ลืมรหัสผ่าน: เปิดจากหน้า login ได้', async ({ page }) => {
+        await page.goto('/login')
+        await page.getByRole('link', { name: 'ลืมรหัสผ่าน?' }).click()
+        await expect(page).toHaveURL(/\/forgot-password$/)
+        await expect(page.getByRole('button', { name: 'ส่งลิงก์ตั้งรหัสผ่านใหม่' })).toBeVisible()
+    })
+
+    test('/reset-password ต้อง login ก่อน', async ({ page }) => {
+        await page.goto('/reset-password')
+        await expect(page).toHaveURL(/\/login$/)
     })
 })

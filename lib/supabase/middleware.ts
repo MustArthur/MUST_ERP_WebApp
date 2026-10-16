@@ -58,7 +58,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Every route requires login except these - new pages are protected by default
-    const publicPaths = ['/login', '/signup', '/auth/']
+    const publicPaths = ['/login', '/signup', '/forgot-password', '/auth/']
     const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
 
     if (!user) {
@@ -69,8 +69,9 @@ export async function updateSession(request: NextRequest) {
         return redirectTo('/')
     }
 
-    // Logged in, but not necessarily an approved ERP member: /access explains where they stand
-    if (isPublicPath || pathname.startsWith(ACCESS_PATH)) {
+    // Logged in, but not necessarily an approved ERP member: /access explains where they stand,
+    // /reset-password lets anyone with a session (incl. a recovery link) set a new password
+    if (isPublicPath || pathname.startsWith(ACCESS_PATH) || pathname.startsWith('/reset-password')) {
         return supabaseResponse
     }
 
