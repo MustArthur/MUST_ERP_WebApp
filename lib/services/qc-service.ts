@@ -637,41 +637,28 @@ export class QCService {
                             warehouseId
                         })
                     }
-
-                    // Update receipt item QC status if applicable
-                    if (inspection.sourceDocType === 'PURCHASE_RECEIPT') {
-                        const qcStatus = acceptedQty > 0 ? 'PARTIAL' : 'FAILED'
-                        await this.supabase
-                            .from('purchase_receipt_items')
-                            .update({
-                                qc_status: qcStatus,
-                                qty_accepted: acceptedQty,
-                                qty_rejected: rejectedQty
-                            })
-                            .eq('qc_inspection_id', inspectionId)
-
-                        // Recalculate receipt header QC status
-                        await this.recalculateReceiptHeaderQCStatus(inspectionId)
-                    }
                 } catch (quarantineError) {
                     console.error('Failed to create quarantine:', quarantineError)
                     // Don't throw - inspection update was successful
                 }
-            } else if (!hasPending && allPass) {
-                // All passed - update receipt item
-                if (inspection.sourceDocType === 'PURCHASE_RECEIPT') {
-                    await this.supabase
-                        .from('purchase_receipt_items')
-                        .update({
-                            qc_status: 'PASSED',
-                            qty_accepted: acceptedQty,
-                            qty_rejected: 0
-                        })
-                        .eq('qc_inspection_id', inspectionId)
+            }
 
-                    // Recalculate receipt header QC status
-                    await this.recalculateReceiptHeaderQCStatus(inspectionId)
-                }
+            // Once the result is final, sync the receipt item so receiving no longer waits on QC.
+            // Done independently of quarantine creation so a quarantine failure can't leave it PENDING.
+            if (!hasPending && inspection.sourceDocType === 'PURCHASE_RECEIPT') {
+                const itemQCStatus = rejectedQty === 0 ? 'PASSED' : acceptedQty > 0 ? 'PARTIAL' : 'FAILED'
+                const { error: itemError } = await this.supabase
+                    .from('purchase_receipt_items')
+                    .update({
+                        qc_status: itemQCStatus,
+                        qty_accepted: acceptedQty,
+                        qty_rejected: rejectedQty
+                    })
+                    .eq('qc_inspection_id', inspectionId)
+
+                if (itemError) throw itemError
+
+                await this.recalculateReceiptHeaderQCStatus(inspectionId)
             }
         }
 
@@ -953,16 +940,16 @@ export class QCService {
             const pendingCount = allItems.filter(i => i.qc_status === 'PENDING').length
             const passedCount = allItems.filter(i =>
                 i.qc_status === 'PASSED' ||
-                i.qc_status === 'NOT_REQUIRED' ||
-                i.qc_status === 'PARTIAL'
+                i.qc_status === 'NOT_REQUIRED'
             ).length
+            const partialCount = allItems.filter(i => i.qc_status === 'PARTIAL').length
             const failedCount = allItems.filter(i => i.qc_status === 'FAILED').length
 
             let newQCStatus = 'PENDING'
             if (pendingCount === 0) {
-                if (failedCount === 0) {
+                if (failedCount === 0 && partialCount === 0) {
                     newQCStatus = 'PASSED'
-                } else if (passedCount === 0) {
+                } else if (passedCount === 0 && partialCount === 0) {
                     newQCStatus = 'FAILED'
                 } else {
                     newQCStatus = 'PARTIAL'
@@ -970,13 +957,15 @@ export class QCService {
             }
 
             // 4. Update receipt header
-            await this.supabase
+            const { error: headerError } = await this.supabase
                 .from('purchase_receipts')
                 .update({
                     qc_status: newQCStatus,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', receiptItem.receipt_id)
+
+            if (headerError) throw headerError
         } catch (error) {
             console.error('Failed to recalculate receipt header QC status:', error)
             // Don't throw - this is a non-critical operation
