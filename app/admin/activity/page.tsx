@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import type { ActivityLogRow, ActivitySummary } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { ActivityKpis, DailyTrend, ModuleUsage } from '@/components/admin/activity/activity-overview'
 import { UserModuleTable } from '@/components/admin/activity/user-module-table'
 import { ActivityLogList, LOG_PAGE_SIZE, type LogFilters } from '@/components/admin/activity/activity-log-list'
@@ -12,9 +14,21 @@ import { RANGE_PRESETS, rangeFor, type RangePreset } from '@/components/admin/ac
 import { RefreshCw } from 'lucide-react'
 
 const NO_FILTERS: LogFilters = { userId: null, pageKey: null, event: null }
+const HIDE_TEST_KEY = 'erp-activity-hide-test'
+
+// Per-viewer preference; hidden by default
+function readHideTest() {
+    try {
+        return localStorage.getItem(HIDE_TEST_KEY) !== 'false'
+    } catch {
+        return true
+    }
+}
 
 export default function ActivityPage() {
     const [preset, setPreset] = useState<RangePreset>('7d')
+    const [hideTest, setHideTest] = useState(true)
+    const [prefLoaded, setPrefLoaded] = useState(false)
     const [reloadKey, setReloadKey] = useState(0)
     // Recomputed on refresh too, so "today" keeps moving forward
     const range = useMemo(() => rangeFor(preset), [preset, reloadKey])
@@ -39,6 +53,7 @@ export default function ActivityPage() {
         const { data, error } = await createClient().rpc('erp_admin_activity_summary', {
             p_from: range.from,
             p_to: range.to,
+            p_exclude_test: hideTest,
         })
         if (id !== summaryRequest.current) return
         setSummaryLoading(false)
@@ -48,7 +63,7 @@ export default function ActivityPage() {
         }
         setSummaryError(null)
         setSummary(data as ActivitySummary)
-    }, [range])
+    }, [range, hideTest])
 
     const loadLogs = useCallback(async () => {
         const id = ++logsRequest.current
@@ -61,6 +76,7 @@ export default function ActivityPage() {
             p_event: filters.event,
             p_limit: LOG_PAGE_SIZE,
             p_offset: page * LOG_PAGE_SIZE,
+            p_exclude_test: hideTest,
         })
         if (id !== logsRequest.current) return
         setLogsLoading(false)
@@ -70,15 +86,33 @@ export default function ActivityPage() {
         }
         setLogsError(null)
         setRows((data ?? []) as ActivityLogRow[])
-    }, [range, filters, page])
+    }, [range, filters, page, hideTest])
 
     useEffect(() => {
-        loadSummary()
-    }, [loadSummary])
+        setHideTest(readHideTest())
+        setPrefLoaded(true)
+    }, [])
+
+    // Wait for the saved preference so we don't load twice on open
+    useEffect(() => {
+        if (prefLoaded) loadSummary()
+    }, [loadSummary, prefLoaded])
 
     useEffect(() => {
-        loadLogs()
-    }, [loadLogs])
+        if (prefLoaded) loadLogs()
+    }, [loadLogs, prefLoaded])
+
+    const changeHideTest = (next: boolean) => {
+        setHideTest(next)
+        // A hidden test account may be the selected user filter
+        setFilters((f) => ({ ...f, userId: null }))
+        setPage(0)
+        try {
+            localStorage.setItem(HIDE_TEST_KEY, String(next))
+        } catch {
+            // ignore
+        }
+    }
 
     const changeFilters = (next: LogFilters) => {
         setFilters(next)
@@ -108,13 +142,22 @@ export default function ActivityPage() {
             </header>
 
             <main className="max-w-6xl mx-auto px-4 py-6 space-y-4">
-                <Tabs value={preset} onValueChange={(v) => changePreset(v as RangePreset)}>
-                    <TabsList className="w-full sm:w-auto overflow-x-auto justify-start" aria-label="ช่วงเวลา">
-                        {RANGE_PRESETS.map((p) => (
-                            <TabsTrigger key={p.value} value={p.value}>{p.label}</TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Tabs value={preset} onValueChange={(v) => changePreset(v as RangePreset)}>
+                        <TabsList className="w-full sm:w-auto overflow-x-auto justify-start" aria-label="ช่วงเวลา">
+                            {RANGE_PRESETS.map((p) => (
+                                <TabsTrigger key={p.value} value={p.value}>{p.label}</TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
+                    <div className="flex items-center gap-2">
+                        <Switch id="hide-test" checked={hideTest} onCheckedChange={changeHideTest} />
+                        <Label htmlFor="hide-test" className="text-sm font-normal text-gray-700 cursor-pointer">
+                            ซ่อนบัญชีทดสอบ
+                            <span className="ml-1 text-xs text-gray-500">(อีเมล .test)</span>
+                        </Label>
+                    </div>
+                </div>
 
                 {summaryError ? (
                     <div role="alert" className="bg-white rounded-xl border p-8 text-center space-y-3">
