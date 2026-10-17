@@ -7,6 +7,7 @@ import { Sidebar } from './sidebar'
 import { useUIStore } from '@/stores/ui-store'
 import { useAccessStore } from '@/stores/access-store'
 import { canEdit, canView, pageKeyForPath } from '@/lib/permissions'
+import { useActivityLogger } from '@/lib/activity-log'
 
 const ROUTES_WITHOUT_SIDEBAR = ['/login', '/signup', '/access', '/forgot-password', '/reset-password']
 
@@ -26,6 +27,8 @@ function ViewOnlyBanner({ pathname }: { pathname: string }) {
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
     const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
+    // Only module and /admin paths are logged; auth pages are ignored inside
+    useActivityLogger(pathname)
 
     if (ROUTES_WITHOUT_SIDEBAR.includes(pathname)) {
         return <>{children}</>

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { navGroups, type NavGroup, type NavItem } from './nav-data'
 import { canView, pageKeyForPath, type MyAccess } from '@/lib/permissions'
 import { useAccessStore } from '@/stores/access-store'
+import { logActivity } from '@/lib/activity-log'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,7 +17,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Factory, User, LogOut, ChevronDown, ChevronsLeft, ChevronsRight, Menu, X, ShieldCheck } from 'lucide-react'
+import { Factory, User, LogOut, ChevronDown, ChevronsLeft, ChevronsRight, Menu, X, ShieldCheck, Activity } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { useUIStore } from '@/stores/ui-store'
 
@@ -40,7 +41,10 @@ function visibleNavGroups(access: MyAccess | null): NavGroup[] {
         groups.push({
             id: 'admin',
             label: 'ผู้ดูแลระบบ',
-            items: [{ name: 'ผู้ใช้งาน', href: '/admin/members', icon: ShieldCheck }],
+            items: [
+                { name: 'ผู้ใช้งาน', href: '/admin/members', icon: ShieldCheck },
+                { name: 'ประวัติการใช้งาน', href: '/admin/activity', icon: Activity },
+            ],
         })
     }
     return groups
@@ -148,6 +152,8 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
 
     const handleSignOut = async () => {
         const supabase = createClient()
+        // Log before signing out, while the session still exists
+        await logActivity('logout')
         await supabase.auth.signOut()
         clearAccess()
         router.push('/login')

@@ -1,5 +1,6 @@
 // Page-level access control shared by middleware, the sidebar and the admin page.
-// Keep PAGE_KEYS in sync with the CHECK constraint on erp_page_permissions (migration 009).
+// Keep PAGE_KEYS in sync with the CHECK constraint on erp_page_permissions (migration 009)
+// and the page_key list in erp_log_activity (migration 013).
 
 export const PAGES = [
     { key: 'dashboard', href: '/dashboard', label: 'แดชบอร์ด' },
@@ -48,7 +49,46 @@ export interface ErpMember {
     permissions: PermissionMap
 }
 
+// Activity log (migration 013). page_key is a PageKey or 'admin'
+export type ActivityEvent = 'page_view' | 'login' | 'logout'
+
+// Shape returned by the erp_admin_activity_summary() RPC
+export interface ActivitySummary {
+    totals: { views: number; active_users: number; logins: number }
+    by_module: { page_key: string; views: number; users: number; last_at: string }[]
+    by_day: { day: string; views: number; users: number }[]
+    by_user: {
+        user_id: string
+        email: string | null
+        full_name: string | null
+        views: number
+        logins: number
+        last_at: string
+        modules: Record<string, number>
+    }[]
+}
+
+// Row returned by the erp_admin_activity_logs() RPC
+export interface ActivityLogRow {
+    id: number
+    created_at: string
+    user_id: string
+    email: string | null
+    full_name: string | null
+    event: ActivityEvent
+    page_key: string | null
+    path: string | null
+    user_agent: string | null
+    total_count: number
+}
+
 export const ADMIN_PATH = '/admin'
+
+export function pageLabel(key: string | null | undefined): string {
+    if (!key) return '—'
+    if (key === 'admin') return 'ผู้ดูแลระบบ'
+    return PAGES.find((p) => p.key === key)?.label ?? key
+}
 
 export function pageKeyForPath(pathname: string): PageKey | null {
     const page = PAGES.find((p) => pathname === p.href || pathname.startsWith(`${p.href}/`))

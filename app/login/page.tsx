@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { logActivity } from '@/lib/activity-log'
 import { AuthFrame } from '@/components/layout/auth-frame'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,6 +49,8 @@ function LoginForm() {
             setIsLoading(false)
             return
         }
+
+        await logActivity('login')
 
         // Middleware sends the user to the first page they are allowed to see
         router.push('/')

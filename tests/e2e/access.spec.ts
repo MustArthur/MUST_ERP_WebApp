@@ -24,3 +24,19 @@ test('สมาชิกที่ใช้งานอยู่ถูกพา�
     await page.goto('/access')
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 })
 })
+
+test('ผู้ใช้ทั่วไปเข้าหน้าประวัติการใช้งานไม่ได้', async ({ page }) => {
+    await page.goto('/admin/activity')
+    await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(page.getByRole('link', { name: 'ประวัติการใช้งาน' })).toHaveCount(0)
+})
+
+test('เปิดหน้าโมดูลแล้วบันทึกการเข้าใช้งานสำเร็จ', async ({ page, problems }) => {
+    const logged = page.waitForResponse((res) => res.url().includes('/rpc/erp_log_activity'))
+    await page.goto('/items')
+    const res = await logged
+    expect(res.status(), await res.text()).toBeLessThan(300)
+    expect(res.request().postDataJSON()).toMatchObject({ p_event: 'page_view', p_page_key: 'items', p_path: '/items' })
+    await settle(page)
+    expect(problems.errors, problems.errors.join('\n')).toEqual([])
+})
